@@ -1,0 +1,41 @@
+<script>
+  /**
+   * This is a sample front page for a Google Apps Script web app, where it:
+   * - initializes the session
+   * - waits for the DOM to be ready
+   * - calls "postSiteInited"
+   * - sets up event listeners.
+   * - sends a custom event to the parent website to modify the URL parameters without refreshing.
+   */
+
+  initializeSession(() => {
+    if (document.readyState !== "loading")
+      onDomContentLoaded();
+    else
+      document.addEventListener('DOMContentLoaded', () => onDomContentLoaded());
+  });
+
+  function onDomContentLoaded() {
+    postSiteInited(); //tells the parent to show the iframe and stop the "loading" progress.
+
+    //simulate some seconds of wait
+    setTimeout(() => {
+      document.getElementById('bodyBottom').style.display = "";
+      document.getElementById('button1').addEventListener('click', function () {
+        console.log('Button clicked');
+        analytics("customEvent1"); //sample custom event
+        alert("event sent to website");
+      });
+
+      //tell the website to change a url parameter
+      postSiteMessage("urlParamChange",
+        {
+          refresh: false,
+          urlParams: {
+            lang: "en"
+          }
+        });
+    }, 3000);
+  }
+
+</script>

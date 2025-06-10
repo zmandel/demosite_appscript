@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="Demo website containing Google Apps Script frames">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
+
+  <title>Demo Website with Apps Script</title>
+  <style>
+
+
+    :root {
+      --primary-text-color: #DCDCDC;
+      --background-color: #000000;
+    }
+
+    html,
+    body {
+      margin: 1em;
+      font-family: 'Roboto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      color: var(--primary-text-color);
+      background-color: var(--background-color);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Demo Website with Apps Script</h1>
+  <div>
+    <button id="page1">Page 1</button>
+    <button id="page2">Page 2</button>
+  </div>
+  <script  type="module" src="/js/common.js"></script>
+  <script type="module">
+    import { initializePage } from "/js/common.js";
+    function onContentLoaded() {
+      const btnPage1 = document.getElementById('page1');
+      const btnPage2 = document.getElementById('page2');
+    
+
+      btnPage1.addEventListener('click', function () {
+        const url = new URL(window.location.href);
+        const paramsSite = new URLSearchParams(window.location.search);
+
+        url.pathname = '/page1';
+        //Set other parameters here, as in url.searchParams.set("parameter1", value1);
+        window.location.assign(url); //navigate forward
+      });
+
+      btnPage2.addEventListener('click', function () {
+        const url = new URL(window.location.href);
+        const paramsSite = new URLSearchParams(window.location.search);
+
+        url.pathname = '/page2';
+        //Set other parameters here, as in:
+        //url.searchParams.set("parameter1", value1);
+        window.location.assign(url); //navigate forward
+      });
+    }
+
+    initializePage({
+      loadIframe: false,    //this landing page has no iframe
+      loadAnalytics: true,
+      paramsExtra: "",
+      callbackMessage: null,
+      onError: function () {
+        //your error handler
+      },
+      callbackContentLoaded: onContentLoaded
+    });
+  </script>
+</body>
+</html>

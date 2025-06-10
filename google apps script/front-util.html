@@ -1,0 +1,350 @@
+<script>
+    /**
+     * Utilites to handle automatic and manual logging with callstacks of
+     * - console.*
+     * - window.onerror
+     * - the 'unhandledrejection' event
+     * - exceptions
+     * 
+     * These logs are sent to the parent window, which sends it to GCP logging and alerting.
+     * Manual utilities:
+      - log_, warn_, error_: shorthands for the console methods
+      - throwError: logs the error and throws
+      - analytics: send an analytics event to the parent window
+      - initializeSession: initializes the session
+      - postSiteInited: marks the site as initialized and notifies the parent window (if in iframe mode)
+      - postSiteMessage: send a custom message to the parent window (if in iframe mode)
+    *
+    */
+    const g_allowAnyEmbedding = true; //use false for production to improve security. Use true for embedding on any url (like debugging on localhost or in this demo case, to make it easier for you to run the demo)
+    const g_urlWebsite = "https://mywebsite.com";
+    const g_parentDomainFilter = g_allowAnyEmbedding ? "*" : g_urlWebsite;
+    const g_propEmbed = "embed"; //url parameter to determine if the site is embedded in an iframe
+    const g_moduleLog = "frontend";
+    const g_maxLogsSend = 10; //maximum logs to send at once (batch size)
+    let g_iframeMode = false; //set in initializeSession
+</script>
+
+<style>
+    /* common styles for your frontends */
+</style>
+
+<script>
+    (function () {
+        /* log tracking
+        overwrites console.*  methods and sends them to the parent under the tag g_moduleLog.
+        It also generates logs for window.onerror and the 'unhandledrejection' event.
+        Logs are queued and sent to the website during idle (as a postmessage) and on unload.
+        */
+        if (typeof console === "undefined") {
+            window.console = {};
+        }
+        const noop = function () { };
+        const originalConsole = {
+            log: typeof console.log === "function" ? console.log.bind(console) : noop,
+            warn: typeof console.warn === "function" ? console.warn.bind(console) : noop,
+            error: typeof console.error === "function" ? console.error.bind(console) : noop,
+            info: typeof console.info === "function" ? console.info.bind(console) : noop,
+            debug: typeof console.debug === "function" ? console.debug.bind(console) : noop
+        };
+
+        let g_logQueue = [];
+        let g_idleScheduled = false;
+
+        function sendLogs(logs) {
+            postSiteMessage("logs", { logs: logs });
+        }
+
+        function scheduleIdleCallback(callback, options) {
+            if (window.requestIdleCallback) {
+                return window.requestIdleCallback(callback, options);
+            } else {
+                return setTimeout(() => {
+                    callback({
+                        timeRemaining: function () { return 50; } //any positive number
+                    });
+                }, options && options.timeout ? options.timeout : 50);
+            }
+        }
+
+        function payloadBase(message) {
+            const unk = "unknown";
+
+            const payload = {
+                message: g_moduleLog + ": " + message,
+                functionName: unk,
+                callStack: unk,
+                moduleLog: g_moduleLog,
+                //add other custom parameters here (will appear in GCP logs in jsonPayload)
+            };
+            return payload;
+        }
+
+        function generateLogPayload(...args) {
+            const unk = "unknown";
+
+            const message = args.map(arg => {
+                if (typeof arg === 'object') {
+                    try {
+                        if (arg instanceof Error)
+                            return "Error obj: " + (arg.message || unk);
+                        return JSON.stringify(arg);
+                    } catch (err) {
+                        return String(arg);
+                    }
+                }
+                return String(arg);
+            }).join(' ');
+
+            let payload = payloadBase(message);
+
+            const IGNORED = [
+                "captureConsole",
+                "console.log",
+                "console.warn",
+                "console.error",
+                "console.info",
+                "console.debug",
+                "throwError",
+                "error_",
+                "warn_",
+                "log_",
+            ];
+
+            function parseFnName(line) {
+                try {
+                    const match = line.match(/at (\S+) \(/);
+                    if (match)
+                        return match[1];
+                } catch (e) {
+                    error_(e);
+                    //fall through
+                }
+                return "";
+            }
+
+            function getCleanStackLines(stackLines) {
+                let startIndex = 2;
+
+                while (startIndex < stackLines.length) {
+                    const line = stackLines[startIndex];
+                    if (line.trim() && !IGNORED.includes(parseFnName(line))) {
+                        break;
+                    }
+                    startIndex++;
+                }
+
+                return stackLines.slice(startIndex);
+            }
+
+            try {
+                const error = new Error("");
+                error.name = "";
+                const stack = getCleanStackLines(error.stack?.split("\n") || []);
+
+                let nameFunction = null;
+                if (stack.length > 0)
+                    nameFunction = parseFnName(stack[0]);
+
+                payload.functionName = nameFunction || unk;
+                payload.callStack = stack.join("\n") || unk;
+            } catch (e) {
+                //fall through
+            }
+            return payload;
+        }
+
+        function levelToSeverity(level) {
+            const consoleToSeverity = {
+                error: 'ERROR',
+                warn: 'WARNING',
+                log: 'INFO',
+                info: 'INFO',
+                debug: 'DEBUG'
+            };
+
+            return (consoleToSeverity[level] || 'DEFAULT');
+        }
+
+        let g_isLogging = false; // to prevent recursive logging
+        function captureConsole(level, ...args) {
+            try {
+                level = level.toLowerCase();
+                originalConsole[level](...args);
+                if (g_isLogging) {
+                    originalConsole.warn("recursive log within captureConsole");
+                    return;
+                }
+                g_isLogging = true;
+                let payload = generateLogPayload(...args);
+                payload.timestamp = new Date().toISOString();
+                payload.severity = levelToSeverity(level);
+                g_logQueue.push(payload);
+                scheduleLogFlush();
+            } catch (e) {
+                originalConsole.error(e.message);
+                //ignore
+            }
+            g_isLogging = false;
+        }
+
+        function scheduleLogFlush() {
+            if (g_logQueue.length === 0 || g_idleScheduled) return;
+            g_idleScheduled = true;
+            scheduleIdleCallback(flushLogs, { timeout: 2000 });
+        }
+
+        function flushLogs() {
+            if (g_logQueue.length === 0) {
+                g_idleScheduled = false;
+                return;
+            }
+
+
+            const logSend = g_logQueue.slice(0, g_maxLogsSend); //first ones only
+            g_logQueue = [];
+            sendLogs(logSend);
+            g_idleScheduled = false;
+        }
+
+        // Override console methods.
+        console.log = (...args) => captureConsole("log", ...args);
+        console.warn = (...args) => captureConsole("warn", ...args);
+        console.error = (...args) => captureConsole("error", ...args);
+        console.info = (...args) => captureConsole("info", ...args);
+        console.debug = (...args) => captureConsole("debug", ...args);
+
+        // Global error handling.
+        window.onerror = function (message, source, lineno, colno, error) {
+            captureConsole("error", "Uncaught Exception:", { message, source, lineno, colno, error });
+        };
+
+        window.addEventListener("unhandledrejection", function (event) {
+            captureConsole("error", "Unhandled Promise Rejection:", event.reason);
+        });
+
+        window.addEventListener("beforeunload", function () {
+            flushLogs();
+        });
+    })();
+
+
+    /**
+     * Logs arguments to the console as an error.
+     * @param {...any} args
+     */
+    function error_(...args) {
+        console.error(...args);
+    }
+
+    /**
+     * Logs arguments to the console as a warning.
+     * @param {...any} args
+     */
+    function warn_(...args) {
+        console.warn(...args);
+    }
+
+    /**
+     * Logs arguments to the console as a debug log message.
+     * @param {...any} args
+     */
+    function log_(...args) {
+        console.log(...args);
+    }
+
+    /**
+     * Throws an Error with the given argument and logs it as an error, unless skipLog is true.
+     * @param {any} arg - The error message or object.
+     * @param {boolean} [skipLog=false] - If true, skips logging the error.
+     * @throws {Error}
+     */
+    function throwError(arg, skipLog = false) {
+        arg = arg || "unknown";
+        if (!skipLog) {
+            error_("throw: " + arg);
+        }
+        throw new Error(arg);
+    }
+
+    let g_siteInited = false;
+
+    /**
+     * Sends a postMessage to the parent window with the specified action and data.
+     * @param {string} action - The action type for the message.
+     * @param {any} data - The data payload to send.
+     */
+    function postSiteMessage(action, data) {
+        if (!g_iframeMode)
+            return;
+
+        window.top.postMessage(
+            {
+                type: "FROM_IFRAME",
+                action: action,
+                data: data
+            },
+            g_parentDomainFilter
+        );
+    }
+
+    /**
+     * Sends an analytics event to the parent window.
+     * @param {string} customEvent - The name of the analytics event.
+     */
+    function analytics(customEvent) {
+        postSiteMessage("analyticsEvent", { name: customEvent });
+    }
+
+    /**
+     * Marks the site as initialized and notifies the parent window if in iframe mode.
+     * @param {any} data - Optional data to send with the initialization message.
+     */
+    function postSiteInited(data) {
+        if (g_siteInited)
+            return;
+        g_siteInited = true;
+        if (!g_iframeMode)
+            return;
+
+        let g_postedMessage = false;
+        let g_timeoutPost = null;
+
+        function doPost() {
+            if (g_postedMessage)
+                return;
+            g_postedMessage = true;
+            postSiteMessage("siteInited", data);
+            if (g_timeoutPost)
+                clearTimeout(g_timeoutPost);
+        }
+
+        //first do a double "requestAnimationFrame" to ensure the site is fully loaded and drawn.
+        //just in case, we also use a timeout, in case something goes wrong with the animation frame detection
+        g_timeoutPost = setTimeout(function () {
+            g_timeoutPost = null;
+            doPost();
+        }, 200);
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                doPost();
+            });
+        });
+    }
+
+    /**
+     * Initializes the session by determining iframe mode from URL parameters and then calls the callback.
+     * @param {Function} callback - Function to call after initialization.
+     */
+    function initializeSession(callback) {
+        google.script.url.getLocation(function (location) {
+            if (location && location.parameter) {
+                //REVIEW: add here your custom parameters
+                g_iframeMode = ("1" == location.parameter[g_propEmbed]);
+            }
+            callback();
+        });
+    }
+
+</script>
