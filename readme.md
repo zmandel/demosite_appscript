@@ -100,7 +100,7 @@ The `google apps script/` directory contains a Google Apps Script project with t
     *   Note the deployment ID. This will be used as the `org` parameter.
 3.  **Configuration**:
     *   Update `g_orgDefault` in [`website/public/js/common.js`](website/public/js/common.js) with your Apps Script deployment ID.
-    *   If you plan to use multiple Apps Script deployments dynamically, generate corresponding public/private key pairs for signature verification and update `g_publicKeyJwk` in [`website/public/js/common.js`](website/public/js/common.js).
+    *   If you plan to use multiple Apps Script deployments dynamically, generate corresponding public/private key pairs for signature verification and update `g_publicKeyJwk` in [`website/public/js/common.js`](website/public/js/common.js). See [`/util/crypto.js`](/util/crypto.js) for instructions to create your own public/private key pairs.
     *   Update other placeholder values as needed (GTM ID, API endpoints, etc.).
 
 ## Customization

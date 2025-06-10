@@ -115,6 +115,16 @@ export function loadGTM() {
 }
 
 /**
+ * events that the iframe can send:
+ * - analyticsEvent
+ * - siteInited
+* - siteFullyLoaded
+* - logs
+* - titleChange
+* - urlParamChange 
+*/
+
+/**
  * Initializes the main page logic for the Apps Script iframe integration.
  * @param {Object} options - Options for initialization
  * @param {boolean} options.loadIframe - Whether to load the iframe
