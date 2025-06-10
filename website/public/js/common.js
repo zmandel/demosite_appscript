@@ -17,7 +17,7 @@
  * or for different clients, each with scripts under their own Workspace account.
  * When using a different "org", the "sig" parameter must be set to a valid signature. (see the github documentation)
 */
-const g_orgDefault = "AKfycbwAIoEn3hffuydjeqmipTatV31BwOOcnl0uuknGscjYrGlbdiTAiuZY5BbblusCsRid"; //REVIEW: replace with your own
+const g_orgDefault = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; //REVIEW: replace with your own
 
 const g_endpointPutLogs = "/api/putlogs"; //REVIEW: endpoint for sending error/warning logs from the iframe to the firebase function
 /**
@@ -26,8 +26,8 @@ const g_endpointPutLogs = "/api/putlogs"; //REVIEW: endpoint for sending error/w
 const publicKeyJwk = { //REVIEW: replace with your own public key
     "kty": "EC",
     "crv": "P-256",
-    "x": "b5kxtfrQQdKWsh06ixmAUetiYOPgkymM4eWJda3hJsM",
-    "y": "FZInICTDI43Yzvr_UcUTn7C04Yq7JG95QZtiK4ITp64",
+    "x": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "y": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "ext": true
 };
 
@@ -45,7 +45,7 @@ let g_paramsClean = {
     org: g_orgDefault,
     sig: "",
     lang: "", //sample "language" parameter demoed in page1
-    //add more parameters as needed
+    //REVIEW: add or customize parameters as needed
 }
 
 /**
