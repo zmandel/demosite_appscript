@@ -23,7 +23,7 @@ const g_endpointPutLogs = "/api/putlogs"; //REVIEW: endpoint for sending error/w
 /**
  * Public key for verifying signatures.
 */
-const publicKeyJwk = { //REVIEW: replace with your own public key
+const g_publicKeyJwk = { //REVIEW: replace with your own public key
     "kty": "EC",
     "crv": "P-256",
     "x": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -267,10 +267,10 @@ async function verifyScript(org, signatureBase64Url) {
         const alg = "ECDSA";
         const publicKey = await window.crypto.subtle.importKey(
             "jwk",
-            publicKeyJwk,
+            g_publicKeyJwk,
             {
                 name: alg,
-                namedCurve: publicKeyJwk.crv
+                namedCurve: g_publicKeyJwk.crv
             },
             true,
             ["verify"]
