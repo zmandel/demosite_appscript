@@ -1,7 +1,7 @@
 // api/logs.js
 
 const g_maxLogsSend = 10; //maximum per request
-const g_host = "mywebsite.com"; //set to your domain (for security)
+const g_host = "mywebsite.com"; //REVIEW: set to your domain (for security)
 
 exports.putLogsHandler = (req, res) => {
   function notAllowed() {
