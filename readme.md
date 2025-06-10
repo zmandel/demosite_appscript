@@ -1,6 +1,6 @@
 # Google Apps Script Website Integration Framework
 
-This framework integrates Google Apps Script web apps into a standard website, addressing the following issues:
+This framework integrates Google Apps Script web apps into a standard website, addressing the following issues which curreently no other solution can solve all at the same time:
 
 1. **Custom Domain Serving**: Serves apps under a custom domain, providing more control than Google Sites.
 2. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts.
