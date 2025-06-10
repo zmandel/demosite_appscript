@@ -1,4 +1,4 @@
-# Google Apps Script Website Integration Framework
+# Google Apps Script Website Integration Framework 
 
 This framework integrates Google Apps Script web apps into a standard website, addressing the following issues which curreently no other solution can solve all at the same time:
 
