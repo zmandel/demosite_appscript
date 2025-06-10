@@ -1,12 +1,12 @@
 # Google Apps Script Website Integration Framework 
 
-This framework integrates Google Apps Script web apps into a standard website, addressing the following issues which curreently no other solution can solve all at the same time:
+This framework integrates Google Apps Script web apps into a standard website, addressing the following issues which currently no other solution can solve all at the same time:
 
 1. **Custom Domain Serving**: Serves apps under a custom domain, providing more control than Google Sites.
 2. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts.
-3. **Google Workspace Compatibility**: Handles redirects typically problematic with Google Workspace accounts.
+3. **Google Workspace Compatibility**: Handles redirects typically problematic when users are under a Google Workspace account profile.
 4. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads.
-5. **Dynamic Script Loading**: Securely loads different script versions by passing authorized parameters (`organization`, `signature`).
+5. **Dynamic Multiple Script version Loading**: Securely loads different script versions by passing authorized parameters (`org`and `sig` parameters).
 6. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
 7. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
 
@@ -36,7 +36,8 @@ To view Apps Script pages:
 * **Embedding**: Embeds Apps Script web apps using iframes ([`page1.html`](website/public/page1.html), [`page2.html`](website/public/page2.html)).
 * **Custom Domain**: Uses Firebase Hosting for domain management.
 * **Dynamic Loading**: Load scripts dynamically using `org` URL parameter.
-* **Security**: Validates scripts via URL `sig` parameter using public key signature verification.
+* **Security**: Validates scripts via URL `org` and `sig` parameter using public key signature verification. See [`/util/crypto.js`](/util/crypto.js) for instructions to create your own public/private key pairs to sign your various script deployment ids.
+
 * **Parent-Iframe Communication**:
 
   * URL parameter changes
