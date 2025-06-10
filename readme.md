@@ -1,21 +1,38 @@
 # Google Apps Script Website Integration Framework
 
-This project demonstrates a framework for integrating Google Apps Script web apps into a standard website, allowing them to be served under a custom domain and enhancing their capabilities through parent-iframe communication. It also includes sample Apps Script pages showcasing different interaction patterns with this framework.
+Framework for integrating Google Apps Script web apps into a standard website, solving the following issues:
+1. Allows to be served under a custom domain (similar to Google Sites, but with much greater control).
+2. Webapp works when the user is signed into multiple accounts (existing solutions for this can bypass this issue, but not together with the next point).
+3. Webapp works when the user is on a google workspace account (which normally causes a redirect that breaks the webapp).
+4. Smooth page transitions as scripts load, avoiding flashing white screens.
+5. The same website page can load different versions of the script, or different scripts entirely by passing "organization" and "signature" parameters allowing only authorized scripts to load in a highly secure way.
+6. It loads and handles Google Analytics using GTM from the website, which receives events from the apps scripts.
+7. Works well on Mobile and Desktop.
+
+It also includes sample Apps Script pages showcasing different interaction patterns with this framework.
+
+## Demo minimal website
+regular website: https://fir-apps-script.firebaseapp.com/
+website modified by a different "org": https://fir-apps-script.firebaseapp.com/?org=AKfycbyJVIXQETRfIbzEC6OALffWAO533GAMJunm2Trc_8KlPR-YI4MPxWZbypvZ83Eqg9kw&sig=JrqbfLZmsf8WlWz5outYUryPRoiINocCTKErUb79Ww8fKcLKYZO4jOyjCWR9h0HbTwsFQn4Wnuu-auBwRBFYNw
+
+## A production-level website using the framework
+To view the apps script related pages you need to fill the form in the main page, and then follow the instructions from there:
+https://tutorforme.org
 
 ## Directory Structure
 
--   **`website/`**: Contains the Firebase-hosted website that acts as the parent container for the Apps Script iframes. It includes the core framework logic for embedding, communication, and analytics.
+-   **`website/`**: Contains the Firebase-hosted website that acts as the parent container for the Apps Script iframes. It includes the core framework logic for embedding, communication, and analytics. This website can be published on any host, not just firebase hosting.
 -   **`google apps script/`**: Contains the Google Apps Script project with sample web app pages (Page 1 and Page 2) that are designed to be embedded into the website.
 
 ## Website Framework (`website/`)
 
-The `website/` directory implements a framework that allows Google Apps Script web apps to be presented as regular website pages, hosted on Firebase and accessible via a custom domain. It provides mechanisms for dynamically loading different Apps Script deployments and facilitating communication between the hosting website and the embedded Apps Script iframe.
+The `website/` directory implements the framework to embed and route Google Apps Script web apps.
 
 ### Key Features
 
 *   **Embedding Apps Script Web Apps**: Seamlessly embeds Apps Script web apps using iframes ([`public/page1.html`](website/public/page1.html), [`public/page2.html`](website/public/page2.html)).
 *   **Custom Domain Support**: Leverages Firebase Hosting to serve the Apps Script content under your own domain.
-*   **Dynamic Script Loading**: Allows loading different Apps Script deployments by specifying an `org` parameter in the URL. The default script is defined by `g_orgDefault` in [`public/js/common.js`](website/public/js/common.js).
+*   **Dynamic Script Loading**: Allows loading different Apps Script deployments by specifying an `org` parameter in the URL. The default script is defined by `g_orgDefault` in [`public/js/common.js`](website/public/js/common.js) which is just your apps script deployment id.
 *   **Signature Verification**: For security, when a custom `org` (Apps Script deployment ID) is provided via URL parameters, its signature (`sig` parameter) is verified against a public key ([`g_publicKeyJwk`](website/public/js/common.js) and [`verifyScript`](website/public/js/common.js) function in [`public/js/common.js`](website/public/js/common.js)).
 *   **Parent-Iframe Communication**: A robust message-passing system (see `window.addEventListener("message", ...)` in [`public/js/common.js`](website/public/js/common.js)) enables:
     *   **URL Parameter Changes**: The iframe can request the parent page to update its URL parameters, with or without a page refresh (action: `urlParamChange`).
@@ -23,9 +40,8 @@ The `website/` directory implements a framework that allows Google Apps Script w
     *   **Logging**: The iframe can send log messages to the parent, which are then forwarded to a server-side logging endpoint (action: `logs`, handled by [`functions/api/logs.js`](website/functions/api/logs.js)).
     *   **Page Title Changes**: The iframe can request the parent page to change its title (action: `titleChange`).
     *   **Load State Notifications**: The iframe notifies the parent about its initialization (`siteInited`) and full load (`siteFullyLoaded`) states.
-*   **Google Tag Manager (GTM) Integration**: Supports GTM for analytics. GTM is loaded and configured via [`loadGTM`](website/public/js/common.js) and related constants like [`g_idGTM`](website/public/js/common.js) and [`g_dimensionsGTM`](website/public/js/common.js).
-*   **Centralized Logging**: Logs from the iframe can be sent to a Firebase Cloud Function ([`functions/api/logs.js`](website/functions/api/logs.js)) for centralized storage and analysis (e.g., in Google Cloud Logging).
-*   **Error Handling**: Basic error display for iframe loading issues ([`onErrorBaseIframe`](website/public/js/common.js)).
+*   **Google Tag Manager (GTM) Integration**: Supports GTM for analytics with optional custom dimensions.
+*   **Centralized Error Logging**: Logs from the iframe can be sent to a Firebase Cloud Function ([`functions/api/logs.js`](website/functions/api/logs.js)) for centralized storage and analysis (e.g., in Google Cloud Logging). The sample firebase cloud function logs received batch logs into Google Cloud Logging. From there you can further add rules to alert you by email, Google Chat etc. Note that because the backend apps script can also send its logs to GCP, this provides a way to get a single place for frontend and backend logs.
 *   **Loading Indicators**: Provides user feedback while the iframe content is loading.
 
 ### Setup & Configuration
@@ -37,7 +53,6 @@ The `website/` directory implements a framework that allows Google Apps Script w
     *   `g_idGTM`: Your Google Tag Manager ID.
     *   `g_paramsClean`: Allowed URL parameters.
     *   `g_dimensionsGTM`: Custom GTM dimensions.
-*   Configure your Firebase project in `.firebaserc` and `firebase.json`.
 *   Set your website's domain in `g_host` within [`functions/api/logs.js`](website/functions/api/logs.js).
 
 ### Key Files
@@ -50,7 +65,7 @@ The `website/` directory implements a framework that allows Google Apps Script w
 
 ## Google Apps Script Samples (`google apps script/`)
 
-The `google apps script/` directory contains a Google Apps Script project with two sample web app pages. These pages demonstrate how an Apps Script web app can interact with the parent website framework.
+The `google apps script/` emonstrate how an Apps Script web app can interact with the parent website framework.
 
 ### Key Features
 
@@ -93,11 +108,12 @@ The `google apps script/` directory contains a Google Apps Script project with t
     *   Deploy the website using `firebase deploy --only hosting` and functions using `firebase deploy --only functions` (or use the `npm run deploy` scripts in `website/package.json`).
 2.  **Google Apps Script Deployment**:
     *   Create a new Google Apps Script project or use an existing one.
-    *   Copy the files from the `google apps script/` directory into your Apps Script project.
+    *   Copy the files from the `google apps script/` directory into your Apps Script project, or make a copy of the provided Sample Google Spreadsheet.
     *   Deploy the Apps Script project as a Web App.
         *   Execute as: `Me`
-        *   Who has access: `Anyone` (or `Anyone, even anonymous` if you need unauthenticated access).
+        *   Who has access: `Anyone, even anonymous`.
     *   Note the deployment ID. This will be used as the `org` parameter.
+    *   Modify the Apps Script configuration so it uses a "Standard" Cloud Project. so that server logs go into GCP Cloud Logs. Use the same GCP project that Firebase uses. See https://developers.google.com/apps-script/guides/cloud-platform-projects#standard
 3.  **Configuration**:
     *   Update `g_orgDefault` in [`website/public/js/common.js`](website/public/js/common.js) with your Apps Script deployment ID.
     *   If you plan to use multiple Apps Script deployments dynamically, generate corresponding public/private key pairs for signature verification and update `g_publicKeyJwk` in [`website/public/js/common.js`](website/public/js/common.js).
