@@ -76,6 +76,7 @@ Update domain settings (`g_host`) in [`logs.js`](website/functions/api/logs.js).
 * **Enhanced Logging**: Captures frontend logs and sends to parent.
 * **Iframe Communication**: Manages message passing (analytics, events, load states).
 * **Server-side Routing and Logging**: Routes requests and logs server-side events.
+Use the github subdirectory or copy from https://docs.google.com/spreadsheets/d/1TRgGo93TzPihDpCXb7G3_eI6uc0jsQLJch0cgE1aHKs/copy
 
 ### Sample Pages
 
