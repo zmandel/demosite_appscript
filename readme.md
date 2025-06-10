@@ -103,6 +103,7 @@ Update domain settings (`g_host`) in [`logs.js`](website/functions/api/logs.js).
 1. **Deploy Website**:
 
    ```sh
+   cd website
    firebase deploy --only hosting
    firebase deploy --only functions
    ```
