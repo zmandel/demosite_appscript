@@ -19,7 +19,7 @@
 */
 const g_orgDefault = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; //REVIEW: replace with your own
 
-const g_endpointPutLogs = "/api/putlogs"; //REVIEW: endpoint for sending error/warning logs from the iframe to the firebase function
+const g_endpointPutLogs = "/api/logs/putLogs"; //REVIEW: endpoint for sending error/warning logs from the iframe to the firebase function
 /**
  * Public key for verifying signatures.
 */

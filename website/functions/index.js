@@ -5,16 +5,7 @@ const { putLogsHandler } = require('./api/logs');
 const app = express();
 app.use(express.json());
 
-
-//optional rewrite to reorganize methods
-app.use((req, res, next) => {
-  if (req.path === '/api/putlogs') {
-    req.url = '/logs/putlogs';
-  }
-  next();
-});
-
-app.put('/logs/putlogs', putLogsHandler);
+app.put('/api/logs/putLogs', putLogsHandler);
 
 // Firebase
 exports.api = onRequest(
