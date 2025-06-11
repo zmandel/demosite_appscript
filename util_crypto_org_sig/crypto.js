@@ -5,8 +5,11 @@
  * 2. Run only once "await generatePublicAndPrivateKeys();"
  * 4. Important: store the generated private key securely. It should never be exposed in a frontend.
  * 5. Save both the public and private keys in this js file "g_keyPair". Do not publish this file in github.
- * 6. Update the public key in /public/js/common.js g_publicKeyJwk to use your own public key.
- * 7. Now, every time you want to sign a new script id "org" parameter, use the `signAndVerifyMessage` function with the script id (message) you want to sign.
+ * 6. Update the public key in /website/public/js/common.js (g_publicKeyJwk)
+ * 
+ *  Every time you want to sign a new script id to generate its "org" parameter:
+ *  Use the `signAndVerifyMessage` function with the script id (message) you want to sign,
+ *  first making sure that g_keyPair contains the pair you initially generated.
  */
 let g_keyPair = {
     publicKey: {
@@ -16,19 +19,19 @@ let g_keyPair = {
             "verify"
         ],
         "kty": "EC",
-        "x": "xxxxx",
-        "y": "xxxxx"
+        "x": "xxxxx", //REVIEW
+        "y": "xxxxx"  //REVIEW
     },
     privateKey: {
         "crv": "P-256",
-        "d": "xxxxx",
+        "d": "xxxxx", //REVIEW
         "ext": true,
         "key_ops": [
             "sign"
         ],
         "kty": "EC",
-        "x": "xxxxx",
-        "y": "xxxxx"
+        "x": "xxxxx", //REVIEW
+        "y": "xxxxx"  //REVIEW
     }
 };
 

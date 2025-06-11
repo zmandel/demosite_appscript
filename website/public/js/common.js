@@ -23,7 +23,7 @@ const g_endpointPutLogs = "/api/logs/putLogs"; //REVIEW: endpoint for sending er
 /**
  * Public key for verifying signatures.
 */
-const g_publicKeyJwk = { //REVIEW: replace with your own public key
+const g_publicKeyJwk = { //REVIEW: replace with your own public key generated from util_crypto_org_sig/crypto.js
     "kty": "EC",
     "crv": "P-256",
     "x": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -33,9 +33,8 @@ const g_publicKeyJwk = { //REVIEW: replace with your own public key
 
 /**
  * Google Tag Manager ID
- * Replace with your actual GTM ID.
  */
-const g_idGTM = 'G-XXXXXXXXXX';
+const g_idGTM = 'G-XXXXXXXXXX'; //REVIEW: replace with your own GTM ID
 
 /**
  * Parameters allowed in the URL. Others are ignored.
@@ -51,7 +50,7 @@ let g_paramsClean = {
 /**
  * Dimensions for Google Tag Manager (GTM)
  * Use for tracking custom dimensions in GTM, for example the language of the page for the current session.
- * You need to first set up your custom dimensions in your GTM account, then configure them here and in XXXX 
+ * You need to first set up your custom dimensions in your GTM account, then configure them here. 
 */
 //g_dimensionsGTM: custom dimensions for GTM. can be empty.
 const g_dimensionsGTM = {

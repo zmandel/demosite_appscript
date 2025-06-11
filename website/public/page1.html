@@ -123,7 +123,7 @@
                     //we initially show a scrollbar to make a smoother transition into the loaded script iframe, which also has one.
                     document.documentElement.classList.remove('scrollY');
                 }
-                else if (data.action == "openWebsite") { //Sample event
+                else if (data.action == "openWebsite") { //REVIEW: Sample event
                     if (!dataEvent)
                         return;
                     const url = new URL(window.location.href);
