@@ -16,8 +16,8 @@
       - postSiteMessage: send a custom message to the parent window (if in iframe mode)
     *
     */
-    const g_allowAnyEmbedding = false; //REVIEW: use false for production to improve security. Use true for embedding on any url (like debugging on localhost or in this demo case, to make it easier for you to run the demo)
-    const g_urlWebsite = "https://mywebsite.com";
+    const g_allowAnyEmbedding = false; //CUSTOMIZE: use false for production to improve security. Use true for embedding on any url (like debugging on localhost or in this demo case, to make it easier for you to run the demo)
+    const g_urlWebsite = "https://fir-apps-script.firebaseapp.com";
     const g_parentDomainFilter = g_allowAnyEmbedding ? "*" : g_urlWebsite;
     const g_propEmbed = "embed"; //url parameter to determine if the site is embedded in an iframe
     const g_moduleLog = "frontend";
@@ -226,6 +226,20 @@
         window.addEventListener("beforeunload", function () {
             flushLogs();
         });
+
+        window.addEventListener('message', (event) => {
+          if (!g_allowAnyEmbedding &&  event.origin !== g_urlWebsite) {
+            error_("blocked attempt to message from unknown domain: "+event.origin);
+            return;
+          }
+
+          if (event.data.type == "validateDomain") {
+            //CUSTOMIZE: very simple way to show how to prevent the page to showing when embedded in an unauthorized domain.
+            //Keeping the body hidden prevents clickjacking and other issues that coud be abused by an attacker iframing the page.
+            //It can be further improved by postponing DomContentLoaded after this validation, instead of just hiding the body.
+            document.body.style.opacity = '1';
+          }
+        });
     })();
 
 
@@ -340,7 +354,7 @@
     function initializeSession(callback) {
         google.script.url.getLocation(function (location) {
             if (location && location.parameter) {
-                //REVIEW: add here your custom parameters
+                //CUSTOMIZE: add here your custom parameters
                 g_iframeMode = ("1" == location.parameter[g_propEmbed]);
             }
             callback();

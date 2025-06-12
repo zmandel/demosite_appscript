@@ -19,19 +19,19 @@ let g_keyPair = {
             "verify"
         ],
         "kty": "EC",
-        "x": "xxxxx", //REVIEW
-        "y": "xxxxx"  //REVIEW
+        "x": "xxxxx", //CUSTOMIZE
+        "y": "xxxxx"  //CUSTOMIZE
     },
     privateKey: {
         "crv": "P-256",
-        "d": "xxxxx", //REVIEW
+        "d": "xxxxx", //CUSTOMIZE
         "ext": true,
         "key_ops": [
             "sign"
         ],
         "kty": "EC",
-        "x": "xxxxx", //REVIEW
-        "y": "xxxxx"  //REVIEW
+        "x": "xxxxx", //CUSTOMIZE
+        "y": "xxxxx"  //CUSTOMIZE
     }
 };
 

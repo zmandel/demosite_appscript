@@ -126,4 +126,4 @@ Use the github subdirectory or copy from https://docs.google.com/spreadsheets/d/
 
 ## Customization
 
-* Review `REVIEW:` comments in key files (`common.js`, `front-util.html`) to customize as needed.
+* Search for `CUSTOMIZE:` comments to customize as needed.

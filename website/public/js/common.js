@@ -17,13 +17,13 @@
  * or for different clients, each with scripts under their own Workspace account.
  * When using a different "org", the "sig" parameter must be set to a valid signature. (see the github documentation)
 */
-const g_orgDefault = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; //REVIEW: replace with your own
+const g_orgDefault = "AKfycbwAIoEn3hffuydjeqmipTatV31BwOOcnl0uuknGscjYrGlbdiTAiuZY5BbblusCsRid"; //CUSTOMIZE: replace with your own
 
-const g_endpointPutLogs = "/api/logs/putLogs"; //REVIEW: endpoint for sending error/warning logs from the iframe to the firebase function
+const g_endpointPutLogs = "/api/logs/putLogs"; //CUSTOMIZE: endpoint for sending error/warning logs from the iframe to the firebase function
 /**
  * Public key for verifying signatures.
 */
-const g_publicKeyJwk = { //REVIEW: replace with your own public key generated from /util-org-sig/crypto.js
+const g_publicKeyJwk = { //CUSTOMIZE: replace with your own public key generated from /util-org-sig/crypto.js
     "kty": "EC",
     "crv": "P-256",
     "x": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -34,7 +34,7 @@ const g_publicKeyJwk = { //REVIEW: replace with your own public key generated fr
 /**
  * Google Tag Manager ID
  */
-const g_idGTM = 'G-XXXXXXXXXX'; //REVIEW: replace with your own GTM ID
+const g_idGTM = 'G-XXXXXXXXXX'; //CUSTOMIZE: replace with your own GTM ID
 
 /**
  * Parameters allowed in the URL. Others are ignored.
@@ -44,7 +44,7 @@ let g_paramsClean = {
     org: g_orgDefault,
     sig: "",
     lang: "", //sample "language" parameter demoed in page1
-    //REVIEW: add or customize parameters as needed
+    //CUSTOMIZE: add or customize parameters as needed
 }
 
 /**
@@ -56,7 +56,7 @@ let g_paramsClean = {
 const g_dimensionsGTM = {
     // "dimension1": null,
     // "dimension2": null,
-    //REVIEW: replace with your own
+    //CUSTOMIZE: replace with your own
 };
 
 /*
@@ -68,7 +68,7 @@ function initializeCustomDimensions(params) {
     // Example of how to set custom dimensions based on URL parameters
     //g_dimensionsGTM["dimension1"] = params.dimension1;
     //g_dimensionsGTM["dimension2"] = params.dimension2;
-    //REVIEW: replace with your own
+    //CUSTOMIZE: replace with your own
 }
 
 /** localStorage usage
@@ -84,7 +84,7 @@ function initializeCustomDimensions(params) {
 const g_forceGTM = false;
 
 /**
- * //REVIEW: replace with your own error handling
+ * //CUSTOMIZE: replace with your own error handling
  * used as an error callback for initializePage
  */
 export function onErrorBaseIframe() {
@@ -161,7 +161,7 @@ export async function initializePage({
         }
 
         if (event.data && event.data.type === "FROM_IFRAME") {
-            //REVIEW: add your own custom events here
+            //CUSTOMIZE: add your own custom events here
             if (event.data.action == "siteInited") {
                 //this event comes from the script´s postSiteInited
                 const dontStopProgress = event.data?.data?.dontStopProgress;
