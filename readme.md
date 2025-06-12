@@ -36,7 +36,7 @@ To view Apps Script pages:
 * **Embedding**: Embeds Apps Script web apps using iframes ([`page1.html`](website/public/page1.html), [`page2.html`](website/public/page2.html)).
 * **Custom Domain**: Uses Firebase Hosting for domain management.
 * **Dynamic Loading**: Load scripts dynamically using `org` URL parameter.
-* **Security**: Validates scripts via URL `org` and `sig` parameter using public key signature verification. See [`util_crypto_org_sig/crypto.js`](util_crypto_org_sig/crypto.js) for instructions to create your own public/private key pairs to sign your various script deployment ids.
+* **Security**: Validates scripts via URL `org` and `sig` parameter using public key signature verification. See [`util-org-sig/crypto.js`](util-org-sig/crypto.js) for instructions to create your own public/private key pairs to sign your various script deployment ids.
 
 * **Parent-Iframe Communication**:
 

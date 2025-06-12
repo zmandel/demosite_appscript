@@ -23,7 +23,7 @@ const g_endpointPutLogs = "/api/logs/putLogs"; //REVIEW: endpoint for sending er
 /**
  * Public key for verifying signatures.
 */
-const g_publicKeyJwk = { //REVIEW: replace with your own public key generated from util_crypto_org_sig/crypto.js
+const g_publicKeyJwk = { //REVIEW: replace with your own public key generated from /util-org-sig/crypto.js
     "kty": "EC",
     "crv": "P-256",
     "x": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
