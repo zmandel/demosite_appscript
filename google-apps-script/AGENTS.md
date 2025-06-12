@@ -2,10 +2,15 @@
 
 This folder contains sample Apps Script files that interact with the website located under `../website`.
 
+## Notes on Google Apps Script Webapps
+- ".gs" files are server-side javascript with a special function "doGet" as the endpoint entry point.
+- Apps Script has a special template syntax which we augment here to separate HTML from JS using our "include_('html-file')" server function called from inside the HTML template.
+- the apps script (server or client) cannot be simulated, it can only be deployed in Google Drive.
+
 ## File Organization
-- `back-*` files contain server-side Apps Script (`.gs`) code. Note that "gs" code is just javascript.
+- `back-*` files contain server-side Apps Script (`.gs`) code.
 - `front-*` files contain inline JavaScript snippets included by the HTML pages.
-- `html-*` files are the HTML templates served by the script. Apps Script has a special scripting syntax.
+- `html-*` files are the HTML templates served by the script.
 - `front-util.html` provides common client-side utilities for logging and communication with the parent website.
 
 ## Coding Style
