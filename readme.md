@@ -47,7 +47,7 @@ To view Apps Script pages:
   * Load state notifications
 * **Analytics**: Integrated Google Tag Manager (GTM).
 * **Centralized Logging**: Logs iframe events via Firebase Cloud Functions to Google Cloud Logging.
-
+* **Backend**: Uses Firebase cloud functions under [`functions`](website/functions) which implements the "api/logs/putLogs" endpoint to send frontend logs to GCP logging. It can be easily extended to add more API endppoints.
 ### Setup & Configuration
 
 Update placeholders in [`common.js`](website/public/js/common.js):
