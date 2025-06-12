@@ -27,7 +27,7 @@ To view Apps Script pages:
 ## Directory Structure
 
 * **`website/`**: Parent website (Firebase or other hosts) managing Apps Script embedding, communication, and analytics.
-* **`google apps script/`**: Google Apps Script project with embedded page samples.
+* **`google-apps-script/`**: Google Apps Script project with embedded page samples.
 
 ## Website Framework (`website/`)
 
@@ -70,7 +70,7 @@ Set the `ALLOWED_HOST` environment variable to the same domain when deploying fu
 * [`logs.js`](website/functions/api/logs.js): Server-side logging
 * [`firebase.json`](website/firebase.json): Hosting config
 
-## Google Apps Script Samples (`google apps script/`)
+## Google Apps Script Samples (`google-apps-script/`)
 
 ### Key Features
 
@@ -98,10 +98,10 @@ Use the github subdirectory or copy from https://docs.google.com/spreadsheets/d/
 
 ### Key Files
 
-* [`front-util.html`](google%20apps%20script/front-util.html): Client-side utilities
-* [`back-util.gs`](google%20apps%20script/back-util.gs): Server-side utilities
-* [`html-page1.html`, `front-page1.html`](google%20apps%20script/html-page1.html): Sample Page 1
-* [`html-page2.html`, `front-page2.html`](google%20apps%20script/html-page2.html): Sample Page 2
+* [`front-util.html`](google-apps-script/front-util.html): Client-side utilities
+* [`back-util.gs`](google-apps-script/back-util.gs): Server-side utilities
+* [`html-page1.html`, `front-page1.html`](google-apps-script/html-page1.html): Sample Page 1
+* [`html-page2.html`, `front-page2.html`](google-apps-script/html-page2.html): Sample Page 2
 
 ## Getting Started
 
