@@ -5,10 +5,11 @@ This framework integrates Google Apps Script web apps into a standard website, a
 1. **Custom Domain Serving**: Serves apps under a custom domain, providing more control than Google Sites.
 2. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts.
 3. **Google Workspace Compatibility**: Handles redirects typically problematic when users are under a Google Workspace account profile.
-4. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads.
+4. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
 5. **Dynamic Multiple Script version Loading**: Securely loads different script versions by passing authorized parameters (`org`and `sig` parameters).
 6. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
 7. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
+8. **Logs to GCP Logging**: Sends logging events to the parent website.
 
 Sample Apps Script pages illustrate various interaction patterns.
 
@@ -46,7 +47,7 @@ To view Apps Script pages:
   * Page title updates
   * Load state notifications
 * **Analytics**: Integrated Google Tag Manager (GTM).
-* **Centralized Logging**: Logs iframe events via Firebase Cloud Functions to Google Cloud Logging.
+* **Centralized Logging**: Logs iframe error events via Firebase Cloud Functions to Google Cloud Logging.
 * **Backend**: Uses Firebase cloud functions under [`functions`](website/functions) which implements the "api/logs/putLogs" endpoint to send frontend logs to GCP logging. It can be easily extended to add more API endppoints.
 ### Setup & Configuration
 
