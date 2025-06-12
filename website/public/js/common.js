@@ -167,6 +167,7 @@ export async function initializePage({
                 const dontStopProgress = event.data?.data?.dontStopProgress;
                 g_loadedFrame = true;
                 cleanupTimeoutIdiframe();
+                event.source.postMessage({ type: 'validateDomain' }, event.origin);
                 document.querySelector("iframe").style.opacity = "1";
                 if (!dontStopProgress) {
                     hideLoading();
