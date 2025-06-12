@@ -3,9 +3,9 @@
 This folder contains sample Apps Script files that interact with the website located under `../website`.
 
 ## File Organization
-- `back-*` files contain server-side Apps Script (`.gs`) code.
-- `front-*` files contain inline JavaScript snippets used by the HTML pages.
-- `html-*` files are the HTML templates served by the script.
+- `back-*` files contain server-side Apps Script (`.gs`) code. Note that "gs" code is just javascript.
+- `front-*` files contain inline JavaScript snippets included by the HTML pages.
+- `html-*` files are the HTML templates served by the script. Apps Script has a special scripting syntax.
 - `front-util.html` provides common client-side utilities for logging and communication with the parent website.
 
 ## Coding Style
@@ -16,7 +16,7 @@ This folder contains sample Apps Script files that interact with the website loc
 
 ## Development Notes
 - Deploy the Apps Script as a **Web App** (Execute as: Me, Access: Anyone). This allows the sample website to load it inside an iframe.
-- When adding new pages, follow the `page1` and `page2` pattern: create matching `html-*` templates and optional `back-*` logic.
+- When adding new pages, follow the `page1` and `page2` pattern: create matching `html-*` templates and optional `back-*` logic and update the routing.
 - Logging helpers (`log_`, `warn_`, `error_`) send messages to the website for centralized collection. Ensure any new code uses these helpers for consistency.
 
 No automated tests are defined for this directory.
