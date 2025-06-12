@@ -16,7 +16,7 @@
       - postSiteMessage: send a custom message to the parent window (if in iframe mode)
     *
     */
-    const g_allowAnyEmbedding = true; //use false for production to improve security. Use true for embedding on any url (like debugging on localhost or in this demo case, to make it easier for you to run the demo)
+    const g_allowAnyEmbedding = false; //REVIEW: use false for production to improve security. Use true for embedding on any url (like debugging on localhost or in this demo case, to make it easier for you to run the demo)
     const g_urlWebsite = "https://mywebsite.com";
     const g_parentDomainFilter = g_allowAnyEmbedding ? "*" : g_urlWebsite;
     const g_propEmbed = "embed"; //url parameter to determine if the site is embedded in an iframe
