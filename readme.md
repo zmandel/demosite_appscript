@@ -130,3 +130,25 @@ Use the github subdirectory or copy from <https://docs.google.com/spreadsheets/d
 ## Customization
 
 * Search for `CUSTOMIZE:` comments to customize as needed.
+
+## Messaging Protocol
+
+The iframe and parent page communicate via `postMessage` events. The following
+messages are emitted by the Google Apps Script frontend and processed by
+`website/public/js/common.js` unless otherwise noted.
+
+| Action | From → To | Sample Payload |
+| ------ | --------- | -------------- |
+| `siteInited` | iframe → parent | `{ "type": "FROM_IFRAME", "action": "siteInited", "data": { "dontStopProgress": false } }` |
+| `siteFullyLoaded` | iframe → parent | `{ "type": "FROM_IFRAME", "action": "siteFullyLoaded" }` |
+| `titleChange` | iframe → parent | `{ "type": "FROM_IFRAME", "action": "titleChange", "data": { "title": "new title" } }` |
+| `logs` | iframe → parent | `{ "type": "FROM_IFRAME", "action": "logs", "data": { "logs": [ { "message": "..." } ] } }` |
+| `analyticsEvent` | iframe → parent | `{ "type": "FROM_IFRAME", "action": "analyticsEvent", "data": { "name": "customEvent" } }` |
+| `urlParamChange` | iframe → parent | `{ "type": "FROM_IFRAME", "action": "urlParamChange", "data": { "refresh": false, "urlParams": { "lang": "en" } } }` |
+| `validateDomain` | parent → iframe | `{ "type": "validateDomain" }` |
+
+The parent page validates the domain of the embedding site using the
+`validateDomain` message. After receiving `siteInited`, the parent responds with
+`validateDomain` so the iframe can reveal its content. Other messages notify the
+parent about analytics events, logging data, page title changes and URL
+parameter updates.
