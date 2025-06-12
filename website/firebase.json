@@ -6,13 +6,14 @@
       "**/.*",
       "**/node_modules/**"
     ],
-   "cleanUrls": true,
+    "cleanUrls": true,
     "rewrites": [
       {
         "source": "/api/**",
         "function": "api"
       }
-    ],
+    ]
+  },
   "functions": [
     {
       "source": "functions",
@@ -26,5 +27,4 @@
       ]
     }
   ]
-}
 }
