@@ -3,13 +3,14 @@
 This framework integrates Google Apps Script web apps into a standard website, addressing the following issues which currently no other solution can solve all at the same time:
 
 1. **Custom Domain Serving**: Serves apps under a custom domain, providing more control than Google Sites.
-2. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts.
-3. **Google Workspace Compatibility**: Handles redirects typically problematic when users are under a Google Workspace account profile.
-4. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
-5. **Dynamic Multiple Script version Loading**: Securely loads different script versions by passing authorized parameters (`org`and `sig` parameters).
-6. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
-7. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
-8. **Logs to GCP Logging**: Sends logging events to the parent website.
+2. **Secure domain serving**: Only allows your specific domain to embed the apps script iframes.
+3. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts.
+4. **Google Workspace Compatibility**: Handles redirects typically problematic when users are under a Google Workspace account profile.
+5. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
+6. **Dynamic Multiple Script version Loading**: Securely loads different script versions by passing authorized parameters (`org`and `sig` parameters).
+7. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
+8. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
+9. **Logs to GCP Logging**: Sends logging events to the parent website.
 
 Sample Apps Script pages illustrate various interaction patterns.
 
