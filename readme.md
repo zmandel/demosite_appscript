@@ -1,4 +1,4 @@
-# Google Apps Script Website Integration Framework 
+# Google Apps Script Website Integration Framework
 
 This framework integrates Google Apps Script web apps into a standard website, addressing the following issues which currently no other solution can solve all at the same time:
 
@@ -50,6 +50,7 @@ To view Apps Script pages:
 * **Analytics**: Integrated Google Tag Manager (GTM).
 * **Centralized Logging**: Logs iframe error events via Firebase Cloud Functions to Google Cloud Logging.
 * **Backend**: Uses Firebase cloud functions under [`functions`](website/functions) which implements the "api/logs/putLogs" endpoint to send frontend logs to GCP logging. It can be easily extended to add more API endppoints.
+
 ### Setup & Configuration
 
 Update placeholders in [`common.js`](website/public/js/common.js):
@@ -80,8 +81,7 @@ Set the `ALLOWED_HOST` environment variable to the same domain when deploying fu
 * **Iframe Communication**: Manages message passing (analytics, events, load states).
 * **Server-side Routing and Logging**: Routes requests and logs server-side events.
 
-  
-Use the github subdirectory or copy from https://docs.google.com/spreadsheets/d/1TRgGo93TzPihDpCXb7G3_eI6uc0jsQLJch0cgE1aHKs/copy
+Use the github subdirectory or copy from <https://docs.google.com/spreadsheets/d/1TRgGo93TzPihDpCXb7G3_eI6uc0jsQLJch0cgE1aHKs/copy>
 
 ### Sample Pages
 
@@ -115,6 +115,7 @@ Use the github subdirectory or copy from https://docs.google.com/spreadsheets/d/
    firebase deploy --only hosting
    firebase deploy --only functions
    ```
+
    Cloud Functions require Node **22**, as specified in `functions/package.json`.
 
 2. **Deploy Apps Script**:

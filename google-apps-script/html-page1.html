@@ -2,34 +2,34 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <style>
-    body {
-      margin: 20px;
-      margin-left: 0px;
-      background: #3c5979;
-      color: #DCDCDC;
-      font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
-      opacity: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style>
+        body {
+            margin: 20px;
+            margin-left: 0px;
+            background: #3c5979;
+            color: #DCDCDC;
+            font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            opacity: 0;
+        }
 
-    div {
-      margin-bottom: 16px;
-      padding: 12px;
-      border-radius: 6px;
-    }
-  </style>
+        div {
+            margin-bottom: 16px;
+            padding: 12px;
+            border-radius: 6px;
+        }
+    </style>
 </head>
 
 <body>
-  <div>Section visible first</div>
-  <div id="bodyBottom" style="display:none;">
-    Section visible second
-    <br><br>
-    <button id="button1">Button 1</button>
-    <?!= include_('front-util'); ?>
-    <?!= include_('front-page1'); ?>
+    <div>Section visible first</div>
+    <div id="bodyBottom" style="display:none;">
+        Section visible second
+        <br><br>
+        <button id="button1">Button 1</button>
+        <?!= include_('front-util'); ?>
+        <?!= include_('front-page1'); ?>
 </body>
 
 </html>

@@ -200,8 +200,9 @@
                 return;
             }
 
-
-            const logSend = g_logQueue.slice(0, g_maxLogsSend); //first ones only
+            // send the first ones only.
+            // This is by design to prevent flooding the system in case of a bug with the logging process.
+            const logSend = g_logQueue.slice(0, g_maxLogsSend);
             g_logQueue = [];
             sendLogs(logSend);
             g_idleScheduled = false;
@@ -228,17 +229,17 @@
         });
 
         window.addEventListener('message', (event) => {
-          if (!g_allowAnyEmbedding &&  event.origin !== g_urlWebsite) {
-            error_("blocked attempt to message from unknown domain: "+event.origin);
-            return;
-          }
+            if (!g_allowAnyEmbedding && event.origin !== g_urlWebsite) {
+                error_("blocked attempt to message from unknown domain: " + event.origin);
+                return;
+            }
 
-          if (event.data.type == "validateDomain") {
-            //CUSTOMIZE: very simple way to show how to prevent the page to showing when embedded in an unauthorized domain.
-            //Keeping the body hidden prevents clickjacking and other issues that coud be abused by an attacker iframing the page.
-            //It can be further improved by postponing DomContentLoaded after this validation, instead of just hiding the body.
-            document.body.style.opacity = '1';
-          }
+            if (event.data.type == "validateDomain") {
+                //CUSTOMIZE: very simple way to show how to prevent the page to showing when embedded in an unauthorized domain.
+                //Keeping the body hidden prevents clickjacking and other issues that coud be abused by an attacker iframing the page.
+                //It can be further improved by postponing DomContentLoaded after this validation, instead of just hiding the body.
+                document.body.style.opacity = '1';
+            }
         });
     })();
 

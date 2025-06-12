@@ -9,6 +9,6 @@ app.put('/api/logs/putLogs', putLogsHandler);
 
 // Firebase
 exports.api = onRequest(
-  { invoker: 'firebase-hosting@system.gserviceaccount.com' },
-  app
+    { invoker: 'firebase-hosting@system.gserviceaccount.com' },
+    app
 );

@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="theme-color" content="#EBE8D9">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -80,6 +81,7 @@
         }
 
         @keyframes wave {
+
             0%,
             80%,
             100% {
@@ -114,8 +116,9 @@
                 if (!data)
                     return;
                 if (data.action == "titleChange") {
-                    //load GTM here when the title has already changed
-                    //in this sample, we change the title of the window, and we want the GTM reports to pick up that title.
+                    //CUSTOMIZE: load GTM here when the title has already changed
+                    //in this sample, we change the title of the window, and we want the GTM reports to pick up that new title.
+                    //this is just an example on how to control the timing of the GTM loading.
                     loadGTM();
                 }
 
