@@ -7,29 +7,30 @@ This framework integrates Google Apps Script web apps into a standard website, a
 3. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts.
 4. **Google Workspace Compatibility**: Handles redirects typically problematic when users are under a Google Workspace account profile.
 5. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
-6. **Dynamic Multiple Script version Loading**: Securely loads different script versions by passing authorized parameters (`org`and `sig` parameters).
+6. **Dynamic Multiple Script version Loading**: Securely loads different script versions (could be on the same or a different Google Workspace or Google Account) under the same website routes by passing parameters for different "organizations" you can create using the "org/sig" feature.
 7. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
 8. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
 9. **Logs to GCP Logging**: Sends logging events to the parent website.
+10. Bonus: The project is prepared for (and partially built by) software agents, with detailed "agents.md" files in key areas of the repository.
 
 Sample Apps Script pages illustrate various interaction patterns.
 
-## Demo Websites
+## Demos
+Shows a simple website with two pages, each one being a different apps script page. "Page 1" follows the simplest flow, where the page loading animation stops as soon as the script page loads. "Page 2" shows a more complex flow where the page partially loads while the loading animation (from the parent website) continues. It then loads the rest of the page and stops the loading animation.
 
-* **Regular Website**: [fir-apps-script.firebaseapp.com](https://fir-apps-script.firebaseapp.com/)
-* **Modified by different "org"**: [Custom Org URL](https://fir-apps-script.firebaseapp.com/?org=AKfycbyJVIXQETRfIbzEC6OALffWAO533GAMJunm2Trc_8KlPR-YI4MPxWZbypvZ83Eqg9kw&sig=JrqbfLZmsf8WlWz5outYUryPRoiINocCTKErUb79Ww8fKcLKYZO4jOyjCWR9h0HbTwsFQn4Wnuu-auBwRBFYNw)
+* **Demo Website**: [fir-apps-script.firebaseapp.com](https://fir-apps-script.firebaseapp.com/)
+* **Using the "org/sig" feature, modified by different "org" and "sig" url parameter**: [fir-apps-script.firebaseapp.com/?org=xxx&sig=yyy](https://fir-apps-script.firebaseapp.com/?org=AKfycbyJVIXQETRfIbzEC6OALffWAO533GAMJunm2Trc_8KlPR-YI4MPxWZbypvZ83Eqg9kw&sig=JrqbfLZmsf8WlWz5outYUryPRoiINocCTKErUb79Ww8fKcLKYZO4jOyjCWR9h0HbTwsFQn4Wnuu-auBwRBFYNw)
 
-## Production-level Website
-
-To view Apps Script pages:
+## Production Website using this framework
 
 * Visit [Tutor For Me](https://tutorforme.org)
-* Follow instructions after submitting the form on the homepage.
+* Follow instructions after submitting the form on the homepage. You will then given access to the website sections that use two apps script webapps.
 
 ## Directory Structure
 
 * **`website/`**: Parent website (Firebase or other hosts) managing Apps Script embedding, communication, and analytics.
 * **`google-apps-script/`**: Google Apps Script project with embedded page samples.
+* **`util-org-sig/`**: Crypto utility functions for the "org/sig" feature, with instructions to generate the public key, private key and for generating signatures ("sig") for different script ids, called organizations ("org").
 
 ## Website Framework (`website/`)
 
@@ -130,3 +131,25 @@ Use the github subdirectory or copy from <https://docs.google.com/spreadsheets/d
 ## Customization
 
 * Search for `CUSTOMIZE:` comments to customize as needed.
+
+## Messaging Protocol
+
+The iframe and parent page communicate via `postMessage` events. The following
+messages are emitted by the Google Apps Script frontend and processed by
+`website/public/js/common.js` unless otherwise noted.
+
+| Action | From → To | Description | Sample Payload |
+| ------ | --------- | -------------- | -------------- |
+| `siteInited` | iframe → parent | Tells the parent that the iframe can be displayed, with or without stopping the progress animation | `{ "type": "FROM_IFRAME", "action": "siteInited", "data": { "dontStopProgress": false } }` |
+| `siteFullyLoaded` | iframe → parent | used only when siteInited was sent with dontStopProgress:true. It tells the parent to stop the progress animation | `{ "type": "FROM_IFRAME", "action": "siteFullyLoaded" }` |
+| `titleChange` | iframe → parent | change the title of the website | `{ "type": "FROM_IFRAME", "action": "titleChange", "data": { "title": "new title" } }` |
+| `logs` | iframe → parent | send a logs batch to the parent (which then sends it to GCP logging) | `{ "type": "FROM_IFRAME", "action": "logs", "data": { "logs": [ { "message": "..." } ] } }` |
+| `analyticsEvent` | iframe → parent | send an analyics event | `{ "type": "FROM_IFRAME", "action": "analyticsEvent", "data": { "name": "customEvent" } }` |
+| `urlParamChange` | iframe → parent | change a url param of the main website | `{ "type": "FROM_IFRAME", "action": "urlParamChange", "data": { "refresh": false, "urlParams": { "lang": "en" } } }` |
+| `validateDomain` | parent → iframe | received by the iframe. If the domain is correct, it enables the iframe, otherwise it remains hidden to prevent clickjacking | `{ "type": "validateDomain" }` |
+
+The parent page validates the domain of the embedding site using the
+`validateDomain` message. After receiving `siteInited`, the parent responds with
+`validateDomain` so the iframe can reveal its content. Other messages notify the
+parent about analytics events, logging data, page title changes and URL
+parameter updates.
