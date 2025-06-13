@@ -135,15 +135,15 @@ The iframe and parent page communicate via `postMessage` events. The following
 messages are emitted by the Google Apps Script frontend and processed by
 `website/public/js/common.js` unless otherwise noted.
 
-| Action | From → To | Sample Payload |
-| ------ | --------- | -------------- |
-| `siteInited` | iframe → parent | `{ "type": "FROM_IFRAME", "action": "siteInited", "data": { "dontStopProgress": false } }` |
-| `siteFullyLoaded` | iframe → parent | `{ "type": "FROM_IFRAME", "action": "siteFullyLoaded" }` |
-| `titleChange` | iframe → parent | `{ "type": "FROM_IFRAME", "action": "titleChange", "data": { "title": "new title" } }` |
-| `logs` | iframe → parent | `{ "type": "FROM_IFRAME", "action": "logs", "data": { "logs": [ { "message": "..." } ] } }` |
-| `analyticsEvent` | iframe → parent | `{ "type": "FROM_IFRAME", "action": "analyticsEvent", "data": { "name": "customEvent" } }` |
-| `urlParamChange` | iframe → parent | `{ "type": "FROM_IFRAME", "action": "urlParamChange", "data": { "refresh": false, "urlParams": { "lang": "en" } } }` |
-| `validateDomain` | parent → iframe | `{ "type": "validateDomain" }` |
+| Action | From → To | Description | Sample Payload |
+| ------ | --------- | -------------- | -------------- |
+| `siteInited` | iframe → parent | Tells the parent that the iframe can be displayed, with or without stopping the progress animation | `{ "type": "FROM_IFRAME", "action": "siteInited", "data": { "dontStopProgress": false } }` |
+| `siteFullyLoaded` | iframe → parent | used only when siteInited was sent with dontStopProgress:true. It tells the parent to stop the progress animation | `{ "type": "FROM_IFRAME", "action": "siteFullyLoaded" }` |
+| `titleChange` | iframe → parent | change the title of the website | `{ "type": "FROM_IFRAME", "action": "titleChange", "data": { "title": "new title" } }` |
+| `logs` | iframe → parent | send a logs batch to the parent (which then sends it to GCP logging) | `{ "type": "FROM_IFRAME", "action": "logs", "data": { "logs": [ { "message": "..." } ] } }` |
+| `analyticsEvent` | iframe → parent | send an analyics event | `{ "type": "FROM_IFRAME", "action": "analyticsEvent", "data": { "name": "customEvent" } }` |
+| `urlParamChange` | iframe → parent | change a url param of the main website | `{ "type": "FROM_IFRAME", "action": "urlParamChange", "data": { "refresh": false, "urlParams": { "lang": "en" } } }` |
+| `validateDomain` | parent → iframe | received by the iframe. If the domain is correct, it enables the iframe, otherwise it remains hidden to prevent clickjacking | `{ "type": "validateDomain" }` |
 
 The parent page validates the domain of the embedding site using the
 `validateDomain` message. After receiving `siteInited`, the parent responds with
