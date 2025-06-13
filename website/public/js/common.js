@@ -23,11 +23,12 @@ const g_endpointPutLogs = "/api/logs/putLogs"; //CUSTOMIZE: endpoint for sending
 /**
  * Public key for verifying signatures.
 */
-const g_publicKeyJwk = { //CUSTOMIZE: replace with your own public key generated from /util-org-sig/crypto.js
+//CUSTOMIZE: replace with your own public key generated from /util-org-sig/crypto.js
+const g_publicKeyJwk = {
     "kty": "EC",
     "crv": "P-256",
-    "x": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "y": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "x": "b5kxtfrQQdKWsh06ixmAUetiYOPgkymM4eWJda3hJsM",
+    "y": "FZInICTDI43Yzvr_UcUTn7C04Yq7JG95QZtiK4ITp64",
     "ext": true
 };
 
