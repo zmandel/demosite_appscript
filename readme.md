@@ -14,17 +14,15 @@ This framework integrates Google Apps Script web apps into a standard website, a
 
 Sample Apps Script pages illustrate various interaction patterns.
 
-## Demo Websites
+## Demos
 
-* **Regular Website**: [fir-apps-script.firebaseapp.com](https://fir-apps-script.firebaseapp.com/)
-* **Modified by different "org"**: [Custom Org URL](https://fir-apps-script.firebaseapp.com/?org=AKfycbyJVIXQETRfIbzEC6OALffWAO533GAMJunm2Trc_8KlPR-YI4MPxWZbypvZ83Eqg9kw&sig=JrqbfLZmsf8WlWz5outYUryPRoiINocCTKErUb79Ww8fKcLKYZO4jOyjCWR9h0HbTwsFQn4Wnuu-auBwRBFYNw)
+* **Demo Website**: [fir-apps-script.firebaseapp.com](https://fir-apps-script.firebaseapp.com/)
+* **Modified by different "org" (as a url parameter)**: [Custom Org URL](https://fir-apps-script.firebaseapp.com/?org=AKfycbyJVIXQETRfIbzEC6OALffWAO533GAMJunm2Trc_8KlPR-YI4MPxWZbypvZ83Eqg9kw&sig=JrqbfLZmsf8WlWz5outYUryPRoiINocCTKErUb79Ww8fKcLKYZO4jOyjCWR9h0HbTwsFQn4Wnuu-auBwRBFYNw)
 
-## Production-level Website
-
-To view Apps Script pages:
+## Production Website using this framework
 
 * Visit [Tutor For Me](https://tutorforme.org)
-* Follow instructions after submitting the form on the homepage.
+* Follow instructions after submitting the form on the homepage. You will then given access to the website sections that use two apps script webapps.
 
 ## Directory Structure
 
