@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "devDependencies": {},
     "scripts": {
-        "debug": "http-server ./src -S -C /certs/cert.pem -K /certs/key.pem -p 8080",
+        "debug": "http-server ./public -S -C /certs/cert.pem -K /certs/key.pem -p 8080",
         "login": "firebase login --reauth",
         "deploy": "echo 'Deploying...' && firebase deploy --only hosting",
         "deployserver": "echo 'Deploying functions...' && firebase deploy --only functions"
