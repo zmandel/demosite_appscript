@@ -1,16 +1,4 @@
 
-/**
- * Instructions for enabling multiple Script deployments using "org" and "sig":
- * 1 paste this code into the a browser console
- * 2. Run only once "await generatePublicAndPrivateKeys();"
- * 4. Important: store the generated private key securely. It should never be exposed in a frontend.
- * 5. Save both the public and private keys in this js file "g_keyPair". Do not publish this file in github.
- * 6. Update the public key in /website/public/js/common.js (g_publicKeyJwk)
- * 
- *  Every time you want to sign a new script id to generate its "org" parameter:
- *  Use the `signAndVerifyMessage` function with the script id (message) you want to sign,
- *  first making sure that g_keyPair contains the pair you initially generated.
- */
 let g_keyPair = {
     publicKey: {
         "crv": "P-256",
