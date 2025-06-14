@@ -19,12 +19,12 @@ Sample Apps Script pages illustrate various interaction patterns.
 Shows a simple website with two pages, each one being a different apps script page. "Page 1" follows the simplest flow, where the page loading animation stops as soon as the script page loads. "Page 2" shows a more complex flow where the page partially loads while the loading animation (from the parent website) continues. It then loads the rest of the page and stops the loading animation.
 
 * **Demo Website**: [fir-apps-script.firebaseapp.com](https://fir-apps-script.firebaseapp.com/)
-* **Using the "org/sig" feature, modified by different "org" and "sig" url parameter**: [fir-apps-script.firebaseapp.com/?org=xxx&sig=yyy](https://fir-apps-script.firebaseapp.com/?org=AKfycbyJVIXQETRfIbzEC6OALffWAO533GAMJunm2Trc_8KlPR-YI4MPxWZbypvZ83Eqg9kw&sig=JrqbfLZmsf8WlWz5outYUryPRoiINocCTKErUb79Ww8fKcLKYZO4jOyjCWR9h0HbTwsFQn4Wnuu-auBwRBFYNw)
+* **Using the "org/sig" feature, modified by different "org" and "sig" URL parameters**: [fir-apps-script.firebaseapp.com/?org=xxx&sig=yyy](https://fir-apps-script.firebaseapp.com/?org=AKfycbyJVIXQETRfIbzEC6OALffWAO533GAMJunm2Trc_8KlPR-YI4MPxWZbypvZ83Eqg9kw&sig=JrqbfLZmsf8WlWz5outYUryPRoiINocCTKErUb79Ww8fKcLKYZO4jOyjCWR9h0HbTwsFQn4Wnuu-auBwRBFYNw)
 
 ## Production Website using this framework
 
 * Visit [Tutor For Me](https://tutorforme.org)
-* Follow instructions after submitting the form on the homepage. You will then given access to the website sections that use two apps script webapps.
+* Follow instructions after submitting the form on the homepage. You will then be given access to the website sections that use two apps script webapps.
 
 ## Directory Structure
 
@@ -39,7 +39,7 @@ Shows a simple website with two pages, each one being a different apps script pa
 * **Embedding**: Embeds Apps Script web apps using iframes ([`page1.html`](website/public/page1.html), [`page2.html`](website/public/page2.html)).
 * **Custom Domain**: Uses Firebase Hosting for domain management.
 * **Dynamic Loading**: Load scripts dynamically using `org` URL parameter.
-* **Security**: Validates scripts via URL `org` and `sig` parameter using public key signature verification. See [`util-org-sig/readme.md`](util-org-sig/readme.md) for instructions to create your own public/private key pairs to sign your various script deployment ids.
+* **Security**: Validates scripts via URL `org` and `sig` parameters using public key signature verification. See [`util-org-sig/readme.md`](util-org-sig/readme.md) for instructions to create your own public/private key pairs to sign your various script deployment ids.
 
 * **Parent-Iframe Communication**:
 
@@ -50,7 +50,7 @@ Shows a simple website with two pages, each one being a different apps script pa
   * Load state notifications
 * **Analytics**: Integrated Google Tag Manager (GTM).
 * **Centralized Logging**: Logs iframe error events via Firebase Cloud Functions to Google Cloud Logging.
-* **Backend**: Uses Firebase cloud functions under [`functions`](website/functions) which implements the "api/logs/putLogs" endpoint to send frontend logs to GCP logging. It can be easily extended to add more API endppoints.
+* **Backend**: Uses Firebase cloud functions under [`functions`](website/functions) which implements the "api/logs/putLogs" endpoint to send frontend logs to GCP logging. It can be easily extended to add more API endpoints.
 
 ### Setup & Configuration
 
@@ -144,7 +144,7 @@ messages are emitted by the Google Apps Script frontend and processed by
 | `siteFullyLoaded` | iframe → parent | used only when siteInited was sent with dontStopProgress:true. It tells the parent to stop the progress animation | `{ "type": "FROM_IFRAME", "action": "siteFullyLoaded" }` |
 | `titleChange` | iframe → parent | change the title of the website | `{ "type": "FROM_IFRAME", "action": "titleChange", "data": { "title": "new title" } }` |
 | `logs` | iframe → parent | send a logs batch to the parent (which then sends it to GCP logging) | `{ "type": "FROM_IFRAME", "action": "logs", "data": { "logs": [ { "message": "..." } ] } }` |
-| `analyticsEvent` | iframe → parent | send an analyics event | `{ "type": "FROM_IFRAME", "action": "analyticsEvent", "data": { "name": "customEvent" } }` |
+| `analyticsEvent` | iframe → parent | send an analytics event | `{ "type": "FROM_IFRAME", "action": "analyticsEvent", "data": { "name": "customEvent" } }` |
 | `urlParamChange` | iframe → parent | change a url param of the main website | `{ "type": "FROM_IFRAME", "action": "urlParamChange", "data": { "refresh": false, "urlParams": { "lang": "en" } } }` |
 | `validateDomain` | parent → iframe | received by the iframe. If the domain is correct, it enables the iframe, otherwise it remains hidden to prevent clickjacking | `{ "type": "validateDomain" }` |
 
