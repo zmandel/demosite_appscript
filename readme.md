@@ -30,7 +30,7 @@ Shows a simple website with two pages, each one being a different apps script pa
 
 * **`website/`**: Parent website (Firebase or other hosts) managing Apps Script embedding, communication, and analytics.
 * **`google-apps-script/`**: Google Apps Script project with embedded page samples.
-* **`util-org-sig/`**: Crypto utility functions for the "org/sig" feature, with instructions to generate the public key, private key and for generating signatures ("sig") for different script ids, called organizations ("org").
+* **`util-org-sig/`**: Crypto utility functions for the "org/sig" feature. See `util-org-sig/readme.md` for key generation and signing instructions.
 
 ## Website Framework (`website/`)
 
@@ -39,7 +39,7 @@ Shows a simple website with two pages, each one being a different apps script pa
 * **Embedding**: Embeds Apps Script web apps using iframes ([`page1.html`](website/public/page1.html), [`page2.html`](website/public/page2.html)).
 * **Custom Domain**: Uses Firebase Hosting for domain management.
 * **Dynamic Loading**: Load scripts dynamically using `org` URL parameter.
-* **Security**: Validates scripts via URL `org` and `sig` parameter using public key signature verification. See [`util-org-sig/crypto.js`](util-org-sig/crypto.js) for instructions to create your own public/private key pairs to sign your various script deployment ids.
+* **Security**: Validates scripts via URL `org` and `sig` parameter using public key signature verification. See [`util-org-sig/readme.md`](util-org-sig/readme.md) for instructions to create your own public/private key pairs to sign your various script deployment ids.
 
 * **Parent-Iframe Communication**:
 

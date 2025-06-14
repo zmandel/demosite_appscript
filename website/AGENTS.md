@@ -6,7 +6,7 @@ This directory contains the website that embeds the Apps Script web app via ifra
 
 - `public/` contains the static files served by Firebase Hosting. `public/js/common.js` drives the iframe integration logic.
 - `functions/` holds Firebase Cloud Functions (see `api/logs.js`) used for centralized logging.
-- `/util-org-sig/crypto.js` contains helper code to generate signing keys.
+- `util-org-sig/readme.md` contains helper code to generate signing keys.
 
 ## Coding Style
 
