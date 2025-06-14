@@ -26,7 +26,6 @@ let g_keyPair = {
 /**
  * Generate a new ECDSA key pair and assign it to `g_keyPair`.
  * The helper `generateAndPrintKeys` also prints the keys to the console.
- *
  * Resolves when generation is complete.
  */
 async function generatePublicAndPrivateKeys() {
@@ -56,7 +55,7 @@ async function signAndVerifyMessage(message) {
  * Import a private key provided in JWK format.
  *
  * @param {JsonWebKey} jwk The JWK object describing the private key.
- * @returns {Promise<CryptoKey|undefined>} The resulting CryptoKey or `undefined` on failure.
+ * @returns {CryptoKey} or `undefined` on failure.
  */
 async function importPrivateKey(jwk) {
     try {
@@ -80,7 +79,7 @@ async function importPrivateKey(jwk) {
 /**
  * Generate a new ECDSA P-256 key pair and print both keys in JWK format.
  *
- * @returns {Promise<CryptoKeyPair>} The generated key pair.
+ * @returns {CryptoKeyPair] the generated key pair.
  */
 async function generateAndPrintKeys() {
     // Generate an ECDSA P-256 key pair
@@ -149,7 +148,7 @@ function base64UrlToArrayBuffer(base64url) {
  *
  * @param {CryptoKey} privateKey The private key for signing.
  * @param {string} message The message to be signed.
- * @returns {Promise<string>} The Base64url encoded signature.
+ * @returns {string} The Base64url encoded signature.
  */
 async function signMessage(privateKey, message) {
     const encoder = new TextEncoder();
@@ -170,7 +169,7 @@ async function signMessage(privateKey, message) {
  * @param {CryptoKey} publicKey The public key for verification.
  * @param {string} message The original message that was signed.
  * @param {string} signatureBase64Url The signature to verify.
- * @returns {Promise<boolean>} Whether the signature is valid.
+ * @returns {boolean} Whether the signature is valid.
  */
 async function verifySignature(publicKey, message, signatureBase64Url) {
     const encoder = new TextEncoder();
