@@ -2,4 +2,3 @@ node_modules/
 logs/
 *.log
 .env
-util-org-sig/crypto.js
