@@ -153,3 +153,7 @@ The parent page validates the domain of the embedding site using the
 `validateDomain` so the iframe can reveal its content. Other messages notify the
 parent about analytics events, logging data, page title changes and URL
 parameter updates.
+
+## License
+
+This project is released under the [MIT License](LICENSE).
