@@ -125,7 +125,7 @@ Use the github subdirectory or copy from <https://docs.google.com/spreadsheets/d
 2. **Deploy Apps Script**:
 
    * Deploy as Web App (Execute: Me, Access: Anyone)
-   * Use standard GCP project for centralized logs ([instructions](https://developers.google.com/apps-script/guides/cloud-platform-projects#standard))
+   * Use standard GCP project for centralized logs ([instructions](https://developers.google.com/apps-script/guides/cloud-platform-projects#standard)) using the same gcp project for this and the firebase project.
 
 3. **Configuration**:
 
