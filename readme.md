@@ -32,6 +32,9 @@ Shows a simple website with two pages, each one being a different apps script pa
 * **`google-apps-script/`**: Google Apps Script project with embedded page samples.
 * **`util-org-sig/`**: Crypto utility functions for the "org/sig" feature. See `util-org-sig/readme.md` for key generation and signing instructions.
 
+## tl;dr
+Copy repo. Search for `CUSTOMIZE:` comments to modify with your data. then deploy.
+
 ## Website Framework (`website/`)
 
 ### Key Features
