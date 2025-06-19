@@ -11,7 +11,8 @@ This framework integrates Google Apps Script web apps into a standard website, a
 7. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
 8. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
 9. **Logs to GCP Logging**: Sends logging events to the parent website.
-10. Bonus: The project is prepared for (and partially built by) software agents, with detailed "agents.md" files in key areas of the repository.
+10. **Change the browser header colorscheme** to match the script webapp.
+11. **Bonus**: The project is prepared for (and partially built by) software agents, with detailed "agents.md" files in key areas of the repository.
 
 Sample Apps Script pages illustrate various interaction patterns.
 
