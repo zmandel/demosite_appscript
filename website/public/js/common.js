@@ -178,7 +178,6 @@ export async function initializePage({
                 hideLoading();
             }
             else if (event.data.action == "titleChange") {
-                //if the current title already has a separator replace the first part, otherwise replace the whole title
                 document.title = event.data.data.title;
             }
             else if (event.data.action == "logs") {
