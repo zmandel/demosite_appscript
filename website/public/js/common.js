@@ -179,12 +179,7 @@ export async function initializePage({
             }
             else if (event.data.action == "titleChange") {
                 //if the current title already has a separator replace the first part, otherwise replace the whole title
-                const sep = " - ";
-                if (!document.title.includes(sep)) {
-                    document.title = event.data.data.title;
-                } else {
-                    document.title = document.title.split(sep)[0] + sep + event.data.data.title;
-                }
+                document.title = event.data.data.title;
             }
             else if (event.data.action == "logs") {
                 const logs = event.data.data.logs;
