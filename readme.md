@@ -30,7 +30,7 @@ Shows a simple website with two pages, each one being a different apps script pa
 ## Production Website using this framework
 
 * Visit [Tutor For Me](https://tutorforme.org)
-* Follow instructions after submitting the form on the homepage. You will then be given access to the website sections that use two apps script webapps.
+* Do a demo lesson
 
 ## Directory Structure
 
