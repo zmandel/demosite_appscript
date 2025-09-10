@@ -12,7 +12,10 @@ Integrates Google Apps Script webapps into a standard website, addressing the fo
 8. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
 9. **Logs to GCP Logging**: Sends logging events to the parent website.
 10. **Change the browser header colorscheme** to match the script webapp.
-11. **Very soon... Firebase auth** without limitations.
+
+**Very soon... 
+11. Fullscreen support
+12. Firebase auth** without limitations.
 
 **Bonus**: The project is prepared for (and partially built by) software agents, with detailed "agents.md" files in key areas of the repository.
 
