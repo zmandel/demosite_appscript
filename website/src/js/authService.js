@@ -69,10 +69,7 @@ const ONE_TAP_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 let gsiScriptPromise = null;
 
 function getGoogleClientId() {
-  const meta = document.querySelector('meta[name="google-signin-client_id"]');
-  const globalClientId = window.__GOOGLE_CLIENT_ID__;
-  const envClientId = (import.meta && import.meta.env)? import.meta.env.GOOGLE_SIGNIN_CLIENT_ID : null;
-  return globalClientId || meta?.content || envClientId || null;
+  return import.meta.env.VITE_GOOGLE_SIGNIN_CLIENT_ID;
 }
 
 function createOneTapError(code, message) {

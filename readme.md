@@ -39,7 +39,7 @@ Shows a simple website with two pages, each one being a different apps script pa
 * **`util-org-sig/`**: Crypto utility functions for the "org/sig" feature. See `util-org-sig/readme.md` for key generation and signing instructions.
 
 ## tl;dr
-Copy repo. Search for `CUSTOMIZE:` comments to modify with your data. then deploy.
+Copy repo. configure .env, search for `CUSTOMIZE:` comments to modify with your data. then deploy.
 
 ## Website Framework (`website/`)
 
@@ -138,7 +138,7 @@ Use the github subdirectory or copy from <https://docs.google.com/spreadsheets/d
    * Update `g_orgDefault` and keys in [`common.js`](website/src/js/common.js).
 
 ## Customization
-
+* configure .env
 * Search for `CUSTOMIZE:` comments to customize as needed.
 
 ## Messaging Protocol

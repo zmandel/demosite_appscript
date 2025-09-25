@@ -13,17 +13,11 @@
 import '../common.css';
 export default toast;
 
-/**
- * Default apps script (when not set in the URL)
- * This is called the "org" parameter in the URL, using this default when not set in the URL.
- * Using different orgs lets you use different apps script deployments, for example, for development and production,
- * or for different clients, each with scripts under their own Workspace account.
- * When using a different "org", the "sig" parameter must be set to a valid signature. (see the github documentation)
-*/
-const g_orgDefault = "AKfycbwAIoEn3hffuydjeqmipTatV31BwOOcnl0uuknGscjYrGlbdiTAiuZY5BbblusCsRid"; //CUSTOMIZE: replace with your own
+const g_orgDefault = import.meta.env.VITE_ORG_DEFAULT;
+const g_endpointPutLogs = import.meta.env.VITE_ENDPOINT_PUT_LOGS;
+const g_firebaseProjname = import.meta.env.VITE_FIREBASE_PROJNAME;
+const g_idGTM = import.meta.env.VITE_GTM_ID; //Google Tag Manager ID
 
-const g_endpointPutLogs = "/api/logs/putLogs"; //CUSTOMIZE: endpoint for sending error/warning logs from the iframe to the firebase function
-const g_firebaseProjname = "fir-apps-script";
 /**
  * Public key for verifying signatures.
 */
@@ -31,15 +25,11 @@ const g_firebaseProjname = "fir-apps-script";
 const g_publicKeyJwk = {
   "kty": "EC",
   "crv": "P-256",
-  "x": "b5kxtfrQQdKWsh06ixmAUetiYOPgkymM4eWJda3hJsM",
-  "y": "FZInICTDI43Yzvr_UcUTn7C04Yq7JG95QZtiK4ITp64",
+  "x": "xxxx",
+  "y": "xxxx",
   "ext": true
 };
 
-/**
- * Google Tag Manager ID
- */
-const g_idGTM = 'G-XXXXXXXXXX'; //CUSTOMIZE: replace with your own GTM ID
 
 /**
  * Parameters allowed in the URL. Others are ignored.
@@ -49,7 +39,7 @@ let g_paramsClean = {
   org: g_orgDefault,
   sig: "",
   lang: "", //sample "language" parameter demoed in page1
-  //CUSTOMIZE: add or customize parameters as needed
+  //CUSTOMIZE: add or modify parameters as needed
 }
 
 /**
@@ -443,4 +433,154 @@ export function setLanguage(langCode) {
   if (elemLang)
     elemLang.value = langCode;
   localStorage.setItem('lang', langCode);
+}
+
+// mini-toast.js — tiny, dependency-free toast (ESM). Import and call `toast(...)`.
+// Usage:
+//   import toast from './mini-toast.js';
+//   toast('Saved', { type: 'success', position: 'center' });
+
+const STYLE_ID = 'mini-toast-style';
+/** @type {Map<string, HTMLElement>} */
+const containers = new Map();
+
+/**
+ * @typedef {'tr'|'tl'|'br'|'bl'|'center'} ToastPosition
+ * @typedef {'success'|'warn'|'error'|''} ToastType
+ * @typedef {{
+ *   duration?: number,            // ms; 0 = sticky
+ *   type?: ToastType,
+ *   position?: ToastPosition,
+ *   dismissible?: boolean,        // click to close
+ *   max?: number                  // stack cap per position
+ * }} ToastOptions
+ */
+
+/** Injects CSS once */
+function injectCSS() {
+  if (typeof document === 'undefined') return; // SSR no-op
+  if (document.getElementById(STYLE_ID)) return;
+  const s = document.createElement('style');
+  s.id = STYLE_ID;
+  s.textContent = `
+    ._toaster{position:fixed;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+    ._toaster.tr{top:12px;right:12px;align-items:flex-end}
+    ._toaster.tl{top:12px;left:12px}
+    ._toaster.br{bottom:12px;right:12px;align-items:flex-end}
+    ._toaster.bl{bottom:12px;left:12px}
+    ._toaster.center{top:50%;left:50%;transform:translate(-50%,-50%);align-items:center}
+    ._toast{pointer-events:auto;max-width:min(420px,90vw);padding:10px 14px;border-radius:10px;
+            background:#222;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.18);
+            font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+            opacity:0;transform:translateY(-6px);transition:opacity .18s ease, transform .18s ease}
+    ._toaster.center ._toast{transform:none} /* fade-only in center */
+    ._toast.show{opacity:1;transform:translateY(0)}
+    ._toast.hide{opacity:0;transform:translateY(-6px)}
+    ._toast.success{background:#222}
+    ._toast.warn{background:#ca8a04}
+    ._toast.error{background:#dc2626}
+  `;
+  document.head.appendChild(s);
+}
+
+/** @param {ToastPosition} pos */
+function getContainer(pos) {
+  if (containers.has(pos)) return containers.get(pos);
+  const el = document.createElement('div');
+  el.className = `_toaster ${pos}`;
+  document.body.appendChild(el);
+  containers.set(pos, el);
+  return el;
+}
+
+/**
+ * Show a toast.
+ * @param {string|Node} text
+ * @param {ToastOptions} [opts]
+ * @returns {{close:()=>void, el:HTMLElement}}
+ */
+export function toast(text, opts = {}) {
+  if (typeof document === 'undefined') {
+    throw new Error('mini-toast requires a browser environment');
+  }
+  injectCSS();
+
+  const {
+    duration = 2400,
+    type = '',
+    position = 'tr',
+    dismissible = true,
+    max = Infinity,
+  } = opts;
+
+  const host = getContainer(position);
+  while (host.children.length >= max) host.firstChild.remove();
+
+  const el = document.createElement('div');
+  el.className = `_toast ${type}`;
+  if (text instanceof Node) el.appendChild(text);
+  else el.textContent = String(text);
+  host.appendChild(el);
+
+  // animate in
+  requestAnimationFrame(() => el.classList.add('show'));
+
+  let timer = duration > 0 ? setTimeout(hide, duration) : null;
+
+  function hide() {
+    if (!el.isConnected) return;
+    if (timer) { clearTimeout(timer); timer = null; }
+    el.classList.remove('show');
+    el.classList.add('hide');
+    el.addEventListener('transitionend', () => el.remove(), { once: true });
+  }
+
+  if (dismissible) el.addEventListener('click', hide);
+
+  return { close: hide, el };
+}
+
+/** Remove all toasts in a position (or every position if omitted). */
+export function clearToasts(position) {
+  if (typeof document === 'undefined') return;
+  if (position) {
+    const host = containers.get(position);
+    if (host) host.replaceChildren();
+    return;
+  }
+  for (const host of containers.values()) host.replaceChildren();
+}
+
+function toggleFullscreen() {
+  const elem =
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement ||
+    document.msFullscreenElement;
+
+  const safeCall = (api, context) => {
+    if (api) {
+      const result = api.call(context);
+      if (result instanceof Promise) {
+        result.catch(err => console.error(err));
+      }
+    }
+  };
+
+  if (elem) {
+    const exitFullscreen =
+      document.exitFullscreen ||
+      document.webkitExitFullscreen ||
+      document.mozCancelFullScreen ||
+      document.msExitFullscreen;
+    safeCall(exitFullscreen, document);
+  } else {
+    const element = document.documentElement;
+    const requestFullscreen =
+      element.requestFullscreen ||
+      element.webkitRequestFullscreen ||
+      element.mozRequestFullScreen ||
+      element.msRequestFullscreen;
+    safeCall(requestFullscreen, element);
+  }
 }
