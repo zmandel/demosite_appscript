@@ -6,9 +6,9 @@ import messageBox from './messagebox.js';
 import '../components/authdialog.js';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCw3lvTxm25t8TY4fYhi9eOQVgP8nq7FSY",
-  authDomain: "tutorforme.org", //can be changed to https://localhost but with firebase dev server.
-  projectId: "tutorforme-org",
+  apiKey: "XXX",
+  authDomain: "XXX", //can be changed to https://localhost but with firebase dev server.
+  projectId: "XXX",
 };
 
 const authState = {

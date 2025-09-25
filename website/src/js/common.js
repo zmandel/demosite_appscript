@@ -10,6 +10,9 @@
 *   To be able to use reporting based on the "item_id", create a "item_id" event-scoped custom dimension in your GTM account: https://support.google.com/analytics/answer/14239696
 */
 
+import '../common.css';
+export default toast;
+
 /**
  * Default apps script (when not set in the URL)
  * This is called the "org" parameter in the URL, using this default when not set in the URL.
