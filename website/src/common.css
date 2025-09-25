@@ -1,0 +1,38 @@
+.centerMessage {
+  position: absolute;
+  left: 50vw;
+  top: 50vh;
+  left: 50dvw;
+  top: 50dvh;
+  transform: translate(-50%, -50%);
+  width: 80vw;
+  /* Use 80% of the viewport's width */
+  max-width: 80ch;
+  /* But don't exceed a readable line length */
+  text-align: center;
+  font-size: 1.5em;
+  cursor: default;
+}
+
+  .hidden {
+    display: none !important;
+  }
+
+
+  button {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+  }
+
+  .no-wrap {
+    white-space: nowrap;
+  }
+
+  .centered {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+  }
+  

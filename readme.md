@@ -45,7 +45,7 @@ Copy repo. Search for `CUSTOMIZE:` comments to modify with your data. then deplo
 
 ### Key Features
 
-* **Embedding**: Embeds Apps Script web apps using iframes ([`page1.html`](website/public/page1.html), [`page2.html`](website/public/page2.html)).
+* **Embedding**: Embeds Apps Script web apps using iframes ([`page1.html`](website/src/page1.html), [`page2.html`](website/src/page2.html)).
 * **Custom Domain**: Uses Firebase Hosting for domain management.
 * **Dynamic Loading**: Load scripts dynamically using `org` URL parameter.
 * **Security**: Validates scripts via URL `org` and `sig` parameters using public key signature verification. See [`util-org-sig/readme.md`](util-org-sig/readme.md) for instructions to create your own public/private key pairs to sign your various script deployment ids.
@@ -63,7 +63,7 @@ Copy repo. Search for `CUSTOMIZE:` comments to modify with your data. then deplo
 
 ### Setup & Configuration
 
-Update placeholders in [`common.js`](website/public/js/common.js):
+Update placeholders in [`common.js`](website/src/js/common.js):
 
 * Default deployment ID (`g_orgDefault`)
 * Logs endpoint (`g_endpointPutLogs`)
@@ -77,9 +77,9 @@ Set the `ALLOWED_HOST` environment variable to the same domain when deploying fu
 
 ### Key Files
 
-* [`common.js`](website/public/js/common.js): Core logic
-* [`index.html`](website/public/index.html): Landing page
-* [`page1.html`, `page2.html`](website/public/page1.html): Iframe hosts
+* [`common.js`](website/src/js/common.js): Core logic
+* [`index.html`](website/src/index.html): Landing page
+* [`page1.html`, `page2.html`](website/src/page1.html): Iframe hosts
 * [`logs.js`](website/functions/api/logs.js): Server-side logging
 * [`firebase.json`](website/firebase.json): Hosting config
 
@@ -135,7 +135,7 @@ Use the github subdirectory or copy from <https://docs.google.com/spreadsheets/d
 
 3. **Configuration**:
 
-   * Update `g_orgDefault` and keys in [`common.js`](website/public/js/common.js).
+   * Update `g_orgDefault` and keys in [`common.js`](website/src/js/common.js).
 
 ## Customization
 
@@ -145,7 +145,7 @@ Use the github subdirectory or copy from <https://docs.google.com/spreadsheets/d
 
 The iframe and parent page communicate via `postMessage` events. The following
 messages are emitted by the Google Apps Script frontend and processed by
-`website/public/js/common.js` unless otherwise noted.
+`website/src/js/common.js` unless otherwise noted.
 
 | Action | From → To | Description | Sample Payload |
 | ------ | --------- | -------------- | -------------- |
