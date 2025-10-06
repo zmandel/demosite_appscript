@@ -38,20 +38,17 @@ Shows a simple website with two pages, each one being a different apps script pa
 * **`google-apps-script/`**: Google Apps Script project with embedded page samples.
 * **`util-org-sig/`**: Crypto utility functions for the "org/sig" feature. See `util-org-sig/readme.md` for key generation and signing instructions.
 
-## tl;dr
-Copy repo. configure .env, search for `CUSTOMIZE:` comments to modify with your data. then deploy.
-
 ## Website Framework (`website/`)
 
 ### Key Features
-
 * **Embedding**: Embeds Apps Script web apps using iframes ([`page1.html`](website/src/page1.html), [`page2.html`](website/src/page2.html)).
-* **Custom Domain**: Uses Firebase Hosting for domain management.
-* **Dynamic Loading**: Load scripts dynamically using `org` URL parameter.
-* **Security**: Validates scripts via URL `org` and `sig` parameters using public key signature verification. See [`util-org-sig/readme.md`](util-org-sig/readme.md) for instructions to create your own public/private key pairs to sign your various script deployment ids.
+* **Custom Domain**: Uses Firebase Hosting for domain management and authentication (UI, login with Google, login with email, script helpers to validate auth id tokens)
+* **Dynamic Loading**: Load scripts dynamically using the `org` URL parameter.
+* **Security**: Validates scripts via URL `org` and `sig` parameters using public key signature verification. See [`util-org-sig/readme.md`](util-org-sig/readme.md) for instructions to create your own public/private key pairs.
 
 * **Parent-Iframe Communication**:
 
+  * login tokens (idToken)
   * URL parameter changes
   * Analytics event tracking
   * Centralized logging
@@ -59,21 +56,13 @@ Copy repo. configure .env, search for `CUSTOMIZE:` comments to modify with your 
   * Load state notifications
 * **Analytics**: Integrated Google Tag Manager (GTM).
 * **Centralized Logging**: Logs iframe error events via Firebase Cloud Functions to Google Cloud Logging.
-* **Backend**: Uses Firebase cloud functions under [`functions`](website/functions) which implements the "api/logs/putLogs" endpoint to send frontend logs to GCP logging. It can be easily extended to add more API endpoints.
+* **Backend**: Uses Firebase cloud functions under [`functions`](website/functions), it implements the "api/logs/putLogs" endpoint to send frontend logs to GCP logging. It can be easily extended to add more API endpoints.
 
 ### Setup & Configuration
+clone, then inside website/src create and fill your .env.local file based on .env.
+use vite from the website/ directory
 
-Update placeholders in [`common.js`](website/src/js/common.js):
-
-* Default deployment ID (`g_orgDefault`)
-* Logs endpoint (`g_endpointPutLogs`)
-* Public key (`g_publicKeyJwk`)
-* GTM ID (`g_idGTM`)
-* URL parameter sanitization (`g_paramsClean`)
-* GTM dimensions (`g_dimensionsGTM`)
-
-Update domain settings (`g_host`) in [`logs.js`](website/functions/api/logs.js).
-Set the `ALLOWED_HOST` environment variable to the same domain when deploying functions so requests can be validated.
+To use cloud logging for the frontend, use the firebase function in website/functions/api/logs.js. For improved security set the `ALLOWED_HOST` environment variable to the same domain.
 
 ### Key Files
 
