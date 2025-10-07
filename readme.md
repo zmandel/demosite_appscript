@@ -1,6 +1,6 @@
 # Google Apps Script Website Integration Framework
 
-Integrates Google Apps Script webapps into a standard website, addressing the following issues:
+Integrates Google Apps Script webapps into a standard website, addressing the following issues and features:
 
 1. **Custom Domain Serving**: Serves apps under a custom domain, providing more control than Google Sites.
 2. **Secure domain serving**: Only allows your specific domain to embed the apps script iframes.
@@ -12,10 +12,9 @@ Integrates Google Apps Script webapps into a standard website, addressing the fo
 8. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
 9. **Logs to GCP Logging**: Sends logging events to the parent website.
 10. **Change the browser header colorscheme** to match the script webapp.
-
-**Very soon... 
 11. Fullscreen support
-12. Firebase auth** without limitations.
+12. Firebase auth** without limitations, including the new Google Signing, popup and redirect mode
+13. A simple bundling system for apps script, which allows for organizing files as html,js, css and bundle into inlined html files.
 
 **Bonus**: The project is prepared for (and partially built by) software agents, with detailed "agents.md" files in key areas of the repository.
 
