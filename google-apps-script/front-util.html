@@ -16,7 +16,7 @@
       - postSiteMessage: send a custom message to the parent window (if in iframe mode)
     *
     */
-    const g_allowAnyEmbedding = false; //CUSTOMIZE: use false for production to improve security. Use true for embedding on any url (like debugging on localhost or in this demo case, to make it easier for you to run the demo)
+    const g_allowAnyEmbedding = ('true'===import.meta.env.VITE_ALLOW_ANY_EMBEDDING);
     const g_urlWebsite = "https://fir-apps-script.firebaseapp.com";
     const g_parentDomainFilter = g_allowAnyEmbedding ? "*" : g_urlWebsite;
     const g_propEmbed = "embed"; //url parameter to determine if the site is embedded in an iframe
@@ -229,17 +229,17 @@
         });
 
         window.addEventListener('message', (event) => {
-            if (!g_allowAnyEmbedding && event.origin !== g_urlWebsite) {
-                error_("blocked attempt to message from unknown domain: " + event.origin);
-                return;
-            }
+          if (!g_allowAnyEmbedding &&  event.origin !== g_urlWebsite) {
+            error_("blocked attempt to message from unknown domain: "+event.origin);
+            return;
+          }
 
-            if (event.data.type == "validateDomain") {
+          if (event.data.type == "validateDomain") {
                 //CUSTOMIZE: very simple way to show how to prevent the page to showing when embedded in an unauthorized domain.
                 //Keeping the body hidden prevents clickjacking and other issues that coud be abused by an attacker iframing the page.
                 //It can be further improved by postponing DomContentLoaded after this validation, instead of just hiding the body.
-                document.body.style.opacity = '1';
-            }
+            document.body.style.opacity = '1';
+          }
         });
     })();
 
@@ -362,4 +362,44 @@
         });
     }
 
+  let g_replyPost = {};
+  function setReplyPost(eventName, fn) {
+    g_replyPost[eventName] = fn;
+  }
+
+  function executeReplyPost(data) {
+    if (!data.reply)
+      warn_("no data.reply");
+    const fn = g_replyPost[data.reply];
+    if (fn) {
+      g_replyPost[data.reply] = null;
+      fn(data);
+    }
+  }
+
+  /**
+   * Requests the user object from the parent window.
+   * @param {force} true if it must log-in (shows UI if needed). false for silent (no UI)
+   * @returns {Promise<object>} A promise that resolves with the data from the parent.
+   */
+  function getUser(force, addIdToken=true) {
+    return new Promise((resolve, reject) => {
+      const nameEvent = "getUser";
+      setReplyPost(nameEvent, function (data) {
+        resolve(data);
+      });
+
+      postSiteMessage(nameEvent, { force: force, addIdToken: addIdToken });
+    });
+  }
+
+  function logoutUser() {
+    return new Promise((resolve, reject) => {
+      const nameEvent = "logoutUser";
+      setReplyPost(nameEvent, function (data) {
+        resolve(data);
+      });
+      postSiteMessage(nameEvent, {});
+    });
+  }
 </script>

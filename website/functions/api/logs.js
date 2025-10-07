@@ -1,9 +1,8 @@
 // api/logs.js
 
 const g_maxLogsSend = 10; // Maximum logs per request (keep in sync with the apps script version of this constant)
-// The host expected in the forwarded request header. Set the ALLOWED_HOST
-// environment variable to override the default domain.
-const g_host = process.env.ALLOWED_HOST || "https://fir-apps-script.firebaseapp.com";
+// The host expected in the forwarded request header.
+const g_host = process.env.ALLOWED_HOST || null;
 
 exports.putLogsHandler = (req, res) => {
     function notAllowed() {
@@ -12,7 +11,7 @@ exports.putLogsHandler = (req, res) => {
 
     // For improved security, the function can only be called from a forwarded
     // request (done in Firebase Hosting).
-    if (req.headers['x-forwarded-host'] !== g_host) {
+    if (g_host && req.headers['x-forwarded-host'] !== g_host) {
         return notAllowed();
     }
 

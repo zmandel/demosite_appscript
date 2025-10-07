@@ -1,4 +1,5 @@
 
+//CUSTOMIZE all xxxxx
 let g_keyPair = {
   publicKey: {
     "crv": "P-256",
@@ -7,19 +8,19 @@ let g_keyPair = {
       "verify"
     ],
     "kty": "EC",
-    "x": "xxxxx", //CUSTOMIZE
-    "y": "xxxxx"  //CUSTOMIZE
+    "x": "xxxxx", 
+    "y": "xxxxx"
   },
   privateKey: {
     "crv": "P-256",
-    "d": "xxxxx", //CUSTOMIZE
+    "d": "xxxxx", 
     "ext": true,
     "key_ops": [
       "sign"
     ],
     "kty": "EC",
-    "x": "xxxxx", //CUSTOMIZE
-    "y": "xxxxx"  //CUSTOMIZE
+    "x": "xxxxx",
+    "y": "xxxxx"
   }
 };
 

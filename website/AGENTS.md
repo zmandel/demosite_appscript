@@ -4,7 +4,7 @@ This directory contains the website that embeds the Apps Script web app via ifra
 
 ## Key Locations
 
-- `public/` contains the static files served by Firebase Hosting. `public/js/common.js` drives the iframe integration logic.
+- `src/` contains the static files served by Firebase Hosting. `src/js/common.js` drives the iframe integration logic.
 - `functions/` holds Firebase Cloud Functions (see `api/logs.js`) used for centralized logging.
 - `util-org-sig/readme.md` contains helper code to generate signing keys.
 
@@ -19,7 +19,7 @@ This directory contains the website that embeds the Apps Script web app via ifra
 
 1. Run `npm install` inside `functions/` before deploying Cloud Functions.
 2. Use `npm run deploy` from the `website` folder to deploy the Hosting site and `npm run deployserver` to deploy functions.
-3. Update configuration placeholders in `public/js/common.js` and `functions/api/logs.js` when setting up your own domain and keys.
+3. Update configuration placeholders in `src/js/common.js` and `functions/api/logs.js` when setting up your own domain and keys.
 4. Firebase Hosting expects Node **22** for the Cloud Functions runtime.
 
 No automated tests are provided for this project.

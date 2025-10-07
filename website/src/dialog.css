@@ -1,0 +1,23 @@
+/* Common dialog styles for A11yDialog instances */
+.dialog[aria-hidden="true"] {
+  display: none;
+}
+
+.dialog .dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1001;
+}
+
+.dialog .dialog-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #333;
+  padding: 1rem;
+  border-radius: 8px;
+  color: #fff;
+  z-index: 1002;
+}

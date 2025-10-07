@@ -11,5 +11,5 @@ This folder contains helper code for generating ECDSA keys and signing script de
 
    **Important:** store the generated private key securely. It should never be exposed in a frontend or push the modified crypto.js to your repo.
 3. Save both the public and private keys in `g_keyPair` inside a copy of `crypto.js` **outside of the repo**. The private key is a secret.
-4. Update the public key in `website/public/js/common.js` (`g_publicKeyJwk`).
+4. Update the public key in `website/src/js/common.js` (`g_publicKeyJwk`).
 5. To generate an `org` parameter for a script deployment, run `signAndVerifyMessage` with the script id as the message, from your private copy of the script (with `g_keyPair` set)

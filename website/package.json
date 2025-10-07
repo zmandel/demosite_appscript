@@ -1,12 +1,21 @@
 {
     "name": "demo-webapp-script",
     "version": "0.1.0",
-    "devDependencies": {},
-    "scripts": {
-        "debug": "http-server ./public -S -C /certs/cert.pem -K /certs/key.pem -p 8080",
-        "login": "firebase login --reauth",
-        "deploy": "echo 'Deploying...' && firebase deploy --only hosting",
-        "deployserver": "echo 'Deploying functions...' && firebase deploy --only functions"
+    "devDependencies": {
+        "vite": "^7.1.7"
     },
-    "dependencies": {}
+    "scripts": {
+      "dev": "vite",
+      "build": "vite build",
+      "preview": "vite preview",
+      "debug": "vite --host",
+      "login": "firebase login --reauth",
+      "deploy": "echo 'Building...' && npm run build && echo 'Deploying...' && firebase deploy --only hosting",
+      "deployserver": "echo 'Deploying functions...' && firebase deploy --only functions"
+  },
+    "dependencies": {
+        "a11y-dialog": "^8.1.4",
+        "firebase": "^12.1.0",
+        "lit": "^3.3.1"
+    }
 }
