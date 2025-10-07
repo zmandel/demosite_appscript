@@ -1,4 +1,3 @@
-<script>
     /**
      * Utilites to handle automatic and manual logging with callstacks of
      * - console.*
@@ -16,20 +15,15 @@
       - postSiteMessage: send a custom message to the parent window (if in iframe mode)
     *
     */
-    const g_allowAnyEmbedding = ('true'===import.meta.env.VITE_ALLOW_ANY_EMBEDDING);
-    const g_urlWebsite = "https://fir-apps-script.firebaseapp.com";
+    const g_allowAnyEmbedding = true; //TODO ('true'===import.meta.env.VITE_ALLOW_ANY_EMBEDDING);
+    const g_isProduction = true; //TODO ('true'===import.meta.env.VITE_IS_PRODUCTION);
+    const g_urlWebsite = "https://fir-apps-script.firebaseapp.com"; //TODO (import.meta.env.VITE_URL_WEBSITE);
     const g_parentDomainFilter = g_allowAnyEmbedding ? "*" : g_urlWebsite;
     const g_propEmbed = "embed"; //url parameter to determine if the site is embedded in an iframe
     const g_moduleLog = "frontend";
     const g_maxLogsSend = 10; //maximum logs to send at once (batch size)
     let g_iframeMode = false; //set in initializeSession
-</script>
 
-<style>
-    /* common styles for your frontends */
-</style>
-
-<script>
     (function () {
         /* log tracking
         overwrites console.*  methods and sends them to the parent under the tag g_moduleLog.
@@ -229,11 +223,14 @@
         });
 
         window.addEventListener('message', (event) => {
-          if (!g_allowAnyEmbedding &&  event.origin !== g_urlWebsite) {
+          if (!g_allowAnyEmbedding &&  event.origin.toLowerCase() !== g_urlWebsite) {
             error_("blocked attempt to message from unknown domain: "+event.origin);
             return;
           }
 
+          if (event.data && event.data.reply)
+            executeReplyPost(event.data);          
+          
           if (event.data.type == "validateDomain") {
                 //CUSTOMIZE: very simple way to show how to prevent the page to showing when embedded in an unauthorized domain.
                 //Keeping the body hidden prevents clickjacking and other issues that coud be abused by an attacker iframing the page.
@@ -293,7 +290,14 @@
         if (!g_iframeMode)
             return;
 
-        window.top.postMessage(
+      if (!g_iframeMode) {
+        if (!g_isProduction && action == "getUser") {
+          executeReplyPost({ reply: "getUser", user: null }); //for development / localhost
+        }
+        return;
+      }
+
+      window.top.postMessage(
             {
                 type: "FROM_IFRAME",
                 action: action,
@@ -402,4 +406,3 @@
       postSiteMessage(nameEvent, {});
     });
   }
-</script>

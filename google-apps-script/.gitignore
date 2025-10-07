@@ -1,0 +1,15 @@
+# Local .env overrides stay untracked.
+.env.local
+.env.*.local
+
+node_modules/
+.vscode/
+.vite/
+dist/
+src/.inline-cache/
+
+.npm
+.eslintcache
+*.log
+npm-debug.log*
+

@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-  <?!= include_('front-util'); ?>
+    <script src="../js/util.js" inline></script>
   <style>
     body {
       margin: 20px;
@@ -35,7 +35,8 @@
     onload="window.library1Loaded = true; document.dispatchEvent(new Event('library1Loaded'))"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"
     onload="window.library2Loaded = true; document.dispatchEvent(new Event('library2Loaded'))"></script>
-  <?!= include_('front-page2'); ?>
+    <link rel="stylesheet" href="../css/common.css" inline>
+    <script src="../js/page2.js" inline></script>
 </body>
 
 </html>

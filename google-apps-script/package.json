@@ -1,0 +1,26 @@
+{
+  "name": "demosite-appscript",
+  "version": "1.1.0",
+  "description": "",
+  "scripts": {
+    "clean": "rimraf dist && mkdirp dist/html dist/gs",
+    "copy-gs": "copyfiles -u 1 \"src/gs/**/*\" dist && copyfiles -u 1 \"src/appsscript.json\" dist",
+    "build-html": "node build/scripts/build-html.js",
+    "build": "npm run clean && npm run copy-gs && npm run build-html",
+    "push-to-gas": "clasp push --force",
+    "pub-prod": "npm run push-to-gas && clasp deploy -i deployment_id -d Prod",
+    "deploy": "npm run build && npm run pub-prod"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "copyfiles": "^2.4.1",
+    "inline-source-cli": "^2.0.0",
+    "mkdirp": "^3.0.1",
+    "posthtml": "^0.16.6",
+    "posthtml-include": "^2.0.1",
+    "rimraf": "^6.0.1"
+  }
+}
