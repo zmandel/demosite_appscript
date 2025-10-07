@@ -10,12 +10,13 @@
 *   To be able to use reporting based on the "item_id", create a "item_id" event-scoped custom dimension in your GTM account: https://support.google.com/analytics/answer/14239696
 */
 
-import '../common.css';
+import "../common.css";
 export default toast;
 
 const g_orgDefault = import.meta.env.VITE_ORG_DEFAULT;
 const g_endpointPutLogs = import.meta.env.VITE_ENDPOINT_PUT_LOGS;
 const g_firebaseProjname = import.meta.env.VITE_FIREBASE_PROJNAME;
+const g_rootDomain = import.meta.env.VITE_ROOT_DOMAIN;
 const g_idGTM = import.meta.env.VITE_GTM_ID; //Google Tag Manager ID
 
 /**
@@ -25,8 +26,8 @@ const g_idGTM = import.meta.env.VITE_GTM_ID; //Google Tag Manager ID
 const g_publicKeyJwk = {
   "kty": "EC",
   "crv": "P-256",
-  "x": "xxxx",
-  "y": "xxxx",
+  "x": import.meta.env.VITE_PUBLIC_KEY_X,
+  "y": import.meta.env.VITE_PUBLIC_KEY_Y,
   "ext": true
 };
 
@@ -38,14 +39,15 @@ const g_publicKeyJwk = {
 let g_paramsClean = {
   org: g_orgDefault,
   sig: "",
-  lang: "", //sample "language" parameter demoed in page1
+  lang: "en",
   //CUSTOMIZE: add or modify parameters as needed
 }
 
 /**
  * Dimensions for Google Tag Manager (GTM)
  * Use for tracking custom dimensions in GTM, for example the language of the page for the current session.
- * You need to first set up your custom dimensions in your GTM account, then configure them here. 
+ * You need to first set up your custom dimensions "item_id" in your GTM account, then configure them here.
+ see: https://support.google.com/analytics/answer/14239696
 */
 //g_dimensionsGTM: custom dimensions for GTM. can be empty.
 const g_dimensionsGTM = {
@@ -64,6 +66,7 @@ function initializeCustomDimensions(params) {
   //g_dimensionsGTM["dimension1"] = params.dimension1;
   //g_dimensionsGTM["dimension2"] = params.dimension2;
   //CUSTOMIZE: replace with your own
+  // see: https://support.google.com/analytics/answer/14239696
 }
 
 /** localStorage usage
@@ -77,6 +80,7 @@ function initializeCustomDimensions(params) {
  * NOTE: localStorage["gtag_disabled"] = "1" will disable GTM loading (unless this is set to true).
  */
 const g_forceGTM = false;
+let gtag = null;
 
 /**
  * //CUSTOMIZE: replace with your own error handling
@@ -84,9 +88,9 @@ const g_forceGTM = false;
  */
 export function onErrorBaseIframe() {
   hideLoading();
-  let elem = document.querySelector('#errPage');
+  let elem = document.querySelector("#errPage");
   if (elem)
-    elem.style.display = "block"; //it is hidden by default in the HTML}, so show it.
+    elem.style.display = "";
 }
 
 /**
@@ -97,15 +101,19 @@ export function onErrorBaseIframe() {
 export function loadGTM() {
   beforeLoadGTM();
   const host = window.location.hostname;
-  if (!host.includes('.') || /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || localStorage.getItem('gtag_disabled') == "1") {
+  if (!host.includes(".") || /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || localStorage.getItem("gtag_disabled") == "1") {
     if (!g_forceGTM)
       return; //ignore local or disabled
   }
 
-  var script = document.createElement('script');
+  var script = document.createElement("script");
   script.async = true;
   script.src = "https://www.googletagmanager.com/gtag/js?id=" + g_idGTM;
   document.head.appendChild(script);
+}
+
+export function isLocalhost() {
+  return window.location.hostname === "localhost";
 }
 
 /**
@@ -140,27 +148,37 @@ export async function initializePage({
   let initedBase = await initializeBase();
 
   function sendLogsToServer(logQueue) {
+    if (isLocalhost()) {
+      return;
+    }
+    
     fetch(g_endpointPutLogs, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ logs: logQueue })
-    }).catch((e) => {
-      console.error('Error sending logs', e);
-    });
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        return res;
+      })
+      .catch(e => {
+        console.error("Error sending logs", e);
+      });
   }
 
-  window.addEventListener("message", function (event) {
+
+  window.addEventListener("message", (event) => {
     // validate the origin of the message
     const allowedHostnames = [
       g_firebaseProjname + ".firebaseapp.com",
+      g_rootDomain,
       "localhost",
     ];
     let originHostname;
-
-    if (!event.origin)
-      return; //ignore, could be from a sandboxed iframe
-
     try {
+      // This can throw if event.origin is "null" (e.g., from a sandboxed iframe)
       originHostname = new URL(event.origin).hostname;
     } catch (e) {
       console.warn("Message from an invalid or opaque origin:", event.origin);
@@ -175,71 +193,120 @@ export async function initializePage({
       return;
     }
 
-    if (event.data && event.data.type === "FROM_IFRAME") {
-      //CUSTOMIZE: add your own custom events here
-      if (event.data.action == "siteInited") {
-        //this event comes from the script´s postSiteInited
-        const dontStopProgress = event.data?.data?.dontStopProgress;
-        g_loadedFrame = true;
-        cleanupTimeoutIdiframe();
-        event.source.postMessage({ type: 'validateDomain' }, event.origin);
-        document.querySelector("iframe").style.opacity = "1";
-        if (!dontStopProgress) {
-          hideLoading();
-        }
-      }
-      else if (event.data.action == "siteFullyLoaded") {
-        hideLoading();
-      }
-      else if (event.data.action == "titleChange") {
-        document.title = event.data.data.title;
-      }
-      else if (event.data.action == "logs") {
-        const logs = event.data.data.logs;
-        if (!logs || !Array.isArray(logs) || logs.length == 0) {
-          console.error("Invalid logs");
-          return;
-        }
-        sendLogsToServer(logs);
+    if (window.location.origin === event.origin) {
+      return; //ignore same origin messages (like 'login-done') 
+    }
 
-      }
-      else if (event.data.action == "analyticsEvent") {
-        if (gtag) {
-          gtag('event', 'select_content', {
-            content_type: 'button',
-            item_id: event.data.data.name
-          });
+    if (!event.data || event.data.type !== "FROM_IFRAME")
+      return;
+    // Walk up via .parent to see if it reaches this window
+    {
+      let w = event.source;
+      let ok = false;
+      for (let i = 0; i < 5 && w; i++) {
+        if (w === window) {
+          ok = true;
+          break;
         }
+        if (w === w.parent)
+          break;   // reached that tree's top
+        w = w.parent;
       }
-      else if (event.data.action == "urlParamChange") {
-        const dataEvent = event.data.data;
-        if (dataEvent && typeof dataEvent === 'object' && dataEvent.urlParams) {
-          const urlParams = dataEvent.urlParams;
-          const url = new URL(window.location.href);
-          Object.entries(urlParams).forEach(([key, value]) => {
-            if (value == null) {
-              url.searchParams.delete(key);
-              g_paramsClean[key] = null;
-            } else {
-              url.searchParams.set(key, value);
-              g_paramsClean[key] = value;
-            }
-          });
-          if (dataEvent.refresh)
-            window.location.replace(url);
-          else
-            window.history.replaceState({}, document.title, url);
-
-          if (callbackMessage)
-            callbackMessage(event.data); //propagate
-        }
+      if (!ok) {
+        console.warn("Message from unknown origin:", event.origin);
+        return;
       }
     }
+
+    //CUSTOMIZE: add your own custom events here
+    if (event.data.action == "siteInited") {
+      //this event comes from the script´s postSiteInited
+      const dontStopProgress = event.data?.data?.dontStopProgress;
+      g_loadedFrame = true;
+      cleanupTimeoutIdiframe();
+      event.source.postMessage({ type: 'validateDomain' }, event.origin);
+      document.querySelector("iframe").style.opacity = "1";
+      if (!dontStopProgress) {
+        hideLoading();
+      }
+    }
+    if (event.data.action == "openUrlWithProps") {
+      const dataEvent = event.data.data;
+      if (!dataEvent)
+        return;
+      const url = new URL(window.location.href);
+      if (dataEvent.pathname)
+        url.pathname = dataEvent.pathname;
+      
+      if (dataEvent.props) {
+        Object.entries(dataEvent.props).forEach(([key, value]) => {
+          //if value is empty, remove the parameter
+          if (value === null || value === undefined || value === "")
+            url.searchParams.delete(key);
+          else
+            url.searchParams.set(key, value);
+        });
+      }
+      window.open(url, dataEvent.replacePage ? "_self" : "_blank");
+    }
+    else if (event.data.action == "siteFullyLoaded") {
+      hideLoading();
+    }
+    else if (event.data.action == "titleChange") {
+      if (event.data.data.afterDash) {
+        const sep = " - ";
+        document.title = document.title.split(sep)[0] + sep + event.data.data.title;
+      }
+      else {
+        document.title = event.data.data.title;
+      }
+    }
+    else if (event.data.action == "logs") {
+      const logs = event.data.data.logs;
+      if (!logs || !Array.isArray(logs) || logs.length == 0) {
+        console.error("Invalid logs");
+        return;
+      }
+      sendLogsToServer(logs);
+    }
+    else if (event.data.action == "toggleFullscreen") {
+      toggleFullscreen();
+    }
+    else if (event.data.action == "analyticsEvent") {
+      if (gtag) {
+        gtag("event", "select_content", {
+          content_type: "button",
+          item_id: event.data.data.name
+        });
+      }
+    }
+    else if (event.data.action == "urlParamChange") {
+      const dataEvent = event.data.data;
+      if (dataEvent && typeof dataEvent === 'object' && dataEvent.urlParams) {
+        const urlParams = dataEvent.urlParams;
+        const url = new URL(window.location.href);
+        Object.entries(urlParams).forEach(([key, value]) => {
+          if (value == null) {
+            url.searchParams.delete(key);
+            g_paramsClean[key] = null;
+          } else {
+            url.searchParams.set(key, value);
+            g_paramsClean[key] = value;
+          }
+        });
+        if (dataEvent.refresh)
+          window.location.replace(url);
+        else
+          window.history.replaceState({}, document.title, url);
+      }
+    }
+    if (callbackMessage)
+      callbackMessage(event.data, event); //propagate
   });
 
   function onContentLoadedBase() {
     if (!initedBase) {
-      cleanupTimeoutIdiframe(); //to be useful in the future
+      cleanupTimeoutIdiframe(); //not currently needed
       if (onError)
         onError();
       return;
@@ -255,19 +322,77 @@ export async function initializePage({
   if (document.readyState !== "loading") {
     onContentLoadedBase();
   } else {
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener("DOMContentLoaded", () => {
       onContentLoadedBase();
     });
   }
 }
 
-let gtag = null;
+export function getLang(onlyFromURL = true) {
+  const params = new URLSearchParams(window.location.search);
+  const urlLang = params.get("lang");
+  if (urlLang)
+    return urlLang;
+  if (onlyFromURL)
+    return "en"; //default language
+
+  const stored = localStorage.getItem("lang");
+  if (stored)
+    return stored;
+  return navigator.language.startsWith("es") ? "es" : "en";
+}
+
+export function setLanguage(langCode, translations) {
+  const elemLang = document.getElementById("language");
+  if (elemLang)
+    elemLang.value = langCode;
+  localStorage.setItem("lang", langCode);
+  applyTranslations(document, translations, langCode);
+}
+
+export function t(translations, lang) {
+  let dict = translations[lang || getLang()];
+  if (!dict) {
+    console.log("Missing translation map ", lang);
+    dict = translations["en"];
+  }
+  return dict;
+}
+
+let g_firstTranslationDone = false;
+
+export function applyTranslations(root, translations, lang) {
+  root.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    const mapped = t(translations, lang)[key];
+    if (mapped) {
+      if (!g_firstTranslationDone && lang == "en" && el.innerHTML !== mapped) {
+        console.log("unmatched translation for", key);
+      }
+      el.innerHTML = mapped;
+    }
+    else {
+      if (lang !== "en") {
+        console.log("Missing translation for", key, "in", lang);
+        const mapped2 = t(translations, "en")[key];
+        if (mapped2) {
+          el.innerHTML = mapped2;
+          return;
+        }
+      }
+      console.log("missing: "+key+': "'+ el.innerHTML+'"');
+      el.innerHTML = "?";
+    }
+  });
+  g_firstTranslationDone = true;
+}
+
 /** crypto helper */
 function base64UrlToArrayBuffer(base64url) {
-  let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/'); //Base64url to standard Base64.
+  let base64 = base64url.replace(/-/g, "+").replace(/_/g, "/"); //Base64url to standard Base64.
   // Add padding if needed.
   while (base64.length % 4)
-    base64 += '=';
+    base64 += "=";
 
   const binary = window.atob(base64);
   const bytes = new Uint8Array(binary.length);
@@ -277,7 +402,6 @@ function base64UrlToArrayBuffer(base64url) {
   return bytes.buffer;
 }
 
-/** crypto helper */
 async function verifyScript(org, signatureBase64Url) {
   let isValid = false;
   try {
@@ -315,17 +439,21 @@ async function verifyScript(org, signatureBase64Url) {
   return isValid;
 }
 
-/** helper */
 async function initializeBase() {
   const params = new URLSearchParams(window.location.search);
   //set g_paramsClean with allowed values from the URL
   Object.keys(g_paramsClean).forEach(key => {
     if (params.has(key))
       g_paramsClean[key] = params.get(key);
+  });
+  if (g_paramsClean.lang != "en" && g_paramsClean.lang != "es") {
+    console.error("Unsupported lang: " + g_paramsClean.lang);
+    return false;
   }
-  );
 
   if (params.has("org")) {
+    g_paramsClean.org = params.get("org");
+    g_paramsClean.sig = params.get("sig");
     const isValid = await verifyScript(g_paramsClean.org, g_paramsClean.sig);
     if (!isValid)
       return false;
@@ -356,7 +484,6 @@ function hideLoading() {
     elem.style.display = "none";
 }
 
-/** helper */
 function cleanupTimeoutIdiframe() {
   if (g_timeoutIdiframe) {
     clearTimeout(g_timeoutIdiframe);
@@ -370,26 +497,25 @@ function cleanupTimeoutIdiframe() {
  * This function sets a timeout to show a long loading page if the iframe does not load within 10 seconds.
  * @param {string} paramsExtra - Extra parameters to append to the iframe URL.
  */
-function loadIframeFromCurrentUrl(paramsExtra) {
+export function loadIframeFromCurrentUrl(paramsExtra) {
   cleanupTimeoutIdiframe();
-  g_timeoutIdiframe = setTimeout(function () {
+  g_timeoutIdiframe = setTimeout(() => {
     if (!g_loadedFrame) {
       document.getElementById("loadingPage").style.display = "none";
       document.getElementById("loadingPageLong").style.display = "";
     }
-  }, 10000);
+  }, 13000);
 
   g_loadedFrame = false;
   document.getElementById("loadingPageLong").style.display = "none";
   document.getElementById("loadingPage").style.display = "";
-  document.querySelector('iframe').style.opacity = "0";
+  document.querySelector("iframe").style.opacity = "0";
 
-  let url = `https://script.google.com/macros/s/${g_paramsClean.org}/exec?embed=1&${paramsExtra}`;
-  document.querySelector('iframe').src = url;
+  let url = `https://script.google.com/macros/s/${g_paramsClean.org}/exec?lang=${g_paramsClean.lang}&${paramsExtra}&embed=1`;
+  document.querySelector("iframe").src = url;
 }
 
 let g_beforeGTMFinished = false;
-/** helper */
 function beforeLoadGTM() {
   if (g_beforeGTMFinished)
     return;
@@ -403,36 +529,15 @@ function beforeLoadGTM() {
 
   let dimensionsGTM = {};
   Object.entries(g_dimensionsGTM).forEach(([name, value]) => {
-    if (typeof value !== 'undefined' && value !== null && value !== '')
+    if (typeof value !== "undefined" && value !== null && value !== "")
       dimensionsGTM[name] = value;
   });
 
-  gtag('js', new Date());
+  gtag("js", new Date());
   if (Object.keys(dimensionsGTM).length > 0)
-    gtag('config', g_idGTM, dimensionsGTM);
+    gtag("config", g_idGTM, dimensionsGTM);
 
   g_beforeGTMFinished = true;
-}
-
-export function getLang(onlyFromURL = true) {
-  const params = new URLSearchParams(window.location.search);
-  const urlLang = params.get('lang');
-  if (urlLang)
-    return urlLang;
-  if (onlyFromURL)
-    return "en"; //default language
-
-  const stored = localStorage.getItem('lang');
-  if (stored)
-    return stored;
-  return navigator.language.startsWith('es') ? 'es' : 'en';
-}
-
-export function setLanguage(langCode) {
-  const elemLang = document.getElementById('language');
-  if (elemLang)
-    elemLang.value = langCode;
-  localStorage.setItem('lang', langCode);
 }
 
 // mini-toast.js — tiny, dependency-free toast (ESM). Import and call `toast(...)`.
@@ -440,7 +545,7 @@ export function setLanguage(langCode) {
 //   import toast from './mini-toast.js';
 //   toast('Saved', { type: 'success', position: 'center' });
 
-const STYLE_ID = 'mini-toast-style';
+const STYLE_ID = "mini-toast-style";
 /** @type {Map<string, HTMLElement>} */
 const containers = new Map();
 
@@ -458,9 +563,9 @@ const containers = new Map();
 
 /** Injects CSS once */
 function injectCSS() {
-  if (typeof document === 'undefined') return; // SSR no-op
+  if (typeof document === "undefined") return; // SSR no-op
   if (document.getElementById(STYLE_ID)) return;
-  const s = document.createElement('style');
+  const s = document.createElement("style");
   s.id = STYLE_ID;
   s.textContent = `
     ._toaster{position:fixed;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
@@ -486,7 +591,7 @@ function injectCSS() {
 /** @param {ToastPosition} pos */
 function getContainer(pos) {
   if (containers.has(pos)) return containers.get(pos);
-  const el = document.createElement('div');
+  const el = document.createElement("div");
   el.className = `_toaster ${pos}`;
   document.body.appendChild(el);
   containers.set(pos, el);
@@ -500,15 +605,15 @@ function getContainer(pos) {
  * @returns {{close:()=>void, el:HTMLElement}}
  */
 export function toast(text, opts = {}) {
-  if (typeof document === 'undefined') {
-    throw new Error('mini-toast requires a browser environment');
+  if (typeof document === "undefined") {
+    throw new Error("mini-toast requires a browser environment");
   }
   injectCSS();
 
   const {
     duration = 2400,
-    type = '',
-    position = 'tr',
+    type = "",
+    position = "tr",
     dismissible = true,
     max = Infinity,
   } = opts;
@@ -516,33 +621,33 @@ export function toast(text, opts = {}) {
   const host = getContainer(position);
   while (host.children.length >= max) host.firstChild.remove();
 
-  const el = document.createElement('div');
+  const el = document.createElement("div");
   el.className = `_toast ${type}`;
   if (text instanceof Node) el.appendChild(text);
   else el.textContent = String(text);
   host.appendChild(el);
 
   // animate in
-  requestAnimationFrame(() => el.classList.add('show'));
+  requestAnimationFrame(() => el.classList.add("show"));
 
   let timer = duration > 0 ? setTimeout(hide, duration) : null;
 
   function hide() {
     if (!el.isConnected) return;
     if (timer) { clearTimeout(timer); timer = null; }
-    el.classList.remove('show');
-    el.classList.add('hide');
-    el.addEventListener('transitionend', () => el.remove(), { once: true });
+    el.classList.remove("show");
+    el.classList.add("hide");
+    el.addEventListener("transitionend", () => el.remove(), { once: true });
   }
 
-  if (dismissible) el.addEventListener('click', hide);
+  if (dismissible) el.addEventListener("click", hide);
 
   return { close: hide, el };
 }
 
 /** Remove all toasts in a position (or every position if omitted). */
 export function clearToasts(position) {
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
   if (position) {
     const host = containers.get(position);
     if (host) host.replaceChildren();
@@ -583,4 +688,19 @@ function toggleFullscreen() {
       element.msRequestFullscreen;
     safeCall(requestFullscreen, element);
   }
+}
+
+export function waitForAutoPageView(intervalMs = 50, timeoutMs = 2000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const timer = setInterval(() => {
+      const ready = Boolean(window.gtag && window.gtag.get && window.gtag.get("G-" + g_idGTM));
+      const timedOut = Date.now() - start > timeoutMs;
+
+      if (ready || timedOut) {
+        clearInterval(timer);
+        resolve(ready);
+      }
+    }, intervalMs);
+  });
 }

@@ -9,58 +9,60 @@ import {
   signInWithRedirect,
   signInWithCredential,
 } from "firebase/auth";
-import { getLang, t } from './common.js';
-import messageBox from './messagebox.js';
+import { getLang, t } from "./common.js";
+import messageBox from "./messagebox.js";
 
 const translations = {
   en: {
-    googleLoginFailed: 'Google login failed',
-    loginFailed: 'Login failed',
-    signUpFailed: 'Sign up failed',
-    passwordResetFailed: 'Password reset failed',
-    invalidEmail: 'Invalid email address.',
-    userNotFound: 'User not found.',
-    wrongPassword: 'Incorrect password.',
-    tooManyRequests: 'Too many requests. Try again later.',
-    emailInUse: 'Email already in use.',
-    weakPassword: 'Password is too weak.',
-    networkError: 'Network error. Check your connection.',
-    popupBlocked: 'Popup was blocked. Lets try again in a different way.'
+    googleLoginFailed: "Google login failed",
+    loginFailed: "Login failed",
+    signUpFailed: "Sign up failed",
+    passwordResetFailed: "Password reset failed",
+    invalidEmail: "Invalid email address.",
+    userNotFound: "User not found.",
+    wrongPassword: "Incorrect password.",
+    tooManyRequests: "Too many requests. Try again later.",
+    emailInUse: "Email already in use.",
+    weakPassword: "Password is too weak.",
+    networkError: "Network error. Check your connection.",
+    popupBlocked: "Popup was blocked. Lets try again in a different way.",
+    quickLoginBlocked: "Quick login was blocked. Lets try again in a different way."
   },
   es: {
-    googleLoginFailed: 'Error al iniciar con Google',
-    loginFailed: 'Error al iniciar sesión',
-    signUpFailed: 'Error al registrarse',
-    passwordResetFailed: 'Error al restablecer la contraseña',
-    invalidEmail: 'Correo electrónico inválido.',
-    userNotFound: 'Usuario no encontrado.',
-    wrongPassword: 'Contraseña incorrecta.',
-    tooManyRequests: 'Demasiadas solicitudes. Intenta más tarde.',
-    emailInUse: 'El correo ya está en uso.',
-    weakPassword: 'La contraseña es demasiado débil.',
-    networkError: 'Error de red. Verifica tu conexión.',
-    popupBlocked: 'La ventana emergente fue bloqueada. Probemos nuevamente de otra forma.'
+    googleLoginFailed: "Error al iniciar con Google",
+    loginFailed: "Error al iniciar sesión",
+    signUpFailed: "Error al registrarse",
+    passwordResetFailed: "Error al restablecer la contraseña",
+    invalidEmail: "Correo electrónico inválido.",
+    userNotFound: "Usuario no encontrado.",
+    wrongPassword: "Contraseña incorrecta.",
+    tooManyRequests: "Demasiadas solicitudes. Intenta más tarde.",
+    emailInUse: "El correo ya está en uso.",
+    weakPassword: "La contraseña es demasiado débil.",
+    networkError: "Error de red. Verifica tu conexión.",
+    popupBlocked: "El popup fue bloqueado. Probemos nuevamente de otra forma.",
+    quickLoginBlocked: "El login rápido fue bloqueado. Probemos nuevamente de otra forma."
   }
 };
 
 function getErrorMessage(t, error, defaultTitle) {
   const map = {
-    'auth/invalid-email': 'invalidEmail',
-    'auth/user-not-found': 'userNotFound',
-    'auth/wrong-password': 'wrongPassword',
-    'auth/invalid-credential': 'wrongPassword',
-    'auth/too-many-requests': 'tooManyRequests',
-    'auth/email-already-in-use': 'emailInUse',
-    'auth/credential-already-in-use': 'emailInUse',
-    'auth/weak-password': 'weakPassword',
-    'auth/network-request-failed': 'networkError',
-    'auth/popup-blocked': 'popupBlocked',
+    "auth/invalid-email": "invalidEmail",
+    "auth/user-not-found": "userNotFound",
+    "auth/wrong-password": "wrongPassword",
+    "auth/invalid-credential": "wrongPassword",
+    "auth/too-many-requests": "tooManyRequests",
+    "auth/email-already-in-use": "emailInUse",
+    "auth/credential-already-in-use": "emailInUse",
+    "auth/weak-password": "weakPassword",
+    "auth/network-request-failed": "networkError",
+    "auth/popup-blocked": "popupBlocked",
   };
   const key = map[error?.code];
   let message = key ? t[key] : null;
   if (!message) {
     message = defaultTitle;
-    console.error('Unhandled auth error:', error);
+    console.error("Unhandled auth error:", error);
   }
   return { title: defaultTitle, message: message };
 }
@@ -69,7 +71,10 @@ const ONE_TAP_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 let gsiScriptPromise = null;
 
 function getGoogleClientId() {
-  return import.meta.env.VITE_GOOGLE_SIGNIN_CLIENT_ID;
+  const meta = document.querySelector("meta[name=\"google-signin-client_id\"]");
+  const globalClientId = window.__GOOGLE_CLIENT_ID__;
+  const envClientId = (import.meta && import.meta.env)? import.meta.env.VITE_GOOGLE_SIGNIN_CLIENT_ID : null;
+  return globalClientId || meta?.content || envClientId || null;
 }
 
 function createOneTapError(code, message) {
@@ -142,7 +147,8 @@ async function signInWithGoogleOneTap(auth) {
     try {
       window.google.accounts.id.initialize({
         client_id: clientId,
-        cancel_on_tap_outside: true,
+        cancel_on_tap_outside: false,
+        auto_select: false,
         context: "signin",
         callback: (response) => {
           (async () => {
@@ -207,21 +213,21 @@ function handleFirebaseProviderError(e) {
   if (!e)
     return;
   const code = e.code;
-  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request')
+  if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request")
     return;
   const { title, message } = getErrorMessage(t, e, t(translations).googleLoginFailed);
-  if (code === 'auth/popup-blocked') {
+  if (code === "auth/popup-blocked") {
     messageBox(title, message, { cancel: true }).then((result) => {
       if (result) {
         const url = new URL(window.location.href);
-        url.pathname = '/login';
+        url.pathname = "/login";
         url.searchParams.set("forceRedirect", "1");
         url.searchParams.set("lang", getLang());
         let w = null;
         const messageHandler = function (event) {
           if (event.origin !== window.location.origin)
             return;
-          if (w && event.data && event.data.type === 'login-done') {
+          if (w && event.data && event.data.type === "login-done") {
             window.removeEventListener("message", messageHandler);
             try {
               w.close();
@@ -251,6 +257,11 @@ export async function doGoogleAuth(auth, redirectMode) {
       return;
 
     if (shouldFallbackToFirebaseProvider(error)) {
+      if (!redirectMode) {
+        const ret = await messageBox(t(translations).googleLoginFailed, t(translations).quickLoginBlocked, { cancel: true });
+        if (!ret)
+          return;
+      }
       const provider = new GoogleAuthProvider();
       const fbCall = redirectMode ? signInWithRedirect : signInWithPopup;
       return fbCall(auth, provider).catch(handleFirebaseProviderError);

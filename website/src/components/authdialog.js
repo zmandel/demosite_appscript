@@ -1,71 +1,71 @@
-import { LitElement, html } from 'lit';
-import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import componentHTML from './authdialog.html?raw';
-import '../dialog.css';
-import A11yDialog from 'a11y-dialog';
-import messageBox from '../js/messagebox.js';
-import { t, toast, applyTranslations } from '../js/common.js';
-import { onAuthStateChanged } from 'firebase/auth';
+import { LitElement, html } from "lit";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
+import componentHTML from "./authdialog.html?raw";
+import "../dialog.css";
+import A11yDialog from "a11y-dialog";
+import messageBox from "../js/messagebox.js";
+import { t, toast, applyTranslations } from "../js/common.js";
+import { onAuthStateChanged } from "firebase/auth";
 
 const translations = {
   en: {
-    welcomeUser: 'Welcome ',
-    loginPrompt: 'Welcome! Please log in',
-    signInWithGoogle: 'Sign in with Google',
-    signInWithEmail: 'Sign in with Email',
-    emailSignInTitle: 'Sign in with Email',
-    emailLabel: 'Email',
-    passwordLabel: 'Password',
-    forgotPassword: 'Forgot password?',
-    login: 'Login',
-    signUp: 'Sign Up',
-    cancel: 'Cancel',
-    signInTitle: 'Sign in',
-    enterEmailPassword: 'Please enter both email and password.',
-    signUpTitle: 'Sign up',
-    passwordResetTitle: 'Password reset',
-    pwdResetAlert: 'A password reset link will be sent to the email.',
-    enterEmailReset: 'Please enter your email to reset your password.',
-    passwordResetSent: 'A password reset link has been sent to the email.',
+    welcomeUser: "Welcome ",
+    loginPrompt: "Welcome! Please log in",
+    signInWithGoogle: "Sign in with Google",
+    signInWithEmail: "Sign in with Email",
+    emailSignInTitle: "Sign in with Email",
+    emailLabel: "Email",
+    passwordLabel: "Password",
+    forgotPassword: "Forgot password?",
+    login: "Login",
+    signUp: "Sign Up",
+    cancel: "Cancel",
+    signInTitle: "Sign in",
+    enterEmailPassword: "Please enter both email and password.",
+    signUpTitle: "Sign up",
+    passwordResetTitle: "Password reset",
+    pwdResetAlert: "A password reset link will be sent to the email.",
+    enterEmailReset: "Please enter your email to reset your password.",
+    passwordResetSent: "A password reset link has been sent to the email.",
   },
   es: {
-    welcomeUser: 'Bienvenido ',
-    loginPrompt: '¡Bienvenido! Por favor inicia sesión',
-    signInWithGoogle: 'Inicia sesión con Google',
-    signInWithEmail: 'Inicia sesión con Email',
-    emailSignInTitle: 'Inicia sesión con Email',
-    emailLabel: 'Correo electrónico',
-    passwordLabel: 'Contraseña',
-    forgotPassword: '¿Olvidaste tu contraseña?',
-    login: 'Iniciar sesión',
-    signUp: 'Registrarse',
-    cancel: 'Cancelar',
-    signInTitle: 'Iniciar sesión',
-    enterEmailPassword: 'Por favor ingresa correo y contraseña.',
-    signUpTitle: 'Registrarse',
-    passwordResetTitle: 'Restablecer contraseña',
-    pwdResetAlert: 'Se enviará un enlace de restablecimiento al correo.',
-    enterEmailReset: 'Por favor ingresa tu correo para restablecer la contraseña.',
-    passwordResetSent: 'Se envió un enlace de restablecimiento al correo.',
+    welcomeUser: "Bienvenido ",
+    loginPrompt: "¡Bienvenido! Por favor inicia sesión",
+    signInWithGoogle: "Inicia sesión con Google",
+    signInWithEmail: "Inicia sesión con Email",
+    emailSignInTitle: "Inicia sesión con Email",
+    emailLabel: "Correo electrónico",
+    passwordLabel: "Contraseña",
+    forgotPassword: "¿Olvidaste tu contraseña?",
+    login: "Iniciar sesión",
+    signUp: "Registrarse",
+    cancel: "Cancelar",
+    signInTitle: "Iniciar sesión",
+    enterEmailPassword: "Por favor ingresa correo y contraseña.",
+    signUpTitle: "Registrarse",
+    passwordResetTitle: "Restablecer contraseña",
+    pwdResetAlert: "Se enviará un enlace de restablecimiento al correo.",
+    enterEmailReset: "Por favor ingresa tu correo para restablecer la contraseña.",
+    passwordResetSent: "Se envió un enlace de restablecimiento al correo.",
   }
 };
 
 function initAuth(auth, headerText, rootElement, host) {
   const $ = (id) => rootElement.querySelector(id); //shortcut
   applyTranslations(rootElement, translations);
-  $('#loginHeader').textContent = headerText || '';
-  const googleLoginBtn = $('#google-login-btn');
-  const emailOptionBtn = $('#email-option-btn');
-  const emailSignupBtn = $('#email-signup-btn');
-  const forgotPasswordBtn = $('#forgot-password-btn');
-  const emailInput = $('#email-input');
-  const passwordInput = $('#password-input');
-  const emailDialogEl = $('#email-dialog');
+  $("#loginHeader").textContent = headerText || "";
+  const googleLoginBtn = $("#google-login-btn");
+  const emailOptionBtn = $("#email-option-btn");
+  const emailSignupBtn = $("#email-signup-btn");
+  const forgotPasswordBtn = $("#forgot-password-btn");
+  const emailInput = $("#email-input");
+  const passwordInput = $("#password-input");
+  const emailDialogEl = $("#email-dialog");
   const emailDialog = new A11yDialog(emailDialogEl);
-  const cancelBtn = $('#auth-cancel-btn');
-  const emailForm = $('#email-form');
-  const emailCancelBtn = $('#email-cancel-btn');
-  const emailDialogOverlay = emailDialogEl.querySelector('.dialog-overlay');
+  const cancelBtn = $("#auth-cancel-btn");
+  const emailForm = $("#email-form");
+  const emailCancelBtn = $("#email-cancel-btn");
+  const emailDialogOverlay = emailDialogEl.querySelector(".dialog-overlay");
 
   onAuthStateChanged(auth, (user) => {
     updateUI(user);
@@ -76,12 +76,12 @@ function initAuth(auth, headerText, rootElement, host) {
       user = null;
     
     if (user) {
-      toast(t(translations).welcomeUser + (user.displayName || user.email || ''), { type: 'success', position: 'tl' });
+      toast(t(translations).welcomeUser + (user.displayName || user.email || ""), { type: "success", position: "tl" });
       if (emailDialog)
         emailDialog.hide();
       if (host) {
         host.hide();
-        host.dispatchEvent(new CustomEvent('success', { detail: { user }, bubbles: true, composed: true }));
+        host.dispatchEvent(new CustomEvent("success", { detail: { user }, bubbles: true, composed: true }));
       }
     } else {
       googleLoginBtn.disabled = false;
@@ -90,14 +90,14 @@ function initAuth(auth, headerText, rootElement, host) {
   }
 
   if (cancelBtn) {
-    cancelBtn.addEventListener('click', () => {
+    cancelBtn.addEventListener("click", () => {
       host.hide();
-      host.dispatchEvent(new CustomEvent('cancel', { bubbles: true, composed: true }));
+      host.dispatchEvent(new CustomEvent("cancel", { bubbles: true, composed: true }));
     });
   }
 
-  googleLoginBtn.addEventListener('click', () => {
-    host.dispatchEvent(new CustomEvent('google-login', { bubbles: true, composed: true }));
+  googleLoginBtn.addEventListener("click", () => {
+    host.dispatchEvent(new CustomEvent("google-login", { bubbles: true, composed: true }));
   });
 
   const blurFocusedElementOnClick = () => {
@@ -105,34 +105,34 @@ function initAuth(auth, headerText, rootElement, host) {
       document.activeElement.blur(); //to make aria-hidden happy (accessibility warning)
     }
   };
-  emailCancelBtn.addEventListener('click', blurFocusedElementOnClick);
-  emailDialogOverlay.addEventListener('click', blurFocusedElementOnClick);
+  emailCancelBtn.addEventListener("click", blurFocusedElementOnClick);
+  emailDialogOverlay.addEventListener("click", blurFocusedElementOnClick);
 
-  emailOptionBtn.addEventListener('click', () => {
+  emailOptionBtn.addEventListener("click", () => {
     emailDialog.show();
   });
 
-  emailDialog.on('show', () => {
+  emailDialog.on("show", () => {
     googleLoginBtn.disabled = true;
     emailOptionBtn.disabled = true;
     setTimeout(() => emailInput.focus(), 0);
   });
 
-  emailDialog.on('hide', () => {
+  emailDialog.on("hide", () => {
     googleLoginBtn.disabled = false;
     emailOptionBtn.disabled = false;
-    emailInput.value = '';
-    passwordInput.value = '';
+    emailInput.value = "";
+    passwordInput.value = "";
   });
 
-  emailInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
+  emailInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
       e.preventDefault();
       passwordInput.focus();
     }
   });
 
-  emailForm.addEventListener('submit', (e) => {
+  emailForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const email = (emailInput.value || "").trim();
     const password = (passwordInput.value || "").trim();
@@ -140,29 +140,29 @@ function initAuth(auth, headerText, rootElement, host) {
       messageBox(t(translations).signInTitle, t(translations).enterEmailPassword);
       return;
     }
-    host.dispatchEvent(new CustomEvent('email-login', {
+    host.dispatchEvent(new CustomEvent("email-login", {
       detail: { email, password },
       bubbles: true,
       composed: true
     }));
   });
 
-  emailSignupBtn.addEventListener('click', () => {
+  emailSignupBtn.addEventListener("click", () => {
     const email = (emailInput.value || "").trim();
     const password = (passwordInput.value || "").trim();
     if (!email || !password) {
       messageBox(t(translations).signUpTitle, t(translations).enterEmailPassword);
       return;
     }
-    host.dispatchEvent(new CustomEvent('email-signup', {
+    host.dispatchEvent(new CustomEvent("email-signup", {
       detail: { email, password },
       bubbles: true,
       composed: true
     }));
   });
 
-  forgotPasswordBtn.addEventListener('click', async () => {
-    const email = (emailInput.value || '').trim();
+  forgotPasswordBtn.addEventListener("click", async () => {
+    const email = (emailInput.value || "").trim();
     if (!email) {
       messageBox(t(translations).passwordResetTitle, t(translations).enterEmailReset);
       return;
@@ -171,7 +171,7 @@ function initAuth(auth, headerText, rootElement, host) {
     if (!result)
       return;
 
-    host.dispatchEvent(new CustomEvent('password-reset', {
+    host.dispatchEvent(new CustomEvent("password-reset", {
       detail: { email },
       bubbles: true,
       composed: true
@@ -194,11 +194,11 @@ export class AuthDialog extends LitElement {
       await this.updateComplete;
     }
 
-    const footer = this.querySelector('.dialog-footer');
+    const footer = this.querySelector(".dialog-footer");
     if (cancelable) {
-      footer.classList.remove('hidden');
+      footer.classList.remove("hidden");
     } else {
-      footer.classList.add('hidden');
+      footer.classList.add("hidden");
     }
     
     if (!this.#authInitialized) {
@@ -207,13 +207,13 @@ export class AuthDialog extends LitElement {
       this.#authInitialized = true;
     }
 
-    if (this.overlay) this.overlay.classList.add('visible');
-    this.classList.add('visible');
+    if (this.overlay) this.overlay.classList.add("visible");
+    this.classList.add("visible");
   }
 
   hide() {
-    this.classList.remove('visible');
-    if (this.overlay) this.overlay.classList.remove('visible');
+    this.classList.remove("visible");
+    if (this.overlay) this.overlay.classList.remove("visible");
   }
 
   firstUpdated() {
@@ -229,17 +229,17 @@ export class AuthDialog extends LitElement {
 }
 
 function getOverlay(host) {
-  let ov = document.getElementById('auth-overlay');
+  let ov = document.getElementById("auth-overlay");
   if (!ov) {
-    ov = document.createElement('div');
-    ov.id = 'auth-overlay';
-    ov.className = 'auth-overlay';
-    ov.setAttribute('aria-hidden', 'true');
-    ov.addEventListener('click', (e) => {
+    ov = document.createElement("div");
+    ov.id = "auth-overlay";
+    ov.className = "auth-overlay";
+    ov.setAttribute("aria-hidden", "true");
+    ov.addEventListener("click", (e) => {
       e.stopPropagation();
       if (host) {
-        host.classList.add('shake');
-        setTimeout(() => host.classList.remove('shake'), 500);
+        host.classList.add("shake");
+        setTimeout(() => host.classList.remove("shake"), 500);
       }
     });
     document.body.appendChild(ov);
@@ -248,4 +248,4 @@ function getOverlay(host) {
 }
 
 // Define the custom element using the standard browser API.
-customElements.define('auth-dialog', AuthDialog);
+customElements.define("auth-dialog", AuthDialog);

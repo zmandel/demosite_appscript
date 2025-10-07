@@ -1,14 +1,14 @@
 import { t } from "../js/common.js";
 import { signOut, setPersistence, indexedDBLocalPersistence, getAuth, onAuthStateChanged, getRedirectResult } from "firebase/auth";
-import { initializeApp } from 'firebase/app';
-import { doGoogleAuth, doEmailLogin, doEmailSignup, doPasswordReset } from './authService.js';
-import messageBox from './messagebox.js';
-import '../components/authdialog.js';
+import { initializeApp } from "firebase/app";
+import { doGoogleAuth, doEmailLogin, doEmailSignup, doPasswordReset } from "./authService.js";
+import messageBox from "./messagebox.js";
+import "../components/authdialog.js";
 
 const firebaseConfig = {
-  apiKey: "XXX",
-  authDomain: "XXX", //can be changed to https://localhost but with firebase dev server.
-  projectId: "XXX",
+  apiKey: import.meta.env.VITE_FIREBASE_KEY,
+  authDomain: import.meta.env.VITE_ROOT_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJNAME,
 };
 
 const authState = {
