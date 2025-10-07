@@ -704,3 +704,14 @@ export function waitForAutoPageView(intervalMs = 50, timeoutMs = 2000) {
     }, intervalMs);
   });
 }
+
+export function replyUser(action, event, user, idToken = null) {
+  const userParam = user ? {
+    idToken,
+    displayName: user.displayName,
+    email: user.email,
+    photoURL: user.photoURL,
+    uid: user.uid,
+  } : null;
+  event.source.postMessage({ reply: action, user: userParam }, event.origin);
+}

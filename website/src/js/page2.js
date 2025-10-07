@@ -1,10 +1,10 @@
 
-import { initializePage, loadGTM, onErrorBaseIframe } from "/js/common.js";
+import { initializePage, loadGTM, onErrorBaseIframe} from "/js/common.js";
 initializePage({
   loadIframe: true,
   loadAnalytics: false, //in this sample, we wait until a custom time later to enable it through loadGTM()
   paramsExtra: "page=2",
-  callbackMessage: data => {
+  callbackMessage: async (data, event) => {
     if (!data)
       return;
     if (data.action == "titleChange") {
