@@ -79,7 +79,7 @@ To use cloud logging for the frontend, use the firebase function in website/func
 * **Iframe Communication**: Manages message passing (analytics, events, load states).
 * **Server-side Routing and Logging**: Routes requests and logs server-side events.
 
-Use the github subdirectory or copy from <https://docs.google.com/spreadsheets/d/1TRgGo93TzPihDpCXb7G3_eI6uc0jsQLJch0cgE1aHKs/copy>
+Use the github subdirectory, which contains npm scripts to bundle, push and publish the script.
 
 ### Sample Pages
 
