@@ -8,7 +8,7 @@
     "build-html": "node build/scripts/build-html.js",
     "build": "npm run clean && npm run copy-gs && npm run build-html",
     "push-to-gas": "clasp push --force",
-    "pub-prod": "npm run push-to-gas && clasp deploy -i deployment_id -d Prod",
+    "pub-prod": "npm run push-to-gas && clasp deploy -i AKfycbyJVIXQETRfIbzEC6OALffWAO533GAMJunm2Trc_8KlPR-YI4MPxWZbypvZ83Eqg9kw -d Prod",
     "deploy": "npm run build && npm run pub-prod"
   },
   "keywords": [],

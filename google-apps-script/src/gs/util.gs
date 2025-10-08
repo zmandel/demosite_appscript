@@ -24,11 +24,11 @@ function doGet(e) {
 
     if (bPage2) {
         title = "page 2";
-        file = "html-page2";
+        file = "html/page2";
     }
     else {
         title = "page 1";
-        file = "html-page1";
+        file = "html/page1";
     }
 
     let template = HtmlService.createTemplateFromFile(file);

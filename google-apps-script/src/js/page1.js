@@ -31,8 +31,8 @@ async function onDomContentLoaded() {
       alert("Note: this demo page does not have valid Firebase Login credentials");
       const data = await getUser(true, true);
       if (data && data.user) {
-        //data.user is not secure. Need to get it from the idToken, which verifies the JWT signature
-        user = verifyFirebaseIdToken_(data.user.idToken);
+        user = data.user;
+        //data.user is not secure. the backen should verify the idToken with verifyFirebaseIdToken_
         alert("Welcome " + data.user.email);
       }
     });
@@ -43,6 +43,7 @@ async function onDomContentLoaded() {
         return;
       }
       await logoutUser();
+      alert("logged out");
     });
 
     //tell the website to change a url parameter
