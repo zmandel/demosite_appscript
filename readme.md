@@ -66,7 +66,7 @@ NOTE: The demo websites do not have a public login. You can try login features o
 
 ### Setup & Configuration
 clone, then inside website/src create and fill your .env.local file based on .env.
-use vite from the website/ directory
+use npm run at website/ and at google-apps-script/
 
 To use cloud logging for the frontend, use the firebase function in website/functions/api/logs.js. For improved security set the `ALLOWED_HOST` environment variable to the same domain.
 
@@ -78,15 +78,16 @@ To use cloud logging for the frontend, use the firebase function in website/func
 * [`logs.js`](website/functions/api/logs.js): Server-side logging
 * [`firebase.json`](website/firebase.json): Hosting config
 
-## Google Apps Script Samples (`google-apps-script/`)
+## Google Apps Script folder (`google-apps-script/`)
 
 ### Key Features
 
 * **Enhanced Logging**: Captures frontend logs and sends to parent.
 * **Iframe Communication**: Manages message passing (analytics, events, load states).
 * **Server-side Routing and Logging**: Routes requests and logs server-side events.
+* **Crypto support** to securely validate idToken signatures and expiration.
 
-Use the github subdirectory, which contains npm scripts to bundle, push and publish the script.
+Contains npm scripts to bundle, push and publish the script.
 
 ### Sample Pages
 
@@ -95,46 +96,29 @@ Use the github subdirectory, which contains npm scripts to bundle, push and publ
   * Initialization notification
   * Custom analytics events
   * URL parameter changes without refresh
+  * Login / Logout
 
 * **Page 2**:
 
-  * Complex resource loading (Three.js, GSAP)
   * Progressive load notifications
   * Title updates
   * Custom analytics events
 
 ### Key Files
 
-* [`front-util.html`](google-apps-script/front-util.html): Client-side utilities
-* [`back-util.gs`](google-apps-script/back-util.gs): Server-side utilities
-* [`html-page1.html`, `front-page1.html`](google-apps-script/html-page1.html): Sample Page 1
-* [`html-page2.html`, `front-page2.html`](google-apps-script/html-page2.html): Sample Page 2
+* [`util.html`](google-apps-script/src/js/util.html): Client-side utilities
+* [`util.gs`](google-apps-script/src/gs/util.gs): Server-side utilities
+* [`page1.html`, `page1.js`](google-apps-script/src/html/page1.html): Sample Page 1
+* [`page2.html`, `page2.js`](google-apps-script/src/html/page2.html): Sample Page 2
 
-## Getting Started
-
-1. **Deploy Website**:
-
-   ```sh
-   cd website
-   cd functions && npm install && cd ..
-   firebase deploy --only hosting
-   firebase deploy --only functions
-   ```
-
-   Cloud Functions require Node **22**, as specified in `functions/package.json`.
-
-2. **Deploy Apps Script**:
-
-   * Deploy as Web App (Execute: Me, Access: Anyone)
-   * Use standard GCP project for centralized logs ([instructions](https://developers.google.com/apps-script/guides/cloud-platform-projects#standard)) using the same gcp project for this and the firebase project.
-
-3. **Configuration**:
-
-   * Update `g_orgDefault` and keys in [`common.js`](website/src/js/common.js).
-
+## Deploy Apps Script:
+  * customize "g_urlWebsite" in google-apps-script\src\js\util.js
+  * Deploy as Web App (Execute: Me, Access: Anyone)
+  * Use standard GCP project for centralized logs ([instructions](https://developers.google.com/apps-script/guides/cloud-platform-projects#standard)) using the same gcp project for this and the firebase project.
+     
 ## Customization
-* configure .env
-* Search for `CUSTOMIZE:` comments to customize as needed.
+* configure .env.local
+* Search for `CUSTOMIZE:` comments in the repo.
 
 ## Messaging Protocol
 
