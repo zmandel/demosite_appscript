@@ -5,7 +5,7 @@
   "scripts": {
     "clean": "rimraf dist && mkdirp dist/html dist/gs",
     "copy-gs": "copyfiles -u 1 \"src/gs/**/*\" dist && copyfiles -u 1 \"src/appsscript.json\" dist",
-    "build-html": "node build/scripts/build-html.js",
+    "build-html": "node build/scripts/build-js.js && node build/scripts/build-html.js",
     "build": "npm run clean && npm run copy-gs && npm run build-html",
     "push-to-gas": "clasp push --force",
     "pub-prod": "npm run push-to-gas && clasp deploy -i YOUR_GAS_DEPLOYMENT_ID -d Prod",
@@ -17,10 +17,12 @@
   "type": "module",
   "devDependencies": {
     "copyfiles": "^2.4.1",
+    "dotenv": "^17.2.3",
     "inline-source-cli": "^2.0.0",
     "mkdirp": "^3.0.1",
     "posthtml": "^0.16.6",
     "posthtml-include": "^2.0.1",
+    "replace-in-file": "^8.3.0",
     "rimraf": "^6.0.1"
   }
 }

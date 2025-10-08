@@ -13,10 +13,11 @@ Integrates Google Apps Script webapps into a standard website, addressing the fo
 9. **Logs to GCP Logging**: Sends logging events to the parent website.
 10. **Change the browser header colorscheme** to match the script webapp.
 11. **Fullscreen support**
-12. **Firebase auth** without limitations, including the new Google Signing, popup and redirect mode
+12. **Firebase auth** without limitations, including the new Google Signing, popup and redirect mode.
 13. **A simple bundling system** for apps script, which allows for organizing files as html,js, css and bundle into inlined html files to improve performance.
+14. **Easy installation and customization**: just "npm install" in both for the website and apps script directories, customize .env files and "npm deploy". The website uses vite and the apps script uses a custom npm bundling script and "clasp" to deploy from the command-line.
 
-**Bonus**: The project is prepared for (and partially built by) software agents, with detailed "agents.md" files in key areas of the repository.
+**Bonus**: The project is prepared for software agents, with detailed "agents.md" files in key areas of the repository, both for the website and the apps script.
 
 Sample Apps Script pages illustrate various interaction patterns.
 
@@ -30,7 +31,7 @@ Shows a simple website with two pages, each one being a different apps script pa
 
 NOTE: The demo websites do not have a public login. You can try login features on the production website.
 * **Demo Website**: [fir-apps-script.firebaseapp.com](https://fir-apps-script.firebaseapp.com/)
-* **Using the "org/sig" feature, modified by URL parameters**: [fir-apps-script.firebaseapp.com/?org=xxx&sig=yyy](https://fir-apps-script.firebaseapp.com/?org=XXXX&sig=YYYY)
+* **Using the "org/sig" with sample URL parameters**: [fir-apps-script.firebaseapp.com/?org=xxx&sig=yyy](https://fir-apps-script.firebaseapp.com/?org=XXXX&sig=YYYY)
 
 ## Production Website using this framework
 
@@ -112,13 +113,12 @@ Contains npm scripts to bundle, push and publish the script.
 * [`page2.html`, `page2.js`](google-apps-script/src/html/page2.html): Sample Page 2
 
 ## Deploy Apps Script:
-  * customize "g_urlWebsite" in google-apps-script\src\js\util.js
   * Deploy as Web App (Execute: Me, Access: Anyone)
   * Use standard GCP project for centralized logs ([instructions](https://developers.google.com/apps-script/guides/cloud-platform-projects#standard)) using the same gcp project for this and the firebase project.
      
 ## Customization
-* configure .env.local
-* Search for `CUSTOMIZE:` comments in the repo.
+* create and configure .env.local files both in website/src and google-apps-script/src base on their respective .env files. 
+* Search for `CUSTOMIZE:` comments in the repo for key spots you would want to extend to your needs.
 
 ## Messaging Protocol
 
