@@ -14,11 +14,16 @@ Integrates Google Apps Script webapps into a standard website, addressing the fo
 10. **Change the browser header colorscheme** to match the script webapp.
 11. **Fullscreen support**
 12. **Firebase auth** without limitations, including the new Google Signing, popup and redirect mode
-13. **A simple bundling system** for apps script, which allows for organizing files as html,js, css and bundle into inlined html files.
+13. **A simple bundling system** for apps script, which allows for organizing files as html,js, css and bundle into inlined html files to improve performance.
 
 **Bonus**: The project is prepared for (and partially built by) software agents, with detailed "agents.md" files in key areas of the repository.
 
 Sample Apps Script pages illustrate various interaction patterns.
+
+## Firebase Auth
+The auth implementation can actually be used independent of apps script. Its a lit component in English & Spanish with bundling support (thus much smaller than the official FirebaseUI).
+An Apps Script can define a page as requiring authentication before loading, or can login on-demand after load. The framework handles all the UI, signin methods, Firebase connections, popups, redirects etc without needing to reload the Apps Script.
+It also adds the missing Crypto support in .gs, to validate the firebase idTokens.
 
 ## Demos
 Shows a simple website with two pages, each one being a different apps script page. "Page 1" follows the simplest flow, where the page loading animation stops as soon as the script page loads. "Page 2" shows a more complex flow where the page partially loads while the loading animation (from the parent website) continues. It then loads the rest of the page and stops the loading animation.
