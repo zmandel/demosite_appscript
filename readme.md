@@ -14,22 +14,29 @@ Integrates Google Apps Script webapps into a standard website, addressing the fo
 10. **Change the browser header colorscheme** to match the script webapp.
 11. **Fullscreen support**
 12. **Firebase auth** without limitations, including the new Google Signing, popup and redirect mode
-13. **A simple bundling system** for apps script, which allows for organizing files as html,js, css and bundle into inlined html files.
+13. **A simple bundling system** for apps script, which allows for organizing files as html,js, css and bundle into inlined html files to improve performance.
 
 **Bonus**: The project is prepared for (and partially built by) software agents, with detailed "agents.md" files in key areas of the repository.
 
 Sample Apps Script pages illustrate various interaction patterns.
 
+## Firebase Auth
+The auth implementation can actually be used independent of apps script. Its a lit component in English & Spanish with bundling support (thus much smaller than the official FirebaseUI).
+An Apps Script can define a page as requiring authentication before loading, or can login on-demand after load. The framework handles all the UI, signin methods, Firebase connections, popups, redirects etc without needing to reload the Apps Script.
+It also adds the missing Crypto support in .gs, to validate the firebase idTokens.
+
 ## Demos
 Shows a simple website with two pages, each one being a different apps script page. "Page 1" follows the simplest flow, where the page loading animation stops as soon as the script page loads. "Page 2" shows a more complex flow where the page partially loads while the loading animation (from the parent website) continues. It then loads the rest of the page and stops the loading animation.
 
+NOTE: The demo websites do not have a public login. You can try login features on the production website.
 * **Demo Website**: [fir-apps-script.firebaseapp.com](https://fir-apps-script.firebaseapp.com/)
-* **Using the "org/sig" feature, modified by URL parameters**: [fir-apps-script.firebaseapp.com/?org=xxx&sig=yyy](https://fir-apps-script.firebaseapp.com/?org=AKfycbyJVIXQETRfIbzEC6OALffWAO533GAMJunm2Trc_8KlPR-YI4MPxWZbypvZ83Eqg9kw&sig=JrqbfLZmsf8WlWz5outYUryPRoiINocCTKErUb79Ww8fKcLKYZO4jOyjCWR9h0HbTwsFQn4Wnuu-auBwRBFYNw)
+* **Using the "org/sig" feature, modified by URL parameters**: [fir-apps-script.firebaseapp.com/?org=xxx&sig=yyy](https://fir-apps-script.firebaseapp.com/?org=XXXX&sig=YYYY)
 
 ## Production Website using this framework
 
 * Visit [Tutor For Me](https://tutorforme.org)
-* Do a demo lesson
+* To view a page with optional login: Do a demo lesson
+* to view a page with forced login: View "My lessons"
 
 ## Directory Structure
 
@@ -79,7 +86,7 @@ To use cloud logging for the frontend, use the firebase function in website/func
 * **Iframe Communication**: Manages message passing (analytics, events, load states).
 * **Server-side Routing and Logging**: Routes requests and logs server-side events.
 
-Use the github subdirectory or copy from <https://docs.google.com/spreadsheets/d/1TRgGo93TzPihDpCXb7G3_eI6uc0jsQLJch0cgE1aHKs/copy>
+Use the github subdirectory, which contains npm scripts to bundle, push and publish the script.
 
 ### Sample Pages
 
