@@ -15,9 +15,9 @@
       - postSiteMessage: send a custom message to the parent window (if in iframe mode)
     *
     */
-    const g_allowAnyEmbedding = true; //TODO ('true'===import.meta.env.VITE_ALLOW_ANY_EMBEDDING);
-    const g_isProduction = true; //TODO ('true'===import.meta.env.VITE_IS_PRODUCTION);
-    const g_urlWebsite = "https://fir-apps-script.firebaseapp.com"; //TODO (import.meta.env.VITE_URL_WEBSITE);
+    const g_allowAnyEmbedding = false; //CUSTOMIZE use true for debugging
+    const g_isProduction = true; //CUSTOMIZE use false for debugging
+    const g_urlWebsite = "https://fir-apps-script.firebaseapp.com"; //CUSTOMIZE
     const g_parentDomainFilter = g_allowAnyEmbedding ? "*" : g_urlWebsite;
     const g_propEmbed = "embed"; //url parameter to determine if the site is embedded in an iframe
     const g_moduleLog = "frontend";
