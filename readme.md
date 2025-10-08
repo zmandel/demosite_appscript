@@ -28,13 +28,15 @@ It also adds the missing Crypto support in .gs, to validate the firebase idToken
 ## Demos
 Shows a simple website with two pages, each one being a different apps script page. "Page 1" follows the simplest flow, where the page loading animation stops as soon as the script page loads. "Page 2" shows a more complex flow where the page partially loads while the loading animation (from the parent website) continues. It then loads the rest of the page and stops the loading animation.
 
+NOTE: The demo websites do not have a public login. You can try login features on the production website.
 * **Demo Website**: [fir-apps-script.firebaseapp.com](https://fir-apps-script.firebaseapp.com/)
 * **Using the "org/sig" feature, modified by URL parameters**: [fir-apps-script.firebaseapp.com/?org=xxx&sig=yyy](https://fir-apps-script.firebaseapp.com/?org=AKfycbyJVIXQETRfIbzEC6OALffWAO533GAMJunm2Trc_8KlPR-YI4MPxWZbypvZ83Eqg9kw&sig=JrqbfLZmsf8WlWz5outYUryPRoiINocCTKErUb79Ww8fKcLKYZO4jOyjCWR9h0HbTwsFQn4Wnuu-auBwRBFYNw)
 
 ## Production Website using this framework
 
 * Visit [Tutor For Me](https://tutorforme.org)
-* Do a demo lesson
+* To view a page with optional login: Do a demo lesson
+* to view a page with forced login: View "My lessons"
 
 ## Directory Structure
 
