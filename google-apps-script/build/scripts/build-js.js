@@ -40,5 +40,6 @@ const results = await replaceInFile({
 
 //write the modified files to 'src/.inline-cache
 if (results.some(r => r.hasChanged)) {
-  console.log('Processed js files:', results.filter(r => r.hasChanged).map(r => r.file));
+  //for troubleshooting
+  //console.log('Processed js files:', results.filter(r => r.hasChanged).map(r => r.file));
 }

@@ -6,6 +6,9 @@ import include from "posthtml-include";
 
 const parserOptions = {
   // Preserve Apps Script-style templating blocks
+  // WARNING: your HTML templates with these blocls must have a space after the opening tag, as in:
+  //   <?!= value ?>
+  // DO NOT write it as: <?!=value?>
   directives: [
     { name: '?!=', start: '<', end: '>' }, // preserves <?!=str.labelSliderRight ?>
     { name: '?=',  start: '<', end: '>' }, // preserves <?=foo?>
