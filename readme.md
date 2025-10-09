@@ -66,8 +66,10 @@ NOTE: The demo websites do not have a public login. You can try login features o
 * **Backend**: Uses Firebase cloud functions under [`functions`](website/functions), it implements the "api/logs/putLogs" endpoint to send frontend logs to GCP logging. It can be easily extended to add more API endpoints.
 
 ### Setup & Configuration
-clone, then inside website/src create and fill your .env.local file based on .env.
-use npm run at website/ and at google-apps-script/
+clone, then inside website/src and google-apps-script/src, create and fill your .env.local file based on .env.
+- install "clasp" in google-apps-script/ : npm install @google/clasp -g
+- [create or clone a GAS](https://developers.google.com/apps-script/guides/clasp#create_a_new_project) with clasp.
+- "npm install" at website/ and at google-apps-script/
 
 To use cloud logging for the frontend, use the firebase function in website/functions/api/logs.js. For improved security set the `ALLOWED_HOST` environment variable to the same domain.
 
@@ -107,7 +109,7 @@ Contains npm scripts to bundle, push and publish the script.
 
 ### Key Files
 
-* [`util.html`](google-apps-script/src/js/util.html): Client-side utilities
+* [`util.js`](google-apps-script/src/js/util.js): Client-side utilities
 * [`util.gs`](google-apps-script/src/gs/util.gs): Server-side utilities
 * [`page1.html`, `page1.js`](google-apps-script/src/html/page1.html): Sample Page 1
 * [`page2.html`, `page2.js`](google-apps-script/src/html/page2.html): Sample Page 2
