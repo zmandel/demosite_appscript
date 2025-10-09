@@ -74,3 +74,5 @@ node_modules/
 
 # Vite cache
 .vite/
+
+dist/
