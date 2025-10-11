@@ -1,3 +1,7 @@
+.scrollY {
+    overflow-y: scroll;
+  }
+  
 .centerMessage {
   position: absolute;
   left: 50vw;

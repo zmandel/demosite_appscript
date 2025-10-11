@@ -150,6 +150,7 @@ async function signInWithGoogleOneTap(auth) {
         cancel_on_tap_outside: false,
         auto_select: false,
         context: "signin",
+        use_fedcm_for_prompt: true,
         callback: (response) => {
           (async () => {
             try {
@@ -172,29 +173,25 @@ async function signInWithGoogleOneTap(auth) {
       safeReject(err);
       return;
     }
-
     window.google.accounts.id.prompt((notification) => {
-      if (typeof notification?.isNotDisplayed === "function" && notification.isNotDisplayed()) {
-        safeReject(createOneTapError("one-tap-unavailable", notification.getNotDisplayedReason?.() || "Google One Tap was not displayed."));
+      const momentType = notification?.getMomentType?.();
+
+      if (momentType === "skipped" || (typeof notification?.isSkippedMoment === "function" && notification.isSkippedMoment())) {
+        // With FedCM we no longer receive a specific reason; treat as an intentional dismissal.
+        safeReject(createOneTapError("one-tap-dismissed", "skipped"));
         return;
       }
-      if (typeof notification?.isSkippedMoment === "function" && notification.isSkippedMoment()) {
-        const reason = notification.getSkippedReason?.();
-        if (reason === "credential_returned")
-          return;
-        if (reason === "user_cancelled") {
-          safeReject(createOneTapError("one-tap-dismissed", reason));
-          return;
-        }
-        safeReject(createOneTapError("one-tap-unavailable", reason || "Google One Tap was skipped."));
-        return;
-      }
-      if (typeof notification?.isDismissedMoment === "function" && notification.isDismissedMoment()) {
+
+      if (momentType === "dismissed" || (typeof notification?.isDismissedMoment === "function" && notification.isDismissedMoment())) {
         const reason = notification.getDismissedReason?.();
         if (reason === "credential_returned")
           return;
         if (reason === "tap_outside" || reason === "user_cancelled" || reason === "cancel_called") {
           safeReject(createOneTapError("one-tap-dismissed", reason));
+          return;
+        }
+        if (reason === "issuing_failed" || reason === "secure_context_required" || reason === "unregistered_rp") {
+          safeReject(createOneTapError("one-tap-unavailable", reason));
           return;
         }
         safeReject(createOneTapError("one-tap-unavailable", reason || "Google One Tap was dismissed."));
