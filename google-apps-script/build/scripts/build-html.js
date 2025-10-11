@@ -48,6 +48,18 @@ for (const fileName of files) {
       unlinkSync(tmpPath);
     } catch {
       //ignore
+      console.log("failed to delete tmp file", tmpPath);
     }
   }
+}
+
+try {
+  for (const entry of readdirSync("src/.inline-cache", { withFileTypes: true })) {
+    if (entry.isFile()) {
+      unlinkSync(`src/.inline-cache/${entry.name}`);
+    }
+  }
+} catch {
+  //ignore
+  console.log("failed to clean up inline-cache");
 }
