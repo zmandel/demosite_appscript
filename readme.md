@@ -50,6 +50,7 @@ NOTE: The demo websites do not have a public login. You can try login features o
 ### Key Features
 * **Embedding**: Embeds Apps Script web apps using iframes ([`page1.html`](website/src/page1.html), [`page2.html`](website/src/page2.html)).
 * **Custom Domain**: Uses Firebase Hosting for domain management and authentication (UI, login with Google, login with email, script helpers to validate auth id tokens)
+* **Firebase Auth**
 * **Dynamic Loading**: Load scripts dynamically using the `org` URL parameter.
 * **Security**: Validates scripts via URL `org` and `sig` parameters using public key signature verification. See [`util-org-sig/readme.md`](util-org-sig/readme.md) for instructions to create your own public/private key pairs.
 
@@ -87,10 +88,10 @@ To use cloud logging for the frontend, use the firebase function in website/func
 
 * **Enhanced Logging**: Captures frontend logs and sends to parent.
 * **Iframe Communication**: Manages message passing (analytics, events, load states).
-* **Server-side Routing and Logging**: Routes requests and logs server-side events.
+* **Logging**: logs server-side events.
 * **Crypto support** to securely validate idToken signatures and expiration.
 
-Contains npm scripts to bundle, push and publish the script.
+Supports separate html/js/css/gs. Contains npm scripts to bundle, push and publish the script.
 
 ### Sample Pages
 
