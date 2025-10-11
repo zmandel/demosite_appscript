@@ -2,20 +2,20 @@
 
 Integrates Google Apps Script webapps into a standard website, addressing the following issues and features:
 
-1. **Firebase auth** without limitations, including the new Google Signing by fedCM, popup and redirect mode.
+1. **Firebase auth** without limitations, including the new Google Sign-in by fedCM,with automatic popup and redirect mode fallback.
 2. **A simple bundling system** for apps script, which allows for organizing files as html,js, css and bundle into inlined html files to improve performance.
 3. **Custom Domain Serving**: Serves apps under a custom domain, providing more control than Google Sites.
 4. **Secure domain serving**: Only allows your specific domain to embed the apps script iframes.
 5. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts.
 6. **Google Workspace Compatibility**: Handles redirects typically problematic when users are under a Google Workspace account profile.
-7. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
-8. **Dynamic Multiple Script version Loading**: Securely loads different script versions (could be on the same or a different Google Workspace or Google Account) under the same website routes by passing parameters for different "organizations" you can create using the "org/sig" feature.
-9. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
+7. **Dynamic Multiple Script version Loading**: Securely loads different script versions (could be on the same or a different Google Workspace or Google Account) under the same website routes by passing parameters for different "organizations" you can create using the "org/sig" feature.
+8. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
+9. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
 10. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
 11. **Logs to GCP Logging**: Sends logging events to the parent website.
 12. **Change the browser header colorscheme** to match the script webapp.
 13. **Fullscreen support**
-14. **Easy installation and customization**: just "npm install" in both for the website and apps script directories, customize .env files and "npm deploy". The website uses vite and the apps script uses a custom npm bundling script and "clasp" to deploy from the command-line.
+14. **Easy installation and customization**: just "npm install" in both the website and apps script directories, customize .env.local files and "npm deploy". The website uses vite and the apps script uses a custom npm bundling script and "clasp" to deploy from the command-line.
 
 **Bonus**: The project is prepared for software agents, with detailed "agents.md" files in key areas of the repository, both for the website and the apps script.
 
