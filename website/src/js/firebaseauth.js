@@ -170,11 +170,19 @@ function showAuthDialog(headerText, cancelable = false) {
       reject(new Error('Authentication cancelled by user.'));
     };
 
-    const handleGoogleLogin = () => {
+    const handleGoogleLogin = async () => {
       const url = new URL(window.location.href);
       if (url.searchParams.get("failPopup") === "1")
         window.open("about:blank", "_blank"); //two popups in a row will trigger the popup-blocked error in Chrome
-      doGoogleAuth(authState.auth, authState.redirectMode);
+
+      dialog.setBusy?.(true);
+      try {
+        await doGoogleAuth(authState.auth, authState.redirectMode);
+      } catch (error) {
+        // doGoogleAuth already surfaces the error via messageBox; swallow to avoid unhandled rejection noise.
+      } finally {
+        dialog.setBusy?.(false);
+      }
     };
 
     const handleEmailLogin = async (event) => {

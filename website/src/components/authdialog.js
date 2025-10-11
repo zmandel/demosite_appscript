@@ -4,7 +4,7 @@ import componentHTML from "./authdialog.html?raw";
 import "../dialog.css";
 import A11yDialog from "a11y-dialog";
 import messageBox from "../js/messagebox.js";
-import { t, toast, applyTranslations } from "../js/common.js";
+import { t, toast, applyTranslations, insertSpinner } from "../js/common.js";
 import { onAuthStateChanged } from "firebase/auth";
 
 const translations = {
@@ -65,7 +65,25 @@ function initAuth(auth, headerText, rootElement, host) {
   const cancelBtn = $("#auth-cancel-btn");
   const emailForm = $("#email-form");
   const emailCancelBtn = $("#email-cancel-btn");
+  const spinnerWait = $(".loginSpinnerContainer");
   const emailDialogOverlay = emailDialogEl.querySelector(".dialog-overlay");
+  let isBusy = false;
+  let emailDialogVisible = false;
+
+  const updateButtonState = () => {
+    const disabled = isBusy || emailDialogVisible;
+    googleLoginBtn.disabled = disabled;
+    emailOptionBtn.disabled = disabled;
+    spinnerWait.style.visibility = isBusy ? "visible" : "hidden";
+  };
+
+  host.setBusy = (busy) => {
+    isBusy = !!busy;
+    updateButtonState();
+    host.classList.toggle("auth-busy", isBusy);
+  };
+
+  updateButtonState();
 
   onAuthStateChanged(auth, (user) => {
     updateUI(user);
@@ -76,6 +94,7 @@ function initAuth(auth, headerText, rootElement, host) {
       user = null;
     
     if (user) {
+      host.setBusy(false);
       toast(t(translations).welcomeUser + (user.displayName || user.email || ""), { type: "success", position: "tl" });
       if (emailDialog)
         emailDialog.hide();
@@ -84,8 +103,7 @@ function initAuth(auth, headerText, rootElement, host) {
         host.dispatchEvent(new CustomEvent("success", { detail: { user }, bubbles: true, composed: true }));
       }
     } else {
-      googleLoginBtn.disabled = false;
-      emailOptionBtn.disabled = false;
+      updateButtonState();
     }
   }
 
@@ -113,14 +131,14 @@ function initAuth(auth, headerText, rootElement, host) {
   });
 
   emailDialog.on("show", () => {
-    googleLoginBtn.disabled = true;
-    emailOptionBtn.disabled = true;
+    emailDialogVisible = true;
+    updateButtonState();
     setTimeout(() => emailInput.focus(), 0);
   });
 
   emailDialog.on("hide", () => {
-    googleLoginBtn.disabled = false;
-    emailOptionBtn.disabled = false;
+    emailDialogVisible = false;
+    updateButtonState();
     emailInput.value = "";
     passwordInput.value = "";
   });
@@ -221,6 +239,10 @@ export class AuthDialog extends LitElement {
     // Initialization is now deferred to the first `show()` call
     // to ensure the `auth` object is available.
     this.overlay = getOverlay(this);
+    const spinnerHost = this.querySelector(".loginSpinnerContainer");
+    if (spinnerHost && !spinnerHost.querySelector(".waitingSpinner")) {
+      insertSpinner(spinnerHost);
+    }
   }
 
   disconnectedCallback() {

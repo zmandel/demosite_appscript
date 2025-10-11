@@ -203,7 +203,8 @@ async function signInWithGoogleOneTap(auth) {
 function shouldFallbackToFirebaseProvider(error) {
   return error?.code === "one-tap-unavailable"
     || error?.code === "one-tap-missing-client-id"
-    || error?.code === "one-tap-load-failed";
+    || error?.code === "one-tap-load-failed"
+    || error?.code === "one-tap-dismissed";
 }
 
 function handleFirebaseProviderError(e) {
@@ -250,8 +251,6 @@ export async function doGoogleAuth(auth, redirectMode) {
   try {
     return await signInWithGoogleOneTap(auth);
   } catch (error) {
-    if (error?.code === "one-tap-dismissed")
-      return;
 
     if (shouldFallbackToFirebaseProvider(error)) {
       if (!redirectMode) {

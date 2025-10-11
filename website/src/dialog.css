@@ -20,4 +20,6 @@
   border-radius: 8px;
   color: #fff;
   z-index: 1002;
+  box-sizing: border-box;
+  min-width: calc(min(20em, 100vw - 10px));
 }
