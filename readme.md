@@ -89,9 +89,14 @@ To use cloud logging for the frontend, use the firebase function in website/func
 * **Enhanced Logging**: Captures frontend logs and sends to parent.
 * **Iframe Communication**: Manages message passing (analytics, events, load states).
 * **Logging**: logs server-side events.
-* **Crypto support** to securely validate idToken signatures and expiration.
+* **Crypto support** to securely validate idToken signatures and expiration from Firebase Auth.
 
-Supports separate html/js/css/gs. Contains npm scripts to bundle, push and publish the script.
+Supports separate html/js/css/gs. Contains npm scripts to bundle, push and publish (with "clasp") the script.
+
+### Script Properties
+The script´s crypto implementation automatically downloads and updates the Firebase Certificates needed to verify signatures, and stores it in Script Properties.
+- FIREBASE_CERTS_JSON: holds the cert.
+- FIREBASE_CERTS_UNTIL: holds its expiration.
 
 ### Sample Pages
 
