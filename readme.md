@@ -106,6 +106,7 @@ To use cloud logging for the frontend, use the firebase function in website/func
   - await server.run('myServerFn', arg1, arg2);
   - const loc = await server.getLocation();
 * **separate html/js/css/gs**. Contains npm scripts to bundle, push and publish (with "clasp") the script.
+Calls to server.run are automatically retried when the server returns an empty response. This fixes a common issue with apps script when it returns empty errors on certain situations, for example if the page goes to background on mobile while the server call is running.
 
 ### Script Properties
 The script´s crypto implementation automatically downloads and updates the Firebase Certificates needed to verify signatures, and stores it in Script Properties.
