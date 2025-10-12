@@ -18,9 +18,11 @@ Integrates Google Apps Script webapps into a standard website, addressing the fo
 14. **Fullscreen support**
 15. **Easy installation and customization**: just "npm install" in both the website and apps script directories, customize .env.local files and "npm deploy". The website uses vite and the apps script uses a custom npm bundling script and "clasp" to deploy from the command-line.
 
-**Bonus**: The project is prepared for software agents, with detailed "agents.md" files in key areas of the repository, both for the website and the apps script.
+The project is prepared for software agents, with detailed "agents.md" files in key areas of the repository, both for the website and the apps script.
 
 Sample Apps Script pages illustrate various interaction patterns.
+
+Note: this contains two separate projects: website and script. Each has its own setup and documentation here.
 
 ## Firebase Auth
 I implemented this because I couldnt find a good firebase UI that could be a) bundable (generates much smaller code) and b) handled all possible cases in the auth flow.
