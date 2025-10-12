@@ -9,13 +9,14 @@ Integrates Google Apps Script webapps into a standard website, addressing the fo
 5. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts.
 6. **Google Workspace Compatibility**: Handles redirects typically problematic when users are under a Google Workspace account profile.
 7. **Dynamic Multiple Script version Loading**: Securely loads different script versions (could be on the same or a different Google Workspace or Google Account) under the same website routes by passing parameters for different "organizations" you can create using the "org/sig" feature.
-8. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
-9. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
-10. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
-11. **Logs to GCP Logging**: Sends logging events to the parent website.
-12. **Change the browser header colorscheme** to match the script webapp.
-13. **Fullscreen support**
-14. **Easy installation and customization**: just "npm install" in both the website and apps script directories, customize .env.local files and "npm deploy". The website uses vite and the apps script uses a custom npm bundling script and "clasp" to deploy from the command-line.
+8. **Promise-based calls to google.script.run** and google.script.url.getLocation.
+9. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
+10. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
+11. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
+12. **Logs to GCP Logging**: Sends logging events to the parent website.
+13. **Change the browser header colorscheme** to match the script webapp.
+14. **Fullscreen support**
+15. **Easy installation and customization**: just "npm install" in both the website and apps script directories, customize .env.local files and "npm deploy". The website uses vite and the apps script uses a custom npm bundling script and "clasp" to deploy from the command-line.
 
 **Bonus**: The project is prepared for software agents, with detailed "agents.md" files in key areas of the repository, both for the website and the apps script.
 
@@ -34,8 +35,7 @@ It can actually be used independent of apps script. Its a lit component with:
   3. Redirect method, but without leaving the page!
 
 **On the redirect method**: If the first two methods failed, it automatically opens a new [login](website/src/login.html) page which handles the login, and uses a new Firebase sync mechanism "indexedDBLocalPersistence" and the BroadcastChannel API to communicate with the original "opener" (where user was trying to log-in) and thus finish its login flow. All this is done without ever needing to refresh the Apps Script webapp, which gets the user object and idToken automatically through secure messaging.
-
-On the Apps Script side:
+On the Apps Script:
 - Adds the missing Crypto support in .gs, to securely validate a firebase idToken.
 - It can define a page as requiring authentication before loading, or can login on-demand after load. 
 
@@ -102,8 +102,10 @@ To use cloud logging for the frontend, use the firebase function in website/func
 * **Iframe Communication**: Manages message passing (analytics, events, load states).
 * **Logging**: logs server-side events.
 * **Crypto support** to securely validate idToken signatures and expiration from Firebase Auth.
-
-Supports separate html/js/css/gs. Contains npm scripts to bundle, push and publish (with "clasp") the script.
+* **Promise-based** calls to google.script:
+  - await server.run('myServerFn', arg1, arg2);
+  - const loc = await server.getLocation();
+* **separate html/js/css/gs**. Contains npm scripts to bundle, push and publish (with "clasp") the script.
 
 ### Script Properties
 The script´s crypto implementation automatically downloads and updates the Firebase Certificates needed to verify signatures, and stores it in Script Properties.
