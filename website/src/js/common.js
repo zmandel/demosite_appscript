@@ -83,6 +83,68 @@ const g_forceGTM = false;
 let gtag = null;
 
 /**
+ * GS converts calls of google.script.run and google.script.url.getLocation into promises.
+ * Usage:
+ * const server = new GS();
+ * await server.run('myServerFn', arg1, arg2);
+ * const loc = await server.getLocation();
+ */
+class GS {
+  #ensureAvailable() {
+    const g = globalThis.google;
+    if (!g?.script?.run) throw new Error('google.script.run is not available yet');
+    return g;
+  }
+
+  #isBlankErr(err) {
+    return err == null || (typeof err === 'string' && err === '');
+  }
+
+  #run(method, args) {
+    const { script } = this.#ensureAvailable();
+
+    return new Promise((resolve, reject) => {
+      const call = (retried) => {
+        try {
+          script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler((err) => {
+              if (!retried && this.#isBlankErr(err)) {
+                // Retry once if Apps Script gives a blank error
+                // a common issue if one leaves the page in the background in mobile
+                call(true);
+                return;
+              }
+              reject(err instanceof Error ? err : new Error(String(err)));
+            })[method](...args);
+        } catch (e) {
+          reject(e);
+        }
+      };
+      call(false);
+    });
+  }
+
+  #getLocation() {
+    const { script } = this.#ensureAvailable();
+    const getLoc = script?.url?.getLocation;
+    if (typeof getLoc !== 'function') throw new Error('google.script.url.getLocation is not available');
+    return new Promise((resolve) => getLoc(resolve));
+  }
+
+  run(method, ...args) {
+    if (typeof method !== 'string' || !method) throw new TypeError('run(method, ...args): method must be a non-empty string');
+    return this.#run(method, args);
+  }
+
+  getLocation() {
+    return this.#getLocation();
+  }
+}
+
+const server = new GS();
+
+/**
  * //CUSTOMIZE: replace with your own error handling
  * used as an error callback for initializePage
  */
