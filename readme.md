@@ -32,9 +32,9 @@ It can actually be used independent of apps script. Its a lit component with:
 - "Google" signing and "Email & Password" signin with verified email flow.
 - Extends Firebase Auth with Google FedCM Signing, the newest method with the least user friction.
 - Handles failures by automatically retrying with three different methods for Google Signin:
-  1. FedCM
-  2. Popup method
-  3. Redirect method, but *without leaving the apps script page*.
+  - [FedCM](https://developers.google.com/identity/gsi/web/guides/fedcm-migration): Works even with 3rd party cookies disabled, but needs a newer browser.
+  - Popup method using the same domain: Works with most browsers, but the user might have manually disabled the popup.
+  - Redirect method: Works with all browsers. does it *without leaving the apps script page*.
 
 **On the redirect method**: If the first two methods fail (browser is too old and popups were blocked) it automatically opens a new [login](website/src/login.html) page which handles the login.
 It uses the new Firebase sync mechanism "indexedDBLocalPersistence" and the BroadcastChannel API to communicate with the original "opener" (where the user was trying to log-in) and thus finishes the original login flow. All this is done without refreshing the Apps Script webapp.
