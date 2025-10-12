@@ -22,7 +22,7 @@ The project is prepared for software agents, with detailed "agents.md" files in 
 
 Sample Apps Script pages illustrate various interaction patterns.
 
-Note: this contains two separate projects that work together: website and script. Each has its own setup and documentation here.
+**Note: this contains two separate projects that work together: website and script. Each has its own setup and documentation here.**
 
 ## Firebase Auth
 I implemented this because I couldnt find a good firebase UI that could be a) bundable (generates much smaller code) and b) handled all possible cases in the auth flow.
