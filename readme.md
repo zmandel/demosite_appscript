@@ -22,9 +22,22 @@ Integrates Google Apps Script webapps into a standard website, addressing the fo
 Sample Apps Script pages illustrate various interaction patterns.
 
 ## Firebase Auth
-The auth implementation can actually be used independent of apps script. Its a lit component in English & Spanish with bundling support (thus much smaller than the official FirebaseUI).
-An Apps Script can define a page as requiring authentication before loading, or can login on-demand after load. The framework handles all the UI, signin methods, Firebase connections, popups, redirects etc without needing to reload the Apps Script.
-It also adds the missing Crypto support in .gs, to validate the firebase idTokens.
+I implemented this because I couldnt find a good firebase UI that could be a) bundable (generates much smaller code) and b) handled all possible cases in the auth flow.
+It can actually be used independent of apps script. Its a lit component with:
+- English & Spanish translations.
+- Bundling support (the official FirebaseUI can´t bundle).
+- "Google" signing and "Email & Password" signin with verified email flow.
+- Extends Firebase Auth with Google FedCM Signing, the newest method with the least user friction.
+- Handles failures by automatically retrying with three different methods for Google Signin:
+  1. FedCM
+  2. Popup method
+  3. Redirect method, but without leaving the page!
+
+**On the redirect method**: If the first two methods failed, it automatically opens a new [login](website/src/login.html) page which handles the login, and uses a new Firebase sync mechanism "indexedDBLocalPersistence" and the BroadcastChannel API to communicate with the original "opener" (where user was trying to log-in) and thus finish its login flow. All this is done without ever needing to refresh the Apps Script webapp, which gets the user object and idToken automatically through secure messaging.
+
+On the Apps Script side:
+- Adds the missing Crypto support in .gs, to securely validate a firebase idToken.
+- It can define a page as requiring authentication before loading, or can login on-demand after load. 
 
 ## Demos
 Shows a simple website with two pages, each one being a different apps script page. "Page 1" follows the simplest flow, where the page loading animation stops as soon as the script page loads. "Page 2" shows a more complex flow where the page partially loads while the loading animation (from the parent website) continues. It then loads the rest of the page and stops the loading animation.
@@ -33,10 +46,9 @@ NOTE: The demo websites do not have a public login. You can try login features o
 * **Demo Website**: [fir-apps-script.firebaseapp.com](https://fir-apps-script.firebaseapp.com/)
 * **Using the "org/sig" with sample URL parameters**: [fir-apps-script.firebaseapp.com/?org=xxx&sig=yyy](https://fir-apps-script.firebaseapp.com/?org=XXXX&sig=YYYY)
 
-## Production Website using this framework
-
+## Production Website using this framework 
 * Visit [Tutor For Me](https://tutorforme.org)
-* To view a page with optional login: Do a demo lesson
+* To view a page with optional login: Do a demo lesson. You can view the page without login, then use the login feature while staying on the page.
 * to view a page with forced login: View "My lessons"
 
 ## Directory Structure
