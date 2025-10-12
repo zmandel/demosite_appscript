@@ -34,13 +34,15 @@ It can actually be used independent of apps script. Its a lit component with:
 - Handles failures by automatically retrying with three different methods for Google Signin:
   1. FedCM
   2. Popup method
-  3. Redirect method, but without leaving the page!
+  3. Redirect method, but *without leaving the apps script page*.
 
-**On the redirect method**: If the first two methods failed, it automatically opens a new [login](website/src/login.html) page which handles the login, and uses a new Firebase sync mechanism "indexedDBLocalPersistence" and the BroadcastChannel API to communicate with the original "opener" (where user was trying to log-in) and thus finish its login flow. All this is done without ever needing to refresh the Apps Script webapp, which gets the user object and idToken automatically through secure messaging.
+**On the redirect method**: If the first two methods fail (browser is too old and popups were blocked) it automatically opens a new [login](website/src/login.html) page which handles the login.
+It uses the new Firebase sync mechanism "indexedDBLocalPersistence" and the BroadcastChannel API to communicate with the original "opener" (where the user was trying to log-in) and thus finishes the original login flow. All this is done without refreshing the Apps Script webapp.
 On the Apps Script:
 - Adds the missing Crypto support in .gs, to securely validate a firebase idToken.
 - It can define a page as requiring authentication before loading, or can login on-demand after load. 
-
+- It has new messages to request the user to log-in, or get an idToken.
+  
 ## Demos
 Shows a simple website with two pages, each one being a different apps script page. "Page 1" follows the simplest flow, where the page loading animation stops as soon as the script page loads. "Page 2" shows a more complex flow where the page partially loads while the loading animation (from the parent website) continues. It then loads the rest of the page and stops the loading animation.
 
