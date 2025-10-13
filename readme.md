@@ -13,7 +13,7 @@ Integrates Google Apps Script webapps into a standard website, addressing the fo
 9. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
 10. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
 11. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
-12. **Logs to GCP Logging**: Sends logging events to the parent website.
+12. **Logs to GCP Logging**: Sends logging events to the parent website, which sends the frontend logs to GCP (same place where the .gs logs go.)
 13. **Change the browser header colorscheme** to match the script webapp.
 14. **Fullscreen support**
 15. **Easy installation and customization**: just "npm install" in both the website and apps script directories, customize .env.local files and "npm deploy". The website uses vite and the apps script uses a custom npm bundling script and "clasp" to deploy from the command-line.
