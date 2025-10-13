@@ -9,7 +9,7 @@ Integrates Google Apps Script webapps into a standard website, addressing the fo
 5. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts.
 6. **Google Workspace Compatibility**: Handles redirects typically problematic when users are under a Google Workspace account profile.
 7. **Dynamic Multiple Script version Loading**: Securely loads different script versions (could be on the same or a different Google Workspace or Google Account) under the same website routes by passing parameters for different "organizations" you can create using the "org/sig" feature.
-8. **Promise-based calls to google.script.run** and google.script.url.getLocation.
+8. **Promise-based calls to google.script.run** and google.script.url.getLocation, with automatic retries for common communication errors to the server.
 9. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
 10. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
 11. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
