@@ -29,7 +29,7 @@ I implemented this because I couldnt find a good firebase UI that could be a) bu
 It can actually be used independent of apps script. Its a lit component with:
 - English & Spanish translations.
 - Bundling support (the official FirebaseUI can´t bundle).
-- "Google" signing and "Email & Password" signin with verified email flow.
+- "Google" signin and "Email & Password" signin, including the "verify email flow".
 - Extends Firebase Auth with Google FedCM Signing, the newest method with the least user friction.
 - Handles failures by automatically retrying with three different methods for Google Signin:
   - [FedCM](https://developers.google.com/identity/gsi/web/guides/fedcm-migration): Works even with 3rd party cookies disabled, but needs a newer browser.
