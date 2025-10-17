@@ -10,9 +10,9 @@ const parserOptions = {
   //   <?!= value ?>
   // DO NOT write it as: <?!=value?>
   directives: [
-    { name: '?!=', start: '<', end: '>' }, // preserves <?!=str.labelSliderRight ?>
-    { name: '?=',  start: '<', end: '>' }, // preserves <?=foo?>
-    { name: '?',   start: '<', end: '>' }  // preserves generic <? ... ?>
+    { name: '?!=', start: '<', end: '>' }, // preserves <?!= str.labelSliderRight ?>
+    { name: '?=', start: '<', end: '>' }, // preserves <?= foo ?>
+    { name: '?', start: '<', end: '>' }  // preserves generic <? ... ?>
   ]
 };
 
@@ -34,8 +34,9 @@ for (const fileName of files) {
   const result = await posthtml([include({ encoding: "utf8" })]).process(html,
     { from: srcPath, ...parserOptions }
   );
+  const rewrittenHtml = result.html.replaceAll("../js/", "../.inline-cache/");
   mkdirSync(dirname(tmpPath), { recursive: true });
-  writeFileSync(tmpPath, result.html, "utf8");
+  writeFileSync(tmpPath, rewrittenHtml, "utf8");
 
   try {
     execSync(`inline-source ${tmpPath} > ${outPath}`, { stdio: "inherit", shell: true });

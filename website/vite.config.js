@@ -1,15 +1,15 @@
 import { defineConfig } from 'vite'
-import { resolve } from 'node:path'
 import fs from 'fs';
+import { resolve } from 'node:path'
 
 export default defineConfig(({ command }) => {
   
   // OPTIONAL: enable HTTPS dev server if you have certs (uncomment & adjust paths)
-   const httpsConfig = {
+  const httpsConfig = {
     key: fs.readFileSync('../../../../certs/localhost+2-key.pem'),
     cert: fs.readFileSync('../../../../certs/localhost+2.pem')
   };
-  
+
   return {
     root: 'src',
     publicDir: '../static',
@@ -32,7 +32,7 @@ export default defineConfig(({ command }) => {
     },
     server: {
       port: 5173,
-      https: httpsConfig,   // uncomment if enabling HTTPS
+      https: httpsConfig,   // to enable HTTPS
       open: false,
       host: true, 
     },
