@@ -3,42 +3,46 @@
 Integrates Google Apps Script webapps into a standard website, addressing the following issues and features:
 
 1. **Firebase auth** without limitations, including the new Google Sign-in by fedCM,with automatic popup and redirect mode fallback.
-2. **A simple bundling system** for apps script, which allows for organizing files as html,js, css and bundle into inlined html files to improve performance.
+2. **A simple bundling system** for apps script, which allows for organizing files as html, js, css and bundle into inlined html files to improve performance.
 3. **Custom Domain Serving**: Serves apps under a custom domain, providing more control than Google Sites.
 4. **Secure domain serving**: Only allows your specific domain to embed the apps script iframes.
 5. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts.
 6. **Google Workspace Compatibility**: Handles redirects typically problematic when users are under a Google Workspace account profile.
 7. **Dynamic Multiple Script version Loading**: Securely loads different script versions (could be on the same or a different Google Workspace or Google Account) under the same website routes by passing parameters for different "organizations" you can create using the "org/sig" feature.
-8. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
-9. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
-10. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
-11. **Logs to GCP Logging**: Sends logging events to the parent website.
-12. **Change the browser header colorscheme** to match the script webapp.
-13. **Fullscreen support**
-14. **Easy installation and customization**: just "npm install" in both the website and apps script directories, customize .env.local files and "npm deploy". The website uses vite and the apps script uses a custom npm bundling script and "clasp" to deploy from the command-line.
+8. **Promise-based calls to google.script.run** and google.script.url.getLocation, with automatic retries for common communication errors to the server.
+9. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
+10. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
+11. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
+12. **Logs to GCP Logging**: Sends logging events to the parent website, which sends the frontend logs to GCP (same place where the .gs logs go.)
+13. **Change the browser header colorscheme** to match the script webapp.
+14. **Fullscreen support**
+15. **Easy installation and customization**: just "npm install" in both the website and apps script directories, customize .env.local files and "npm deploy". The website uses vite and the apps script uses a custom npm bundling script and "clasp" to deploy from the command-line.
 
-**Bonus**: The project is prepared for software agents, with detailed "agents.md" files in key areas of the repository, both for the website and the apps script.
+The project is prepared for software agents, with detailed "agents.md" files in key areas of the repository, both for the website and the apps script.
 
 Sample Apps Script pages illustrate various interaction patterns.
+
+**Note: this contains two separate projects that work together: website and script. Each has its own setup and documentation here.**
 
 ## Firebase Auth
 I implemented this because I couldnt find a good firebase UI that could be a) bundable (generates much smaller code) and b) handled all possible cases in the auth flow.
 It can actually be used independent of apps script. Its a lit component with:
 - English & Spanish translations.
 - Bundling support (the official FirebaseUI can´t bundle).
-- "Google" signing and "Email & Password" signin with verified email flow.
+- "Google" signin and "Email & Password" signin, including the "verify email flow".
 - Extends Firebase Auth with Google FedCM Signing, the newest method with the least user friction.
 - Handles failures by automatically retrying with three different methods for Google Signin:
-  1. FedCM
-  2. Popup method
-  3. Redirect method, but without leaving the page!
+  - [FedCM](https://developers.google.com/identity/gsi/web/guides/fedcm-migration): Works even with 3rd party cookies disabled, but needs a newer browser.
+  - Popup method using the same domain: Works with most browsers, but the user might have manually disabled the popup.
+  - Redirect method: Works with all browsers. does it *without leaving the apps script page*.
 
-**On the redirect method**: If the first two methods failed, it automatically opens a new [login](website/src/login.html) page which handles the login, and uses a new Firebase sync mechanism "indexedDBLocalPersistence" and the BroadcastChannel API to communicate with the original "opener" (where user was trying to log-in) and thus finish its login flow. All this is done without ever needing to refresh the Apps Script webapp, which gets the user object and idToken automatically through secure messaging.
-
-On the Apps Script side:
+**On the redirect method**: If the first two methods fail (browser is too old and popups were blocked) it automatically opens a new [login](website/src/login.html) page which handles the login.
+It uses the new Firebase sync mechanism "indexedDBLocalPersistence" and the BroadcastChannel API to communicate with the original "opener" (where the user was trying to log-in) and thus finishes the original login flow. All this is done without refreshing the Apps Script webapp.
+On the Apps Script:
 - Adds the missing Crypto support in .gs, to securely validate a firebase idToken.
 - It can define a page as requiring authentication before loading, or can login on-demand after load. 
-
+- It has new messages to request the user to log-in, or get an idToken.
+  
 ## Demos
 Shows a simple website with two pages, each one being a different apps script page. "Page 1" follows the simplest flow, where the page loading animation stops as soon as the script page loads. "Page 2" shows a more complex flow where the page partially loads while the loading animation (from the parent website) continues. It then loads the rest of the page and stops the loading animation.
 
@@ -102,8 +106,11 @@ To use cloud logging for the frontend, use the firebase function in website/func
 * **Iframe Communication**: Manages message passing (analytics, events, load states).
 * **Logging**: logs server-side events.
 * **Crypto support** to securely validate idToken signatures and expiration from Firebase Auth.
-
-Supports separate html/js/css/gs. Contains npm scripts to bundle, push and publish (with "clasp") the script.
+* **Promise-based** calls to google.script:
+  - await server.run('myServerFn', arg1, arg2);
+  - const loc = await server.getLocation();
+* **separate html/js/css/gs**. Contains npm scripts to bundle, push and publish (with "clasp") the script.
+Calls to server.run are automatically retried when the server returns an empty response. This fixes a common issue with apps script when it returns empty errors on certain situations, for example if the page goes to background on mobile while the server call is running.
 
 ### Script Properties
 The script´s crypto implementation automatically downloads and updates the Firebase Certificates needed to verify signatures, and stores it in Script Properties.
