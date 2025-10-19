@@ -1,7 +1,7 @@
 import { t } from "../js/common.js";
 import { signOut, setPersistence, indexedDBLocalPersistence, getAuth, onAuthStateChanged, getRedirectResult } from "firebase/auth";
 import { initializeApp } from "firebase/app";
-import { doGoogleAuth, doEmailLogin, doEmailSignup, doPasswordReset } from "./authService.js";
+import { doGoogleAuth, doEmailLogin, doEmailSignup, doPasswordReset, loadGIS } from "./authService.js";
 import messageBox from "./messagebox.js";
 import "../components/authdialog.js";
 
@@ -152,7 +152,8 @@ function isAuthDialogCreated() {
  * @returns {Promise<import("firebase/auth").User>} A promise that resolves with the user object upon successful login,
  * or rejects if the dialog is cancelled.
  */
-function showAuthDialog(headerText, cancelable = false) {
+async function showAuthDialog(headerText, cancelable = false) {
+  await loadGIS();
   return new Promise((resolve, reject) => {
     let dialog = document.querySelector('auth-dialog');
     if (!dialog) {

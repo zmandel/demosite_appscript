@@ -74,6 +74,8 @@ function initAuth(auth, headerText, rootElement, host) {
     const disabled = isBusy || emailDialogVisible;
     googleLoginBtn.disabled = disabled;
     emailOptionBtn.disabled = disabled;
+    if (cancelBtn)
+      cancelBtn.disabled = disabled;
     spinnerWait.style.visibility = isBusy ? "visible" : "hidden";
   };
 

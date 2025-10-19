@@ -247,6 +247,10 @@ function handleFirebaseProviderError(e) {
   throw e;
 }
 
+export async function loadGIS() {
+  await loadGoogleIdentityServices();
+}
+
 export async function doGoogleAuth(auth, redirectMode) {
   try {
     return await signInWithGoogleOneTap(auth);
