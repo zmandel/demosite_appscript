@@ -48,7 +48,7 @@ for (const fileName of files) {
     try {
       unlinkSync(tmpPath);
     } catch {
-      //ignore
+      //log & survive
       console.log("failed to delete tmp file", tmpPath);
     }
   }
@@ -61,6 +61,6 @@ try {
     }
   }
 } catch {
-  //ignore
+  //log & survive
   console.log("failed to clean up inline-cache");
 }
