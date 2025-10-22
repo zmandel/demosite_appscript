@@ -6,7 +6,7 @@
  */
 
 const g_moduleLog = "backend"; //GCP logging tag
-const g_firebaseProjectId = "fir-apps-script"; //GCP project
+const g_firebaseProjectId = "__FIREBASE_PROJECT_ID__";
 
 /**
  * sample routing (page 1 or page 2)
