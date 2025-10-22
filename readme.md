@@ -3,7 +3,11 @@
 Integrates Google Apps Script webapps into a standard website, addressing the following issues and features:
 
 1. **Firebase auth** without limitations, including the new Google Sign-in by fedCM,with automatic popup and redirect mode fallback.
-2. **A simple bundling system** for apps script, which allows for organizing files as html, js, css and bundle into inlined html files to improve performance.
+2. **Bundling system** for apps script:
+    - organize files as html, js, css, gs.
+    - use .env / .envlocal variables shared in .js and .gs files to share variables between frontend and backend and avoid hardcoded values.
+    - bundle into inlined html files to improve performance and comply with the apps script format.
+    - Note: for a much more complete bundler, look at [apps-script-engine](https://github.com/WildH0g/apps-script-engine-template)
 3. **Custom Domain Serving**: Serves apps under a custom domain, providing more control than Google Sites.
 4. **Secure domain serving**: Only allows your specific domain to embed the apps script iframes.
 5. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts.
