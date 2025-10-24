@@ -1,5 +1,7 @@
 # Google Apps Script Website Integration Framework
 
+TL;DR iframe your appsscript webapps into a website complete with user auth, navigation and analytics.
+
 Integrates Google Apps Script webapps into a standard website, addressing the following issues and features:
 
 1. **Firebase auth** without limitations, including the new Google Sign-in by fedCM,with automatic popup and redirect mode fallback.
