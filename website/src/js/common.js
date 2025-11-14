@@ -10,7 +10,6 @@
 *   To be able to use reporting based on the "item_id", create a "item_id" event-scoped custom dimension in your GTM account: https://support.google.com/analytics/answer/14239696
 */
 
-import "../common.css";
 export default toast;
 
 const g_orgDefault = import.meta.env.VITE_ORG_DEFAULT;
@@ -18,6 +17,8 @@ const g_endpointPutLogs = import.meta.env.VITE_ENDPOINT_PUT_LOGS;
 const g_firebaseProjname = import.meta.env.VITE_FIREBASE_PROJNAME;
 const g_rootDomain = import.meta.env.VITE_ROOT_DOMAIN;
 const g_idGTM = import.meta.env.VITE_GTM_ID; //Google Tag Manager ID
+const g_langDefault = import.meta.env.VITE_LANG_DEFAULT;
+let g_lang = "";
 
 /**
  * Public key for verifying signatures.
@@ -31,6 +32,11 @@ const g_publicKeyJwk = {
   "ext": true
 };
 
+
+let g_mapsLang = {
+  "en": {},
+  "es": {}
+};
 
 /**
  * Parameters allowed in the URL. Others are ignored.
@@ -81,17 +87,37 @@ function initializeCustomDimensions(params) {
  */
 const g_forceGTM = false;
 let gtag = null;
+let g_sourceIframe = null;
 
-/**
- * //CUSTOMIZE: replace with your own error handling
- * used as an error callback for initializePage
- */
-export function onErrorBaseIframe() {
-  hideLoading();
-  let elem = document.querySelector("#errPage");
-  if (elem)
-    elem.style.display = "";
+export async function serverRequest(prop, ...args) {
+  const strArgs = JSON.stringify(args);
+  let g_loadedFrame = false;
+let g_loadingFrame = false;
+  if (!g_loadedFrame && !g_loadingFrame)
+    loadIframeFromCurrentUrl(); //start the iframe loading process
+
+  return new Promise(resolve => {
+    const idRequest = g_callbackRunner.setCallback(function (response) {
+      resolve(response);
+    });
+    g_signalFrameLoaded.then(() => {
+      g_sourceIframe.postMessage({ type: "FROM_PARENT", action: "serverRequest", data: { functionName: prop, arguments: strArgs }, idRequest: idRequest }, "*");
+    });
+  });
 }
+
+export function makeSignal() {
+  let resolve, reject;
+  const p = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  p.resolve = resolve;
+  p.reject = reject;
+  return p;
+}
+
+const g_signalFrameLoaded = makeSignal();
 
 /**
  * Loads the Google Tag Manager (GTM) script
@@ -116,6 +142,27 @@ export function isLocalhost() {
   return window.location.hostname === "localhost";
 }
 
+export function sendLogsToServer(logQueue) {
+  if (isLocalhost()) {
+    return;
+  }
+
+  fetch(g_endpointPutLogs, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ logs: logQueue })
+  })
+    .then(res => {
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return res;
+    })
+    .catch(e => {
+      console.error("Error sending logs", e);
+    });
+}
+
 /**
  * events that the iframe can send:
  * - analyticsEvent
@@ -126,6 +173,115 @@ export function isLocalhost() {
 * - urlParamChange 
 */
 
+export function setTitle(title) {
+  document.title = title + "  |  Tutor for Me";
+}
+
+export function openUrlWithProps(dataEvent) {
+  if (!dataEvent)
+    return;
+  const url = new URL(window.location.href);
+  if (dataEvent.pathname)
+    url.pathname = dataEvent.pathname;
+
+  if (dataEvent.props) {
+    Object.entries(dataEvent.props).forEach(([key, value]) => {
+      //if value is empty, remove the parameter
+      if (value === null || value === undefined || value === "")
+        url.searchParams.delete(key);
+      else
+        url.searchParams.set(key, value);
+    });
+  }
+  window.open(url, dataEvent.replacePage ? "_self" : "_blank");
+}
+
+export function processAction(data, event, callbackMessage) {
+  if (data.action == "siteInited") {
+    if (event)
+      g_sourceIframe = event.source;
+    document.documentElement.classList.remove("scrollY");
+    g_loadedFrame = true;
+    g_loadingFrame = false;
+    event.source.postMessage({ type: 'validateDomain' }, event.origin);
+        
+    document.querySelector("iframe").style.opacity = "1";
+    
+    if (g_callbackIframeLoadEvents)
+      g_callbackIframeLoadEvents(IframeLoadEvents.LOADED);
+  }
+  else if (data.action == "serverResponse") {
+    g_callbackRunner.runCallback(data.idRequest, data.data);
+  }
+  else if (data.action == "openUrlWithProps") {
+    const dataEvent = data.data;
+    if (!dataEvent)
+      return;
+    openUrlWithProps(dataEvent);
+  }
+  else if (data.action == "siteFullyLoaded") {
+    if (g_callbackIframeLoadEvents)
+      g_callbackIframeLoadEvents(IframeLoadEvents.FULLYLOADED);
+  }
+  else if (data.action == "titleChange") {
+    setTitle(data.data.title);
+  }
+  else if (data.action == "logs") {
+    const logs = data.data.logs;
+    if (!logs || !Array.isArray(logs) || logs.length == 0) {
+      console.error("Invalid logs");
+      return;
+    }
+    sendLogsToServer(logs);
+  }
+  else if (data.action == "toggleFullscreen") {
+    toggleFullscreen();
+  }
+  else if (data.action == "analyticsEvent") {
+    if (gtag) {
+      gtag("event", "select_content", {
+        content_type: "button",
+        item_id: data.data.name
+      });
+    }
+  }
+  else if (data.action == "urlParamChange") {
+    const dataEvent = data.data;
+    if (dataEvent && typeof dataEvent === 'object' && dataEvent.urlParams) {
+      const urlParams = dataEvent.urlParams;
+      const url = new URL(window.location.href);
+      Object.entries(urlParams).forEach(([key, value]) => {
+        if (value == null) {
+          url.searchParams.delete(key);
+          g_paramsClean[key] = null;
+        } else {
+          url.searchParams.set(key, value);
+          g_paramsClean[key] = value;
+        }
+      });
+      if (dataEvent.refresh)
+        window.location.replace(url);
+      else
+        window.history.replaceState({}, document.title, url);
+    }
+  }
+
+  if (data.action == "siteInited")
+    g_signalFrameLoaded.resolve();
+  
+  if (callbackMessage)
+    callbackMessage(data, event); //propagate
+}
+
+export const IframeLoadEvents = {
+  LOADING: "loading",
+  LOADED: "loaded",
+  FULLYLOADED: "fullyloaded",
+  ERRORLOADING: "error"
+};
+
+let g_callbackIframeLoadEvents = null;
+let g_iframeParamsExtra = "";
 /**
  * Initializes the main page logic for the Apps Script iframe integration.
  * @param {Object} options - Options for initialization
@@ -135,6 +291,7 @@ export function isLocalhost() {
  * @param {Function} options.callbackMessage - Callback for message events received from the iframe
  * @param {Function} options.onError - Callback for error events during initialization
  * @param {Function} options.callbackContentLoaded - Callback for the content loaded event
+ * @param {Function} options.callbackIframeLoadEvents - Callback for iframe loading events with IframeLoadEvents enum
  * 
  */
 export async function initializePage({
@@ -143,31 +300,12 @@ export async function initializePage({
   paramsExtra,
   callbackMessage,
   onError,
-  callbackContentLoaded
+  callbackContentLoaded,
+  callbackIframeLoadEvents,
 } = {}) {
+  g_callbackIframeLoadEvents = callbackIframeLoadEvents;
+  g_iframeParamsExtra = paramsExtra || "";
   let initedBase = await initializeBase();
-
-  function sendLogsToServer(logQueue) {
-    if (isLocalhost()) {
-      return;
-    }
-    
-    fetch(g_endpointPutLogs, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ logs: logQueue })
-    })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-        return res;
-      })
-      .catch(e => {
-        console.error("Error sending logs", e);
-      });
-  }
-
 
   window.addEventListener("message", (event) => {
     // validate the origin of the message
@@ -193,10 +331,6 @@ export async function initializePage({
       return;
     }
 
-    if (window.location.origin === event.origin) {
-      return; //ignore same origin messages (like 'login-done') 
-    }
-
     if (!event.data || event.data.type !== "FROM_IFRAME")
       return;
     // Walk up via .parent to see if it reaches this window
@@ -218,100 +352,19 @@ export async function initializePage({
       }
     }
 
-    //CUSTOMIZE: add your own custom events here
-    if (event.data.action == "siteInited") {
-      document.documentElement.classList.remove("scrollY");
-      //this event comes from the script´s postSiteInited
-      const dontStopProgress = event.data?.data?.dontStopProgress;
-      g_loadedFrame = true;
-      cleanupTimeoutIdiframe();
-      event.source.postMessage({ type: 'validateDomain' }, event.origin);
-      document.querySelector("iframe").style.opacity = "1";
-      if (!dontStopProgress) {
-        hideLoading();
-      }
-    }
-    if (event.data.action == "openUrlWithProps") {
-      const dataEvent = event.data.data;
-      if (!dataEvent)
-        return;
-      const url = new URL(window.location.href);
-      if (dataEvent.pathname)
-        url.pathname = dataEvent.pathname;
-      
-      if (dataEvent.props) {
-        Object.entries(dataEvent.props).forEach(([key, value]) => {
-          //if value is empty, remove the parameter
-          if (value === null || value === undefined || value === "")
-            url.searchParams.delete(key);
-          else
-            url.searchParams.set(key, value);
-        });
-      }
-      window.open(url, dataEvent.replacePage ? "_self" : "_blank");
-    }
-    else if (event.data.action == "siteFullyLoaded") {
-      hideLoading();
-    }
-    else if (event.data.action == "titleChange") {
-      if (event.data.data.afterDash) {
-        const sep = " - ";
-        document.title = document.title.split(sep)[0] + sep + event.data.data.title;
-      }
-      else {
-        document.title = event.data.data.title;
-      }
-    }
-    else if (event.data.action == "logs") {
-      const logs = event.data.data.logs;
-      if (!logs || !Array.isArray(logs) || logs.length == 0) {
-        console.error("Invalid logs");
-        return;
-      }
-      sendLogsToServer(logs);
-    }
-    else if (event.data.action == "toggleFullscreen") {
-      toggleFullscreen();
-    }
-    else if (event.data.action == "analyticsEvent") {
-      if (gtag) {
-        gtag("event", "select_content", {
-          content_type: "button",
-          item_id: event.data.data.name
-        });
-      }
-    }
-    else if (event.data.action == "urlParamChange") {
-      const dataEvent = event.data.data;
-      if (dataEvent && typeof dataEvent === 'object' && dataEvent.urlParams) {
-        const urlParams = dataEvent.urlParams;
-        const url = new URL(window.location.href);
-        Object.entries(urlParams).forEach(([key, value]) => {
-          if (value == null) {
-            url.searchParams.delete(key);
-            g_paramsClean[key] = null;
-          } else {
-            url.searchParams.set(key, value);
-            g_paramsClean[key] = value;
-          }
-        });
-        if (dataEvent.refresh)
-          window.location.replace(url);
-        else
-          window.history.replaceState({}, document.title, url);
-      }
-    }
-    if (callbackMessage)
-      callbackMessage(event.data, event); //propagate
+    const data = event.data;
+    processAction(data, event, callbackMessage);
   });
 
   function onContentLoadedBase() {
     if (!initedBase) {
-      cleanupTimeoutIdiframe(); //not currently needed
+      if (g_callbackIframeLoadEvents)
+        g_callbackIframeLoadEvents(IframeLoadEvents.ERRORLOADING);
       if (onError)
         onError();
       return;
     }
+
     if (loadAnalytics)
       loadGTM();
     if (callbackContentLoaded)
@@ -329,13 +382,13 @@ export async function initializePage({
   }
 }
 
-export function getLang(onlyFromURL = true) {
+export function getLang() {
+  if (g_lang)
+    return g_lang;
   const params = new URLSearchParams(window.location.search);
   const urlLang = params.get("lang");
   if (urlLang)
     return urlLang;
-  if (onlyFromURL)
-    return "en"; //default language
 
   const stored = localStorage.getItem("lang");
   if (stored)
@@ -343,45 +396,74 @@ export function getLang(onlyFromURL = true) {
   return navigator.language.startsWith("es") ? "es" : "en";
 }
 
-export function setLanguage(langCode, translations) {
+export function setLang(lang, mapTranslations) {
+  if (!lang)
+    lang = g_langDefault;
+  if (lang !== "en" && lang !== "es")
+    throw new Error("invalid language");
+  g_lang = lang;
+
+  if (mapTranslations) {
+    g_mapsLang = mapTranslations;
+    if (!haveSamePropertyNames(g_mapsLang.en, g_mapsLang.es))
+      console.error("EN and ES differ");
+  }
+
   const elemLang = document.getElementById("language");
   if (elemLang)
-    elemLang.value = langCode;
-  localStorage.setItem("lang", langCode);
-  applyTranslations(document, translations, langCode);
+    elemLang.value = lang;
+  localStorage.setItem("lang", lang);
+  applyTranslations(document, mapTranslations, lang);
 }
 
-export function t(translations, lang) {
-  let dict = translations[lang || getLang()];
-  if (!dict) {
-    console.log("Missing translation map ", lang);
-    dict = translations["en"];
+export function t(lang = null, translations = null) {
+  if (!translations)
+    translations = g_mapsLang;
+
+  if (!lang)
+    lang = g_lang;
+
+  if (!lang)
+    lang = getLang();
+
+  if (!lang) {
+    console.error("no lang in t");
+    lang = g_langDefault; //recover
   }
-  return dict;
+  if (lang == "es")
+    return translations.es;
+  return translations.en;
 }
 
 let g_firstTranslationDone = false;
 
 export function applyTranslations(root, translations, lang) {
+  let isLanding = false;
+  //set isLanding if the current url is the landing page (no pathname)
+  if (window.location.pathname === "/" || window.location.pathname === "/index.html") {
+    isLanding = true;
+  }
+
   root.querySelectorAll("[data-i18n]").forEach(el => {
     const key = el.getAttribute("data-i18n");
-    const mapped = t(translations, lang)[key];
-    if (mapped) {
+    const mapped = t(lang, translations)[key];
+    if (typeof mapped === "string") {
       if (!g_firstTranslationDone && lang == "en" && el.innerHTML !== mapped) {
-        console.log("unmatched translation for", key);
+        if (isLanding || el.innerHTML.trim() !== "") //avoid logging empty elements in non-landing pages
+          console.log("unmatched translation for", key);
       }
       el.innerHTML = mapped;
     }
     else {
       if (lang !== "en") {
         console.log("Missing translation for", key, "in", lang);
-        const mapped2 = t(translations, "en")[key];
+        const mapped2 = t("en", translations)[key];
         if (mapped2) {
           el.innerHTML = mapped2;
           return;
         }
       }
-      console.log("missing: "+key+': "'+ el.innerHTML+'"');
+      console.log("missing: " + key + ': "' + el.innerHTML + '"');
       el.innerHTML = "?";
     }
   });
@@ -442,19 +524,17 @@ async function verifyScript(org, signatureBase64Url) {
 
 async function initializeBase() {
   const params = new URLSearchParams(window.location.search);
-  //set g_paramsClean with allowed values from the URL
   Object.keys(g_paramsClean).forEach(key => {
     if (params.has(key))
       g_paramsClean[key] = params.get(key);
   });
-  if (g_paramsClean.lang != "en" && g_paramsClean.lang != "es") {
+
+  if (g_paramsClean.lang !== "en" && g_paramsClean.lang !== "es") {
     console.error("Unsupported lang: " + g_paramsClean.lang);
     return false;
   }
 
   if (params.has("org")) {
-    g_paramsClean.org = params.get("org");
-    g_paramsClean.sig = params.get("sig");
     const isValid = await verifyScript(g_paramsClean.org, g_paramsClean.sig);
     if (!isValid)
       return false;
@@ -466,54 +546,67 @@ async function initializeBase() {
 }
 
 let g_loadedFrame = false;
-let g_timeoutIdiframe = null;
-
-
-/**
- * Hides the loading page elements.
- * This function is called when the iframe has loaded or when an error occurs.
- * It hides both the short and long loading pages. 
- * 
-*/
-function hideLoading() {
-  let elem = document.getElementById("loadingPage");
-  if (elem)
-    elem.style.display = "none";
-
-  elem = document.getElementById("loadingPageLong");
-  if (elem)
-    elem.style.display = "none";
-}
-
-function cleanupTimeoutIdiframe() {
-  if (g_timeoutIdiframe) {
-    clearTimeout(g_timeoutIdiframe);
-    g_timeoutIdiframe = null;
-  }
-}
-
+let g_loadingFrame = false;
 /**
  * Loads the iframe from the current URL with the given extra parameters. 
- * It handle the loading state, showing a loading page until the iframe is fully loaded.
- * This function sets a timeout to show a long loading page if the iframe does not load within 10 seconds.
+* if paramsExtra is not provided, uses the one set during initializePage.
  * @param {string} paramsExtra - Extra parameters to append to the iframe URL.
  */
-export function loadIframeFromCurrentUrl(paramsExtra) {
-  cleanupTimeoutIdiframe();
-  g_timeoutIdiframe = setTimeout(() => {
-    if (!g_loadedFrame) {
-      document.getElementById("loadingPage").style.display = "none";
-      document.getElementById("loadingPageLong").style.display = "";
-    }
-  }, 13000);
+export function loadIframeFromCurrentUrl(paramsExtra = "") {
+  if (g_loadedFrame || g_loadingFrame)
+    return;
+  g_loadingFrame = true;
+  if (!paramsExtra)
+    paramsExtra = g_iframeParamsExtra;
 
-  g_loadedFrame = false;
-  document.getElementById("loadingPageLong").style.display = "none";
-  document.getElementById("loadingPage").style.display = "";
-  document.querySelector("iframe").style.opacity = "0";
+  const iframeElem = document.querySelector("iframe");
+  let startedRetry = false;
 
-  let url = `https://script.google.com/macros/s/${g_paramsClean.org}/exec?lang=${g_paramsClean.lang}&${paramsExtra}&embed=1`;
-  document.querySelector("iframe").src = url;
+  if (!iframeElem) {
+    console.error("No iframe found");
+    return;
+  }
+
+  function setRetryMode() {
+    if (startedRetry)
+      return;
+    startedRetry = true;
+    g_loadingFrame = false;
+    if (g_callbackIframeLoadEvents)
+        g_callbackIframeLoadEvents(IframeLoadEvents.ERRORLOADING);
+    
+  }
+
+  iframeElem.addEventListener("load", (event) => {
+    if (g_loadedFrame)
+      return;
+
+    setTimeout(() => {
+      if (g_loadedFrame)
+        return;
+      setRetryMode();
+    }, 5000);
+  });
+
+  setTimeout(() => {
+    if (g_loadedFrame || startedRetry)
+      return;
+    //in rare cases (ie frame load cancelled), the iframe load event is never called.
+    setRetryMode();
+  }, 12000);
+
+  if (g_callbackIframeLoadEvents)
+      g_callbackIframeLoadEvents(IframeLoadEvents.LOADING);
+  iframeElem.style.opacity = "0";
+  iframeElem.src = getScriptUrlWithParams(paramsExtra);
+}
+
+function getScriptUrlWithParams(paramsExtra) {
+  const strBuilder = paramsExtra ? "&" + paramsExtra : "";
+  const strDemo = (g_paramsClean.demo == "1") ? "&demo=1" : "";
+  const lang = getLang(); //g_paramsClean has the actual url param, but getLang adds a localStorage preference if url doesnt have it
+  let url = `https://script.google.com/macros/s/${g_paramsClean.org}/exec?lang=${lang}&session=${g_paramsClean.session}${strBuilder}${strDemo}&embed=1`;
+  return url;
 }
 
 let g_beforeGTMFinished = false;
@@ -657,7 +750,7 @@ export function clearToasts(position) {
   for (const host of containers.values()) host.replaceChildren();
 }
 
-function toggleFullscreen() {
+export function toggleFullscreen() {
   const elem =
     document.fullscreenElement ||
     document.webkitFullscreenElement ||
@@ -721,3 +814,59 @@ export function insertSpinner(host) {
   host.style.visibility = "hidden";
   host.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><style>.spinner_S1WN{animation:spinner_MGfb .8s linear infinite;animation-delay:-.8s; fill:currentColor;}.spinner_Km9P{animation-delay:-.65s}.spinner_JApP{animation-delay:-.5s}@keyframes spinner_MGfb{93.75%,100%{opacity:.2}}</style><circle class="spinner_S1WN" cx="4" cy="12" r="3"/><circle class="spinner_S1WN spinner_Km9P" cx="12" cy="12" r="3"/><circle class="spinner_S1WN spinner_JApP" cx="20" cy="12" r="3"/></svg>`;
 }
+
+function haveSamePropertyNames(obj1, obj2) {
+  const keys1 = Object.keys(obj1).sort(); // Get and sort keys of obj1
+  const keys2 = Object.keys(obj2).sort(); // Get and sort keys of obj2
+
+  // Find missing or extra keys in obj1 relative to obj2
+  const missingInObj2 = keys1.filter(key => !keys2.includes(key));
+  const missingInObj1 = keys2.filter(key => !keys1.includes(key));
+
+  // Log warnings for missing or extra keys
+  if (missingInObj2.length > 0) {
+    console.warn("Keys missing in obj2:", missingInObj2);
+  }
+
+  if (missingInObj1.length > 0) {
+    console.warn("Keys missing in obj1:", missingInObj1);
+  }
+
+  // Compare lengths and each key
+  const isSame = keys1.length === keys2.length && keys1.every((key, index) => key === keys2[index]);
+
+  return isSame;
+}
+
+function createCallbackRunner() {
+  const store = new Map();
+
+  const genId = () => {
+    // Prefer strong, collision-resistant IDs when available
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+    const rand = Math.random().toString(36).slice(2);
+    return `cb_${Date.now().toString(36)}_${rand}`;
+  };
+
+  function setCallback(callback) {
+    if (typeof callback !== "function") throw new TypeError("callback must be a function");
+    const id = genId();
+    store.set(id, callback);
+    return id;
+  }
+
+  function runCallback(id, data) {
+    const cb = store.get(id);
+    if (!cb)
+      return false;
+    // Delete first to prevent reentrancy or double-invoke if cb calls set/run
+    store.delete(id);
+    cb(data); // let errors bubble; caller decides how to handle
+    return true;
+  }
+
+  return Object.freeze({ setCallback, runCallback });
+}
+
+const g_callbackRunner = createCallbackRunner();
+

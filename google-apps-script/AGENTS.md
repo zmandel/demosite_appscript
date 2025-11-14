@@ -8,10 +8,6 @@ This folder contains sample Apps Script files that interact with the website loc
 
 
 ## Coding Style
-
-- Use **4 spaces** for indentation for both `.gs` and `.html` files.
-- Use semicolons and keep line length under 120 characters.
-- Keep function and variable names in **camelCase**.
 - Include descriptive comments for new functions and parameters.
 
 ## Development Notes

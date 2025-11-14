@@ -98,7 +98,7 @@ To use cloud logging for the frontend, use the firebase function in website/func
 
 * [`common.js`](website/src/js/common.js): Core logic
 * [`index.html`](website/src/index.html): Landing page
-* [`page1.html`, `page2.html`](website/src/page1.html): Iframe hosts
+* [`page1.html`, `page2.html`, `page3.html`](website/src/page1.html): Iframe hosts
 * [`logs.js`](website/functions/api/logs.js): Server-side logging
 * [`firebase.json`](website/firebase.json): Hosting config
 

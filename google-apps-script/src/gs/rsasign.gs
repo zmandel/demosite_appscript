@@ -1,36 +1,5 @@
 let g_rsaSign = null;
 
-// Verify Firebase ID token without network calls to Google
-// can throw error message "expired"
-function verifyFirebaseIdToken_(idToken) {
-  const projectId = g_firebaseProjectId;
-  const rsaSign = getRsaSign();
-  const parts = idToken.split('.');
-  if (parts.length !== 3)
-    throwErrorGeneric('Malformed JWT');
-
-  const header  = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString());
-  const payload = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[1])).getDataAsString());
-  const now = Math.floor(Date.now()/1000);
-
-  //check expired before pem, as it could be too old and cause an unnecesary fetch to refresh pem
-  if (typeof payload.exp !== 'number' || !isFinite(payload.exp))
-    throwErrorGeneric('invalid payload.exp'); 
-  if (payload.exp <= now)
-    throwError('expired'); //not generic
-
-  const pem = getPemForKid_(header.kid);
-  const ok  = g_rsaVerify(idToken, pem, ['RS256']);
-  if (!ok)
-    throwErrorGeneric('Invalid signature');
-
-  if (payload.iss !== `https://securetoken.google.com/${projectId}`) throwErrorGeneric('Invalid issuer');
-  if (payload.aud !== projectId) throwErrorGeneric('Invalid audience');
-  if (!payload.sub) throwErrorGeneric('Missing sub');
-  if (!payload.email_verified) throwErrorGeneric('Not an email-verified account')
-  return payload;
-}
-
 function getRsaSign() {
 
   if (g_rsaSign)

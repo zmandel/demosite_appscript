@@ -1,10 +1,10 @@
 import { LitElement, html } from "lit";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
-import componentHTML from "./authdialog.html?raw";
-import "../dialog.css";
+import componentHTML from "../html/authdialog.html?raw";
+import "../../css/dialog.css";
 import A11yDialog from "a11y-dialog";
-import messageBox from "../js/messagebox.js";
-import { t, toast, applyTranslations, insertSpinner } from "../js/common.js";
+import messageBox from "../../js/messagebox.js";
+import { t, toast, applyTranslations, insertSpinner } from "../../js/common.js";
 import { onAuthStateChanged } from "firebase/auth";
 
 const translations = {
@@ -97,7 +97,7 @@ function initAuth(auth, headerText, rootElement, host) {
     
     if (user) {
       host.setBusy(false);
-      toast(t(translations).welcomeUser + (user.displayName || user.email || ""), { type: "success", position: "tl" });
+      toast(t(null, translations).welcomeUser + (user.displayName || user.email || ""), { type: "success", position: "tl" });
       if (emailDialog)
         emailDialog.hide();
       if (host) {
@@ -157,7 +157,7 @@ function initAuth(auth, headerText, rootElement, host) {
     const email = (emailInput.value || "").trim();
     const password = (passwordInput.value || "").trim();
     if (!email || !password) {
-      messageBox(t(translations).signInTitle, t(translations).enterEmailPassword);
+      messageBox(t(null, translations).signInTitle, t(null, translations).enterEmailPassword);
       return;
     }
     host.dispatchEvent(new CustomEvent("email-login", {
@@ -171,7 +171,7 @@ function initAuth(auth, headerText, rootElement, host) {
     const email = (emailInput.value || "").trim();
     const password = (passwordInput.value || "").trim();
     if (!email || !password) {
-      messageBox(t(translations).signUpTitle, t(translations).enterEmailPassword);
+      messageBox(t(null, translations).signUpTitle, t(null, translations).enterEmailPassword);
       return;
     }
     host.dispatchEvent(new CustomEvent("email-signup", {
@@ -184,10 +184,10 @@ function initAuth(auth, headerText, rootElement, host) {
   forgotPasswordBtn.addEventListener("click", async () => {
     const email = (emailInput.value || "").trim();
     if (!email) {
-      messageBox(t(translations).passwordResetTitle, t(translations).enterEmailReset);
+      messageBox(t(null, translations).passwordResetTitle, t(null, translations).enterEmailReset);
       return;
     }
-    const result = await messageBox(t(translations).passwordResetTitle, t(translations).pwdResetAlert, { cancel: true });
+    const result = await messageBox(t(null, translations).passwordResetTitle, t(null, translations).pwdResetAlert, { cancel: true });
     if (!result)
       return;
 

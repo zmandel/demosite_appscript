@@ -84,7 +84,7 @@ function loadScene() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
   const div = document.createElement('div');
-  div.textContent = 'Section visible second';
+  div.textContent = 'Section visible second, after having loaded remote libraries and backend data.';
   document.body.appendChild(div);
   document.body.appendChild(renderer.domElement);
 

@@ -213,7 +213,7 @@ function handleFirebaseProviderError(e) {
   const code = e.code;
   if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request")
     return;
-  const { title, message } = getErrorMessage(t, e, t(translations).googleLoginFailed);
+  const { title, message } = getErrorMessage(t, e, t(null,translations).googleLoginFailed);
   if (code === "auth/popup-blocked") {
     messageBox(title, message, { cancel: true }).then((result) => {
       if (result) {
@@ -235,7 +235,7 @@ function handleFirebaseProviderError(e) {
             }
           }
           if (event.data.messageError)
-            messageBox(t(translations).loginFailed, event.data.messageError);
+            messageBox(t(null,translations).loginFailed, event.data.messageError);
         };
         window.addEventListener("message", messageHandler);
         w = window.open(url, "_blank"); //no noopener so we can close it later
@@ -258,7 +258,7 @@ export async function doGoogleAuth(auth, redirectMode) {
 
     if (shouldFallbackToFirebaseProvider(error)) {
       if (!redirectMode) {
-        const ret = await messageBox(t(translations).googleLoginFailed, t(translations).quickLoginBlocked, { cancel: true });
+        const ret = await messageBox(t(null,translations).googleLoginFailed, t(null,translations).quickLoginBlocked, { cancel: true });
         if (!ret)
           return;
       }
@@ -276,7 +276,7 @@ export async function doEmailLogin(auth, email, password) {
   try {
     return await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
-    const { title, message } = getErrorMessage(t, error, t(translations).loginFailed);
+    const { title, message } = getErrorMessage(t, error, t(null,translations).loginFailed);
     messageBox(title, message);
     throw error;
   }
@@ -288,7 +288,7 @@ export async function doEmailSignup(auth, email, password) {
     await sendEmailVerification(userCred.user);
     return userCred;
   } catch (error) {
-    const { title, message } = getErrorMessage(t, error, t(translations).signUpFailed);
+    const { title, message } = getErrorMessage(t, error, t(null,translations).signUpFailed);
     messageBox(title, message);
     throw error;
   }
@@ -298,7 +298,7 @@ export async function doPasswordReset(auth, email) {
   try {
     await sendPasswordResetEmail(auth, email);
   } catch (error) {
-    const { title, message } = getErrorMessage(t, error, t(translations).passwordResetFailed);
+    const { title, message } = getErrorMessage(t, error, t(null,translations).passwordResetFailed);
     messageBox(title, message);
     throw error;
   }

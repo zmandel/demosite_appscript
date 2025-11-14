@@ -3,12 +3,13 @@
   "version": "1.4.0",
   "description": "",
   "scripts": {
+    "checks-prod": "node build/scripts/checks-prod.js",
     "login": "clasp login",
     "clean": "rimraf dist && mkdirp dist/html dist/gs",
     "copy-files": "copyfiles -u 1 \"src/appsscript.json\" dist",
     "build-html": "node build/scripts/build-gs.js && node build/scripts/build-js.js && node build/scripts/build-html.js",
     "build": "npm run clean && npm run copy-files && npm run build-html && clasp push --force",
-    "pub-prod": "clasp deploy -i YOUR_GAS_DEPLOYMENT_ID -d Prod",
+    "pub-prod": "npm run checks-prod && clasp deploy -i YOUR_GAS_DEPLOYMENT_ID -d Prod",
     "deploy": "npm run build && npm run pub-prod"
   },
   "keywords": [],

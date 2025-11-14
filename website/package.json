@@ -2,17 +2,17 @@
     "name": "demo-webapp-script",
     "version": "0.1.0",
     "devDependencies": {
-        "vite": "^7.1.7"
+        "vite": "^7.2.2"
     },
     "scripts": {
-      "dev": "vite",
-      "build": "vite build",
-      "preview": "vite preview",
-      "debug": "vite --host",
-      "login": "firebase login --reauth",
-      "deploy": "echo 'Building...' && npm run build && echo 'Deploying...' && firebase deploy --only hosting",
-      "deployserver": "echo 'Deploying functions...' && firebase deploy --only functions"
-  },
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "debug": "vite --host",
+        "login": "firebase login --reauth",
+        "deploy": "echo 'Building...' && npm run build && echo 'Deploying...' && firebase deploy --only hosting",
+        "deployserver": "echo 'Deploying functions...' && firebase deploy --only functions"
+    },
     "dependencies": {
         "a11y-dialog": "^8.1.4",
         "firebase": "^12.1.0",

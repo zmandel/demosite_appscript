@@ -3,7 +3,7 @@ import { signOut, setPersistence, indexedDBLocalPersistence, getAuth, onAuthStat
 import { initializeApp } from "firebase/app";
 import { doGoogleAuth, doEmailLogin, doEmailSignup, doPasswordReset, loadGIS } from "./authService.js";
 import messageBox from "./messagebox.js";
-import "../components/authdialog.js";
+import "../components/js/authdialog.js";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_KEY,
@@ -23,13 +23,20 @@ export async function signOutCurrentUser() {
   }
 }
 
-export async function getCurrentUser(force, cancelable = false) {
-  if (authState.user)
-    return authState.user;
+export async function getCurrentUser(force, cancelable = false, addIdToken = false) {
+  let user = null;
 
-  if (!force)
-    return null;
-  return await showAuthDialog(authState.headerText, cancelable);
+  if (authState.user)
+    user = authState.user;
+
+  if (!user) {
+    if (!force)
+      return null;
+    user = await showAuthDialog(authState.headerText, cancelable);
+    if (user && addIdToken)
+      user.idToken = await user.getIdToken();
+  }
+  return user;
 }
 
 const translations = {
@@ -126,7 +133,7 @@ export async function setupAuth({ doAuth, headerText, redirectMode, forceRedirec
           pauseActions = true; //temporarily prevent the recursive call to finish the flow.
           await signOutCurrentUser();
           pauseActions = false;
-          await messageBox(t(translations).signInTitle, t(translations).verifyEmailBefore);
+          await messageBox(t(null,translations).signInTitle, t(null,translations).verifyEmailBefore);
           if (!isAuthDialogCreated()) {
             //user left the app without vetrifying, just before we logged them out during onboarding.
             showAuthDialog(authState.headerText, !doAuth).catch(err => {
@@ -215,7 +222,7 @@ async function showAuthDialog(headerText, cancelable = false) {
       try {
         const { email } = event.detail;
         await doPasswordReset(authState.auth, email);
-        messageBox(t(translations).passwordResetTitle, t(translations).passwordResetSent);
+        messageBox(t(null,translations).passwordResetTitle, t(null,translations).passwordResetSent);
       } catch (error) {
         console.error("Password reset error:", error);
         // Error is already displayed by authService

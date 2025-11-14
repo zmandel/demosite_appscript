@@ -1,4 +1,4 @@
-import { getLang } from "./common.js";
+import { getLang, initializePage } from "./common.js";
 import messageBox from "./messagebox.js";
 import {
   setupAuth,
@@ -30,44 +30,59 @@ if (forceRedirect) {
   window.history.replaceState({}, document.title, url.toString());
 }
 
-setupAuth({
-    doAuth: true,
-    headerText: "",
-    redirectMode: true,
-    forceRedirect,
-    readyPromise: null
-  }, async (loginFromRedirect, errText) => {
-  if (errText)
-    messageBox("Error", errText);
-  let user = await getCurrentUser(false);
-  const t = translations[getLang() || "en"] || translations["en"];
-  let innerHTML = "";
+function initializeAuth() {
+  setupAuth({
+      doAuth: true,
+      headerText: "",
+      redirectMode: true,
+      forceRedirect,
+      readyPromise: null
+    }, async (loginFromRedirect, errText) => {
+    if (errText)
+      messageBox("Error", errText);
+    let user = await getCurrentUser(false);
+    const t = translations[getLang() || "en"] || translations["en"];
+    let innerHTML = "";
 
-  if (user) {
-    if (!user.emailVerified) {
-      console.warning("Email not verified in login redirect mode");
-      signOutCurrentUser();
-      user = null;
-      innerHTML = t.verifyEmailBefore;
+    if (user) {
+      if (!user.emailVerified) {
+        console.warning("Email not verified in login redirect mode");
+        signOutCurrentUser();
+        user = null;
+        innerHTML = t.verifyEmailBefore;
+      } else {
+        innerHTML = t.loginSuccess;
+      }
     } else {
-      innerHTML = t.loginSuccess;
+      innerHTML = t.loginCancelled;
     }
-  } else {
-    innerHTML = t.loginCancelled;
-  }
 
-  let textShort = innerHTML;
-  innerHTML += "<br>" + t.closeTab;
-  const box = document.createElement("div");
-  box.className = "centerMessage";
-  box.innerHTML = innerHTML;
-  document.body.appendChild(box);
-  if (!user)
-    return;
+    let textShort = innerHTML;
+    innerHTML += "<br>" + t.closeTab;
+    const box = document.createElement("div");
+    box.className = "centerMessage";
+    box.innerHTML = innerHTML;
+    document.body.appendChild(box);
+    if (!user)
+      return;
 
-  // we used to have a BroadcastChannel here to notify the opener window,
-  // but now we instead use the firebase auth mode indexedDBLocalPersistence
-  // which automatically calls onAuthStateChanged in the opener window.
-  if (window.opener)
-    window.opener.postMessage({ type: "login-done", messageError: user ? null : textShort }, window.location.origin);
+    // we used to have a BroadcastChannel here to notify the opener window,
+    // but now we instead use the firebase auth mode indexedDBLocalPersistence
+    // which automatically calls onAuthStateChanged in the opener window.
+    if (window.opener)
+      window.opener.postMessage({ type: "login-done", messageError: user ? null : textShort }, window.location.origin);
+  })
+}
+
+function onErrorBaseIframe() {
+  let elem = document.querySelector("#errPage");
+  if (elem)
+    elem.style.display = "";
+}
+
+initializePage({
+  loadIframe: false, //we load it later, so login is initialized first
+  loadAnalytics: true,
+  onError: onErrorBaseIframe,
+  callbackContentLoaded: initializeAuth
 });

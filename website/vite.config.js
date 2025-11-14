@@ -21,6 +21,7 @@ export default defineConfig(({ command }) => {
           index: resolve(__dirname, 'src/index.html'),
           page1: resolve(__dirname, 'src/page1.html'),
           page2: resolve(__dirname, 'src/page2.html'),
+          page3: resolve(__dirname, 'src/page3.html'),
           login: resolve(__dirname, 'src/login.html'),
         },
         output: {

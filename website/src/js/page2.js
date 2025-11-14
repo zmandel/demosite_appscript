@@ -1,9 +1,39 @@
 
-import { initializePage, loadGTM, onErrorBaseIframe} from "/js/common.js";
+import { initializePage, loadGTM, IframeLoadEvents } from "/js/common.js";
+
+function onErrorBaseIframe() {
+  let elem = document.querySelector("#errPage");
+  if (elem)
+    elem.style.display = "";
+}
+
+function handleIframeLoadEvent(iframeLoadEvent) {
+  const loadingPage = document.getElementById("loadingPage");
+  const loadingPageLong = document.getElementById("loadingPageLong");
+
+  switch (iframeLoadEvent) {
+    case IframeLoadEvents.LOADING:
+      loadingPageLong.style.display = "none";
+      loadingPage.style.display = "";
+      break;
+
+    case IframeLoadEvents.ERRORLOADING:
+      loadingPage.style.display = "none";
+      loadingPageLong.style.display = "";
+      break;
+
+    case IframeLoadEvents.FULLYLOADED:
+      loadingPage.style.display = "none";
+      loadingPageLong.style.display = "none";
+      break;
+  }
+}
+
 initializePage({
   loadIframe: true,
   loadAnalytics: false, //in this sample, we wait until a custom time later to enable it through loadGTM()
   paramsExtra: "page=2",
+  callbackIframeLoadEvents: handleIframeLoadEvent,
   callbackMessage: async (data, event) => {
     if (!data)
       return;

@@ -1,41 +1,66 @@
 
-import { initializePage, onErrorBaseIframe, loadIframeFromCurrentUrl, replyUser  } from "/js/common.js";
+import { initializePage, loadIframeFromCurrentUrl, replyUser, IframeLoadEvents } from "/js/common.js";
 import {
   setupAuth,
   signOutCurrentUser,
   getCurrentUser,
 } from "/js/firebaseauth.js";
 
-setupAuth({
-  doAuth: false, //no forced login on this page
-  headerText: "to test this feature",
-  redirectMode: false,
-  forceRedirect: false,
-  readyPromise: null
-},
-  (loginFromRedirect, errText) => {
-    if (errText)
-      alert(errText);
-    if (loginFromRedirect) {
-      //handled by firebaseauth.js
-    } else {
-      // Not a redirect login, so load the iframe now.
-      loadIframe();
-    }
-});
+function onErrorBaseIframe() {
+  let elem = document.querySelector("#errPage");
+  if (elem)
+    elem.style.display = "";
+}
 
-let g_iframeLoaded = false;
-function loadIframe() {
-  if (!g_iframeLoaded) {
-    loadIframeFromCurrentUrl("");
-    g_iframeLoaded = true;
+function handleIframeLoadEvent(iframeLoadEvent) {
+  const loadingPage = document.getElementById("loadingPage");
+  const loadingPageLong = document.getElementById("loadingPageLong");
+
+  switch (iframeLoadEvent) {
+    case IframeLoadEvents.LOADING:
+      loadingPageLong.style.display = "none";
+      loadingPage.style.display = "";
+      break;
+
+    case IframeLoadEvents.ERRORLOADING:
+      loadingPage.style.display = "none";
+      loadingPageLong.style.display = "";
+      break;
+
+    case IframeLoadEvents.LOADED:
+      loadingPage.style.display = "none";
+      loadingPageLong.style.display = "none";
+      break;
   }
 }
+
+
+function initializeAuth() {
+  setupAuth({
+    doAuth: false, //no forced login on this page
+    headerText: "to test this feature",
+    redirectMode: false,
+    forceRedirect: false,
+    readyPromise: null
+  },
+    (loginFromRedirect, errText) => {
+      if (errText)
+        alert(errText);
+      if (loginFromRedirect) {
+        //handled by firebaseauth.js
+      } else {
+        // Not a redirect login, so load the iframe now.
+        loadIframeFromCurrentUrl();
+      }
+    });
+}
+
 
 initializePage({
   loadIframe: false, //we load it later, so login is initialized first
   loadAnalytics: true,
   paramsExtra: "page=1",
+  callbackIframeLoadEvents: handleIframeLoadEvent,
   callbackMessage: async (data, event) => {
     if (!data)
       return;
@@ -56,7 +81,7 @@ initializePage({
       url.searchParams.set("parameter2", dataEvent.yyy);
       window.open(url, '_blank');
     }
-     else if (data.action == "logoutUser") {
+    else if (data.action == "logoutUser") {
       const user = await getCurrentUser(false);
       if (user) {
         await signOutCurrentUser();
@@ -75,5 +100,5 @@ initializePage({
     }
   },
   onError: onErrorBaseIframe,
-  callbackContentLoaded: null
+  callbackContentLoaded: initializeAuth
 });

@@ -10,6 +10,7 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
+  <link rel="stylesheet" href="../css/common.css">
   <title>Page 2</title>
   <style>
     :root {
@@ -35,18 +36,6 @@
       display: block;
       border: none;
     }
-
-    .centerMessage {
-      position: absolute;
-      left: 50vw;
-      top: 50vh;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      font-size: 1.5em;
-      z-index: 9999;
-      cursor: default;
-    }
-
 
     #loadingPageLong {
       font-size: 1.2rem;
@@ -97,15 +86,6 @@
 </head>
 
 <body>
-  <div id="errPage" class="centerMessage" style="display:none">Sorry, an error has occurred.</div>
-  <div id="loadingPage" class="centerMessage">Loading<span class="dot dot1">.</span><span class="dot dot2">.</span><span
-      class="dot dot3">.</span>
-  </div>
-  <div id="loadingPageLong" class="centerMessage" style="display:none">
-    Still loading...<br>
-    <a href="javascript:void(0);" onclick="window.location.reload();">Retry</a>
-  </div>
-  <script type="module" src="/js/page2.js"></script>
   <iframe allow="
     geolocation *; camera *; microphone *; display-capture *;
     clipboard-read *; clipboard-write *; 
@@ -113,6 +93,15 @@
     midi *; autoplay *; fullscreen *; picture-in-picture *;
     publickey-credentials-get *; sync-xhr *; payment *
   " src="" frameborder="0" style="opacity: 0;"></iframe>
+  <div id="errPage" class="centerMessage" style="display:none">Sorry, an error has occurred.</div>
+  <div id="loadingPage" class="centerMessage">Loading<span class="dot dot1">.</span><span class="dot dot2">.</span><span
+      class="dot dot3">.</span>
+  </div>
+  <div id="loadingPageLong" class="centerMessage" style="display:none">
+    Error loading<br>
+    <a href="javascript:void(0);" onclick="window.location.reload();">Retry</a>
+  </div>
+  <script type="module" src="/js/page2.js"></script>
 </body>
 
 </html>
