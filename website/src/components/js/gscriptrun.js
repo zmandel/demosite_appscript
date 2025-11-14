@@ -57,7 +57,10 @@ Object.defineProperty(google.script, "run", {
     }
 });
 
-
+Object.defineProperty(google.script, "url", {
+  getLocation: function(callback) {
+    //todo: replicate the return from the Google Apps Script getLocation function from https://developers.google.com/apps-script/guides/html/reference/url
+    
 export class GS {
   #ensureAvailable() {
     const g = google;
@@ -87,7 +90,6 @@ export class GS {
   }
 
   #getLocation() {
-
     if (typeof getLoc !== 'function') throw new Error('google.script.url.getLocation is not available');
     return new Promise((resolve) => getLoc(resolve));
   }
