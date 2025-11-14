@@ -91,8 +91,6 @@ let g_sourceIframe = null;
 
 export async function serverRequest(prop, ...args) {
   const strArgs = JSON.stringify(args);
-  let g_loadedFrame = false;
-let g_loadingFrame = false;
   if (!g_loadedFrame && !g_loadingFrame)
     loadIframeFromCurrentUrl(); //start the iframe loading process
 
