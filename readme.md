@@ -1,5 +1,7 @@
 # Google Apps Script Website Integration Framework
 
+TL;DR iframe your appsscript webapps into a website complete with user auth, navigation and analytics.
+
 Integrates Google Apps Script webapps into a standard website, addressing the following issues and features:
 
 1. **Firebase auth** without limitations, including the new Google Sign-in by fedCM,with automatic popup and redirect mode fallback.
@@ -91,7 +93,16 @@ clone, then inside website/src and google-apps-script/src, create and fill your 
 - install "clasp" in google-apps-script/ : npm install @google/clasp -g
 - [create or clone a GAS](https://developers.google.com/apps-script/guides/clasp#create_a_new_project) with clasp.
 - "npm install" at website/ and at google-apps-script/
-
+- on apps script:
+  - npm run login: authorizes "clasp"
+  - npm run build: builds and uploads to apps script "dev" environment.
+  - add your apps script production id to "pub-prod" in package.json (in the apps script project)
+  - npm run deploy: deploys the script to production.
+- on the website:
+  - npm run login: authorizes Firebase
+  - npm run dev: live preview on localhost.
+  - npm run deploy: deploys to Firebase
+    
 To use cloud logging for the frontend, use the firebase function in website/functions/api/logs.js. For improved security set the `ALLOWED_HOST` environment variable to the same domain.
 
 ### Key Files
