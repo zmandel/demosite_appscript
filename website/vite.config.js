@@ -5,10 +5,15 @@ import { resolve } from 'node:path'
 export default defineConfig(({ command }) => {
   
   // OPTIONAL: enable HTTPS dev server if you have certs (uncomment & adjust paths)
-  const httpsConfig = {
-    key: fs.readFileSync('../../../../certs/localhost+2-key.pem'),
-    cert: fs.readFileSync('../../../../certs/localhost+2.pem')
-  };
+  let httpsConfig = undefined;
+  try {
+    httpsConfig = {
+      key: fs.readFileSync('../../../../certs/localhost+2-key.pem'),
+      cert: fs.readFileSync('../../../../certs/localhost+2.pem')
+    };
+  } catch (err) {
+    // Certs not found, will use HTTP
+  }
 
   return {
     root: 'src',
