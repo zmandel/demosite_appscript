@@ -57,6 +57,53 @@ Object.defineProperty(google.script, "run", {
     }
 });
 
+Object.defineProperty(google.script, "url", {
+    get: function() {
+        return {
+            getLocation: function(callback) {
+                // Replicate the return from the Google Apps Script getLocation function
+                // https://developers.google.com/apps-script/guides/html/reference/url
+                
+                if (typeof callback !== 'function') {
+                    throw new TypeError('getLocation requires a callback function');
+                }
+                
+                // Parse URL from the current window location
+                const url = new URL(window.location.href);
+                
+                // Build the parameter object (single values - first occurrence)
+                const parameter = {};
+                url.searchParams.forEach((value, key) => {
+                    if (!parameter.hasOwnProperty(key)) {
+                        parameter[key] = value;
+                    }
+                });
+                
+                // Build the parameters object (arrays of all values)
+                const parameters = {};
+                url.searchParams.forEach((value, key) => {
+                    if (!parameters[key]) {
+                        parameters[key] = [];
+                    }
+                    parameters[key].push(value);
+                });
+                
+                // Get the hash (fragment) without the leading #
+                const hash = url.hash ? url.hash.substring(1) : '';
+                
+                // Build the location object matching Google Apps Script structure
+                const location = {
+                    hash: hash,
+                    parameter: parameter,
+                    parameters: parameters
+                };
+                
+                // Call the callback with the location object
+                callback(location);
+            }
+        };
+    }
+});
 
 export class GS {
   #ensureAvailable() {
@@ -87,7 +134,8 @@ export class GS {
   }
 
   #getLocation() {
-
+    const { script } = this.#ensureAvailable();
+    const getLoc = script?.url?.getLocation;
     if (typeof getLoc !== 'function') throw new Error('google.script.url.getLocation is not available');
     return new Promise((resolve) => getLoc(resolve));
   }

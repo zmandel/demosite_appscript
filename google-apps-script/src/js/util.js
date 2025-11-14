@@ -1,470 +1,470 @@
-    /**
-     * Utilites to handle automatic and manual logging with callstacks of
-     * - console.*
-     * - window.onerror
-     * - the 'unhandledrejection' event
-     * - exceptions
-     * 
-     * These logs are sent to the parent window, which sends it to GCP logging and alerting.
-     * Manual utilities:
-      - log_, warn_, error_: shorthands for the console methods
-      - throwError: logs the error and throws
-      - analytics: send an analytics event to the parent window
-      - initializeSession: initializes the session
-      - postSiteInited: marks the site as initialized and notifies the parent window (if in iframe mode)
-      - postSiteMessage: send a custom message to the parent window (if in iframe mode)
-    *
-    */
-    const g_allowAnyEmbedding = ("true" === "__ALLOW_ANY_EMBEDDING__"); //from .env[.local]
-    const g_isProduction = ("true" === "__IS_PRODUCTION__"); //from .env[.local]
-    const g_urlWebsite = "__URL_WEBSITE__"; //from .env[.local]
-    const g_parentDomainFilter = g_allowAnyEmbedding ? "*" : g_urlWebsite;
-    const g_propEmbed = "embed"; //url parameter to determine if the site is embedded in an iframe
-    const g_moduleLog = "frontend";
-    const g_maxLogsSend = 10; //maximum logs to send at once (batch size)
-    let g_iframeMode = false; //set in initializeSession
+/**
+ * Utilites to handle automatic and manual logging with callstacks of
+ * - console.*
+ * - window.onerror
+ * - the 'unhandledrejection' event
+ * - exceptions
+ * 
+ * These logs are sent to the parent window, which sends it to GCP logging and alerting.
+ * Manual utilities:
+  - log_, warn_, error_: shorthands for the console methods
+  - throwError: logs the error and throws
+  - analytics: send an analytics event to the parent window
+  - initializeSession: initializes the session
+  - postSiteInited: marks the site as initialized and notifies the parent window (if in iframe mode)
+  - postSiteMessage: send a custom message to the parent window (if in iframe mode)
+*
+*/
+const g_allowAnyEmbedding = ("true" === "__ALLOW_ANY_EMBEDDING__"); //from .env[.local]
+const g_isProduction = ("true" === "__IS_PRODUCTION__"); //from .env[.local]
+const g_urlWebsite = "__URL_WEBSITE__"; //from .env[.local]
+const g_parentDomainFilter = g_allowAnyEmbedding ? "*" : g_urlWebsite;
+const g_propEmbed = "embed"; //url parameter to determine if the site is embedded in an iframe
+const g_moduleLog = "frontend";
+const g_maxLogsSend = 10; //maximum logs to send at once (batch size)
+let g_iframeMode = false; //set in initializeSession
 
-    (function () {
-        /* log tracking
-        overwrites console.*  methods and sends them to the parent under the tag g_moduleLog.
-        It also generates logs for window.onerror and the 'unhandledrejection' event.
-        Logs are queued and sent to the website during idle (as a postmessage) and on unload.
-        */
-        if (typeof console === "undefined") {
-            window.console = {};
-        }
-        const noop = function () { };
-        const originalConsole = {
-            log: typeof console.log === "function" ? console.log.bind(console) : noop,
-            warn: typeof console.warn === "function" ? console.warn.bind(console) : noop,
-            error: typeof console.error === "function" ? console.error.bind(console) : noop,
-            info: typeof console.info === "function" ? console.info.bind(console) : noop,
-            debug: typeof console.debug === "function" ? console.debug.bind(console) : noop
-        };
+(function () {
+  /* log tracking
+  overwrites console.*  methods and sends them to the parent under the tag g_moduleLog.
+  It also generates logs for window.onerror and the 'unhandledrejection' event.
+  Logs are queued and sent to the website during idle (as a postmessage) and on unload.
+  */
+  if (typeof console === "undefined") {
+    window.console = {};
+  }
+  const noop = function () { };
+  const originalConsole = {
+    log: typeof console.log === "function" ? console.log.bind(console) : noop,
+    warn: typeof console.warn === "function" ? console.warn.bind(console) : noop,
+    error: typeof console.error === "function" ? console.error.bind(console) : noop,
+    info: typeof console.info === "function" ? console.info.bind(console) : noop,
+    debug: typeof console.debug === "function" ? console.debug.bind(console) : noop
+  };
 
-        let g_logQueue = [];
-        let g_idleScheduled = false;
+  let g_logQueue = [];
+  let g_idleScheduled = false;
 
-        function sendLogs(logs) {
-            postSiteMessage("logs", { logs: logs });
-        }
+  function sendLogs(logs) {
+    postSiteMessage("logs", { logs: logs });
+  }
 
-        function scheduleIdleCallback(callback, options) {
-            if (window.requestIdleCallback) {
-                return window.requestIdleCallback(callback, options);
-            } else {
-                return setTimeout(() => {
-                    callback({
-                        timeRemaining: function () { return 50; } //any positive number
-                    });
-                }, options && options.timeout ? options.timeout : 50);
-            }
-        }
-
-        function payloadBase(message) {
-            const unk = "unknown";
-
-            const payload = {
-                message: g_moduleLog + ": " + message,
-                functionName: unk,
-                callStack: unk,
-                moduleLog: g_moduleLog,
-                //add other custom parameters here (will appear in GCP logs in jsonPayload)
-            };
-            return payload;
-        }
-
-        function generateLogPayload(...args) {
-            const unk = "unknown";
-
-            const message = args.map(arg => {
-                if (typeof arg === 'object') {
-                    try {
-                        if (arg instanceof Error)
-                            return "Error obj: " + (arg.message || unk);
-                        return JSON.stringify(arg);
-                    } catch (err) {
-                        return String(arg);
-                    }
-                }
-                return String(arg);
-            }).join(' ');
-
-            let payload = payloadBase(message);
-
-            const IGNORED = [
-                "captureConsole",
-                "console.log",
-                "console.warn",
-                "console.error",
-                "console.info",
-                "console.debug",
-                "throwError",
-                "error_",
-                "warn_",
-                "log_",
-            ];
-
-            function parseFnName(line) {
-                try {
-                    const match = line.match(/at (\S+) \(/);
-                    if (match)
-                        return match[1];
-                } catch (e) {
-                    error_(e);
-                    //fall through
-                }
-                return "";
-            }
-
-            function getCleanStackLines(stackLines) {
-                let startIndex = 2;
-
-                while (startIndex < stackLines.length) {
-                    const line = stackLines[startIndex];
-                    if (line.trim() && !IGNORED.includes(parseFnName(line))) {
-                        break;
-                    }
-                    startIndex++;
-                }
-
-                return stackLines.slice(startIndex);
-            }
-
-            try {
-                const error = new Error("");
-                error.name = "";
-                const stack = getCleanStackLines(error.stack?.split("\n") || []);
-
-                let nameFunction = null;
-                if (stack.length > 0)
-                    nameFunction = parseFnName(stack[0]);
-
-                payload.functionName = nameFunction || unk;
-                payload.callStack = stack.join("\n") || unk;
-            } catch (e) {
-                //fall through
-            }
-            return payload;
-        }
-
-        function levelToSeverity(level) {
-            const consoleToSeverity = {
-                error: 'ERROR',
-                warn: 'WARNING',
-                log: 'INFO',
-                info: 'INFO',
-                debug: 'DEBUG'
-            };
-
-            return (consoleToSeverity[level] || 'DEFAULT');
-        }
-
-        let g_isLogging = false; // to prevent recursive logging
-        function captureConsole(level, ...args) {
-            try {
-                level = level.toLowerCase();
-                originalConsole[level](...args);
-                if (g_isLogging) {
-                    originalConsole.warn("recursive log within captureConsole");
-                    return;
-                }
-                g_isLogging = true;
-                let payload = generateLogPayload(...args);
-                payload.timestamp = new Date().toISOString();
-                payload.severity = levelToSeverity(level);
-                g_logQueue.push(payload);
-                scheduleLogFlush();
-            } catch (e) {
-                originalConsole.error(e.message);
-                //ignore
-            }
-            g_isLogging = false;
-        }
-
-        function scheduleLogFlush() {
-            if (g_logQueue.length === 0 || g_idleScheduled) return;
-            g_idleScheduled = true;
-            scheduleIdleCallback(flushLogs, { timeout: 2000 });
-        }
-
-        function flushLogs() {
-            if (g_logQueue.length === 0) {
-                g_idleScheduled = false;
-                return;
-            }
-
-            // send the first ones only.
-            // This is by design to prevent flooding the system in case of a bug with the logging process.
-            const logSend = g_logQueue.slice(0, g_maxLogsSend);
-            g_logQueue = [];
-            sendLogs(logSend);
-            g_idleScheduled = false;
-        }
-
-        // Override console methods.
-        console.log = (...args) => captureConsole("log", ...args);
-        console.warn = (...args) => captureConsole("warn", ...args);
-        console.error = (...args) => captureConsole("error", ...args);
-        console.info = (...args) => captureConsole("info", ...args);
-        console.debug = (...args) => captureConsole("debug", ...args);
-
-        // Global error handling.
-        window.onerror = function (message, source, lineno, colno, error) {
-            captureConsole("error", "Uncaught Exception:", { message, source, lineno, colno, error });
-        };
-
-        window.addEventListener("unhandledrejection", function (event) {
-            captureConsole("error", "Unhandled Promise Rejection:", event.reason);
+  function scheduleIdleCallback(callback, options) {
+    if (window.requestIdleCallback) {
+      return window.requestIdleCallback(callback, options);
+    } else {
+      return setTimeout(() => {
+        callback({
+          timeRemaining: function () { return 50; } //any positive number
         });
-
-        window.addEventListener("beforeunload", function () {
-            flushLogs();
-        });
-
-        window.addEventListener('message', (event) => {
-          if (!g_allowAnyEmbedding &&  event.origin.toLowerCase() !== g_urlWebsite) {
-            error_("blocked attempt to message from unknown domain: "+event.origin);
-            return;
-          }
-
-          if (event.data && event.data.reply)
-            executeReplyPost(event.data);          
-          
-          if (event.data.type == "validateDomain") {
-                //CUSTOMIZE: very simple way to show how to prevent the page to showing when embedded in an unauthorized domain.
-                //Keeping the body hidden prevents clickjacking and other issues that coud be abused by an attacker iframing the page.
-                //It can be further improved by postponing DomContentLoaded after this validation, instead of just hiding the body.
-            document.body.style.opacity = '1';
-          }
-        });
-    })();
-
-
-    /**
-     * GS converts calls of google.script.run and google.script.url.getLocation into promises.
-     * Usage:
-     * const server = new GS();
-     * await server.run('myServerFn', arg1, arg2);
-     * const loc = await server.getLocation();
-     */
-    class GS {
-      #ensureAvailable() {
-        const g = globalThis.google;
-        if (!g?.script?.run) throw new Error('google.script.run is not available yet');
-        return g;
-      }
-    
-      #isBlankErr(err) {
-        return err == null || (typeof err === 'string' && err === '');
-      }
-    
-      #run(method, args) {
-        const { script } = this.#ensureAvailable();
-    
-        return new Promise((resolve, reject) => {
-          const call = (retried) => {
-            try {
-              script.run
-                .withSuccessHandler(resolve)
-                .withFailureHandler((err) => {
-                  if (!retried && this.#isBlankErr(err)) {
-                    // Retry once if Apps Script gives a blank error
-                    // a common issue if one leaves the page in the background in mobile
-                    call(true);
-                    return;
-                  }
-                  reject(err instanceof Error ? err : new Error(String(err)));
-                })[method](...args);
-            } catch (e) {
-              reject(e);
-            }
-          };
-          call(false);
-        });
-      }
-    
-      #getLocation() {
-        const { script } = this.#ensureAvailable();
-        const getLoc = script?.url?.getLocation;
-        if (typeof getLoc !== 'function') throw new Error('google.script.url.getLocation is not available');
-        return new Promise((resolve) => getLoc(resolve));
-      }
-    
-      run(method, ...args) {
-        if (typeof method !== 'string' || !method) throw new TypeError('run(method, ...args): method must be a non-empty string');
-        return this.#run(method, args);
-      }
-    
-      getLocation() {
-        return this.#getLocation();
-      }
+      }, options && options.timeout ? options.timeout : 50);
     }
-    
-    const server = new GS();
-    
-    /**
-     * Logs arguments to the console as an error.
-     * @param {...any} args
-     */
-    function error_(...args) {
-        console.error(...args);
-    }
+  }
 
-    /**
-     * Logs arguments to the console as a warning.
-     * @param {...any} args
-     */
-    function warn_(...args) {
-        console.warn(...args);
-    }
+  function payloadBase(message) {
+    const unk = "unknown";
 
-    /**
-     * Logs arguments to the console as a debug log message.
-     * @param {...any} args
-     */
-    function log_(...args) {
-        console.log(...args);
-    }
+    const payload = {
+      message: g_moduleLog + ": " + message,
+      functionName: unk,
+      callStack: unk,
+      moduleLog: g_moduleLog,
+      //add other custom parameters here (will appear in GCP logs in jsonPayload)
+    };
+    return payload;
+  }
 
-    /**
-     * Throws an Error with the given argument and logs it as an error, unless skipLog is true.
-     * @param {any} arg - The error message or object.
-     * @param {boolean} [skipLog=false] - If true, skips logging the error.
-     * @throws {Error}
-     */
-    function throwError(arg, skipLog = false) {
-        arg = arg || "unknown";
-        if (!skipLog) {
-            error_("throw: " + arg);
+  function generateLogPayload(...args) {
+    const unk = "unknown";
+
+    const message = args.map(arg => {
+      if (typeof arg === 'object') {
+        try {
+          if (arg instanceof Error)
+            return "Error obj: " + (arg.message || unk);
+          return JSON.stringify(arg);
+        } catch (err) {
+          return String(arg);
         }
-        throw new Error(arg);
+      }
+      return String(arg);
+    }).join(' ');
+
+    let payload = payloadBase(message);
+
+    const IGNORED = [
+      "captureConsole",
+      "console.log",
+      "console.warn",
+      "console.error",
+      "console.info",
+      "console.debug",
+      "throwError",
+      "error_",
+      "warn_",
+      "log_",
+    ];
+
+    function parseFnName(line) {
+      try {
+        const match = line.match(/at (\S+) \(/);
+        if (match)
+          return match[1];
+      } catch (e) {
+        error_(e);
+        //fall through
+      }
+      return "";
     }
 
-    let g_siteInited = false;
+    function getCleanStackLines(stackLines) {
+      let startIndex = 2;
 
-    /**
-     * Sends a postMessage to the parent window with the specified action and data.
-     * @param {string} action - The action type for the message.
-     * @param {any} data - The data payload to send.
-     */
-    function postSiteMessage(action, data) {
-        if (!g_iframeMode)
-            return;
-
-      if (!g_iframeMode) {
-        if (!g_isProduction && action == "getUser") {
-          executeReplyPost({ reply: "getUser", user: null }); //for development / localhost
+      while (startIndex < stackLines.length) {
+        const line = stackLines[startIndex];
+        if (line.trim() && !IGNORED.includes(parseFnName(line))) {
+          break;
         }
+        startIndex++;
+      }
+
+      return stackLines.slice(startIndex);
+    }
+
+    try {
+      const error = new Error("");
+      error.name = "";
+      const stack = getCleanStackLines(error.stack?.split("\n") || []);
+
+      let nameFunction = null;
+      if (stack.length > 0)
+        nameFunction = parseFnName(stack[0]);
+
+      payload.functionName = nameFunction || unk;
+      payload.callStack = stack.join("\n") || unk;
+    } catch (e) {
+      //fall through
+    }
+    return payload;
+  }
+
+  function levelToSeverity(level) {
+    const consoleToSeverity = {
+      error: 'ERROR',
+      warn: 'WARNING',
+      log: 'INFO',
+      info: 'INFO',
+      debug: 'DEBUG'
+    };
+
+    return (consoleToSeverity[level] || 'DEFAULT');
+  }
+
+  let g_isLogging = false; // to prevent recursive logging
+  function captureConsole(level, ...args) {
+    try {
+      level = level.toLowerCase();
+      originalConsole[level](...args);
+      if (g_isLogging) {
+        originalConsole.warn("recursive log within captureConsole");
         return;
       }
+      g_isLogging = true;
+      let payload = generateLogPayload(...args);
+      payload.timestamp = new Date().toISOString();
+      payload.severity = levelToSeverity(level);
+      g_logQueue.push(payload);
+      scheduleLogFlush();
+    } catch (e) {
+      originalConsole.error(e.message);
+      //ignore
+    }
+    g_isLogging = false;
+  }
 
-      window.top.postMessage(
-            {
-                type: "FROM_IFRAME",
-                action: action,
-                data: data
-            },
-            g_parentDomainFilter
-        );
+  function scheduleLogFlush() {
+    if (g_logQueue.length === 0 || g_idleScheduled) return;
+    g_idleScheduled = true;
+    scheduleIdleCallback(flushLogs, { timeout: 2000 });
+  }
+
+  function flushLogs() {
+    if (g_logQueue.length === 0) {
+      g_idleScheduled = false;
+      return;
     }
 
-    /**
-     * Sends an analytics event to the parent window.
-     * @param {string} customEvent - The name of the analytics event.
-     */
-    function analytics(customEvent) {
-        postSiteMessage("analyticsEvent", { name: customEvent });
+    // send the first ones only.
+    // This is by design to prevent flooding the system in case of a bug with the logging process.
+    const logSend = g_logQueue.slice(0, g_maxLogsSend);
+    g_logQueue = [];
+    sendLogs(logSend);
+    g_idleScheduled = false;
+  }
+
+  // Override console methods.
+  console.log = (...args) => captureConsole("log", ...args);
+  console.warn = (...args) => captureConsole("warn", ...args);
+  console.error = (...args) => captureConsole("error", ...args);
+  console.info = (...args) => captureConsole("info", ...args);
+  console.debug = (...args) => captureConsole("debug", ...args);
+
+  // Global error handling.
+  window.onerror = function (message, source, lineno, colno, error) {
+    captureConsole("error", "Uncaught Exception:", { message, source, lineno, colno, error });
+  };
+
+  window.addEventListener("unhandledrejection", function (event) {
+    captureConsole("error", "Unhandled Promise Rejection:", event.reason);
+  });
+
+  window.addEventListener("beforeunload", function () {
+    flushLogs();
+  });
+
+  window.addEventListener('message', (event) => {
+    if (!g_allowAnyEmbedding && event.origin.toLowerCase() !== g_urlWebsite) {
+      error_("blocked attempt to message from unknown domain: " + event.origin);
+      return;
     }
 
-    /**
-     * Marks the site as initialized and notifies the parent window if in iframe mode.
-     * @param {any} data - Optional data to send with the initialization message.
-     */
-    function postSiteInited(data) {
-        if (g_siteInited)
-            return;
-        g_siteInited = true;
-        if (!g_iframeMode)
-            return;
+    if (event.data && event.data.reply)
+      executeReplyPost(event.data);
 
-        let g_postedMessage = false;
-        let g_timeoutPost = null;
+    if (event.data.type == "validateDomain") {
+      //CUSTOMIZE: very simple way to show how to prevent the page to showing when embedded in an unauthorized domain.
+      //Keeping the body hidden prevents clickjacking and other issues that coud be abused by an attacker iframing the page.
+      //It can be further improved by postponing DomContentLoaded after this validation, instead of just hiding the body.
+      document.body.style.opacity = '1';
+    }
+  });
+})();
 
-        function doPost() {
-            if (g_postedMessage)
+
+/**
+ * GS converts calls of google.script.run and google.script.url.getLocation into promises.
+ * Usage:
+ * const server = new GS();
+ * await server.run('myServerFn', arg1, arg2);
+ * const loc = await server.getLocation();
+ */
+class GS {
+  #ensureAvailable() {
+    const g = globalThis.google;
+    if (!g?.script?.run) throw new Error('google.script.run is not available yet');
+    return g;
+  }
+
+  #isBlankErr(err) {
+    return err == null || (typeof err === 'string' && err === '');
+  }
+
+  #run(method, args) {
+    const { script } = this.#ensureAvailable();
+
+    return new Promise((resolve, reject) => {
+      const call = (retried) => {
+        try {
+          script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler((err) => {
+              if (!retried && this.#isBlankErr(err)) {
+                // Retry once if Apps Script gives a blank error
+                // a common issue if one leaves the page in the background in mobile
+                call(true);
                 return;
-            g_postedMessage = true;
-            postSiteMessage("siteInited", data);
-            if (g_timeoutPost)
-                clearTimeout(g_timeoutPost);
+              }
+              reject(err instanceof Error ? err : new Error(String(err)));
+            })[method](...args);
+        } catch (e) {
+          reject(e);
         }
-
-        //first do a double "requestAnimationFrame" to ensure the site is fully loaded and drawn.
-        //just in case, we also use a timeout, in case something goes wrong with the animation frame detection
-        g_timeoutPost = setTimeout(function () {
-            g_timeoutPost = null;
-            doPost();
-        }, 200);
-
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                doPost();
-            });
-        });
-    }
-
-    /**
-     * Initializes the session by determining iframe mode from URL parameters and then calls the callback.
-     * @param {Function} callback - Function to call after initialization.
-     */
-    function initializeSession(callback) {
-        google.script.url.getLocation(function (location) {
-            if (location && location.parameter) {
-                //CUSTOMIZE: add here your custom parameters
-                g_iframeMode = ("1" == location.parameter[g_propEmbed]);
-            }
-            callback();
-        });
-    }
-
-  let g_replyPost = {};
-  function setReplyPost(eventName, fn) {
-    g_replyPost[eventName] = fn;
-  }
-
-  function executeReplyPost(data) {
-    if (!data.reply)
-      warn_("no data.reply");
-    const fn = g_replyPost[data.reply];
-    if (fn) {
-      g_replyPost[data.reply] = null;
-      fn(data);
-    }
-  }
-
-  /**
-   * Requests the user object from the parent window.
-   * @param {force} true if it must log-in (shows UI if needed). false for silent (no UI)
-   * @returns {Promise<object>} A promise that resolves with the data from the parent.
-   */
-  function getUser(force, addIdToken=true) {
-    return new Promise((resolve, reject) => {
-      const nameEvent = "getUser";
-      setReplyPost(nameEvent, function (data) {
-        resolve(data);
-      });
-
-      postSiteMessage(nameEvent, { force: force, addIdToken: addIdToken });
+      };
+      call(false);
     });
   }
 
-  function logoutUser() {
-    return new Promise((resolve, reject) => {
-      const nameEvent = "logoutUser";
-      setReplyPost(nameEvent, function (data) {
-        resolve(data);
-      });
-      postSiteMessage(nameEvent, {});
-    });
+  #getLocation() {
+    const { script } = this.#ensureAvailable();
+    const getLoc = script?.url?.getLocation;
+    if (typeof getLoc !== 'function') throw new Error('google.script.url.getLocation is not available');
+    return new Promise((resolve) => getLoc(resolve));
   }
+
+  run(method, ...args) {
+    if (typeof method !== 'string' || !method) throw new TypeError('run(method, ...args): method must be a non-empty string');
+    return this.#run(method, args);
+  }
+
+  getLocation() {
+    return this.#getLocation();
+  }
+}
+
+const server = new GS();
+
+/**
+ * Logs arguments to the console as an error.
+ * @param {...any} args
+ */
+function error_(...args) {
+  console.error(...args);
+}
+
+/**
+ * Logs arguments to the console as a warning.
+ * @param {...any} args
+ */
+function warn_(...args) {
+  console.warn(...args);
+}
+
+/**
+ * Logs arguments to the console as a debug log message.
+ * @param {...any} args
+ */
+function log_(...args) {
+  console.log(...args);
+}
+
+/**
+ * Throws an Error with the given argument and logs it as an error, unless skipLog is true.
+ * @param {any} arg - The error message or object.
+ * @param {boolean} [skipLog=false] - If true, skips logging the error.
+ * @throws {Error}
+ */
+function throwError(arg, skipLog = false) {
+  arg = arg || "unknown";
+  if (!skipLog) {
+    error_("throw: " + arg);
+  }
+  throw new Error(arg);
+}
+
+let g_siteInited = false;
+
+/**
+ * Sends a postMessage to the parent window with the specified action and data.
+ * @param {string} action - The action type for the message.
+ * @param {any} data - The data payload to send.
+ */
+function postSiteMessage(action, data) {
+  if (!g_iframeMode)
+    return;
+
+  if (!g_iframeMode) {
+    if (!g_isProduction && action == "getUser") {
+      executeReplyPost({ reply: "getUser", user: null }); //for development / localhost
+    }
+    return;
+  }
+
+  window.top.postMessage(
+    {
+      type: "FROM_IFRAME",
+      action: action,
+      data: data
+    },
+    g_parentDomainFilter
+  );
+}
+
+/**
+ * Sends an analytics event to the parent window.
+ * @param {string} customEvent - The name of the analytics event.
+ */
+function analytics(customEvent) {
+  postSiteMessage("analyticsEvent", { name: customEvent });
+}
+
+/**
+ * Marks the site as initialized and notifies the parent window if in iframe mode.
+ * @param {any} data - Optional data to send with the initialization message.
+ */
+function postSiteInited(data) {
+  if (g_siteInited)
+    return;
+  g_siteInited = true;
+  if (!g_iframeMode)
+    return;
+
+  let g_postedMessage = false;
+  let g_timeoutPost = null;
+
+  function doPost() {
+    if (g_postedMessage)
+      return;
+    g_postedMessage = true;
+    postSiteMessage("siteInited", data);
+    if (g_timeoutPost)
+      clearTimeout(g_timeoutPost);
+  }
+
+  //first do a double "requestAnimationFrame" to ensure the site is fully loaded and drawn.
+  //just in case, we also use a timeout, in case something goes wrong with the animation frame detection
+  g_timeoutPost = setTimeout(function () {
+    g_timeoutPost = null;
+    doPost();
+  }, 200);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      doPost();
+    });
+  });
+}
+
+/**
+ * Initializes the session by determining iframe mode from URL parameters and then calls the callback.
+ * @param {Function} callback - Function to call after initialization.
+ */
+function initializeSession(callback) {
+  google.script.url.getLocation(function (location) {
+    if (location && location.parameter) {
+      //CUSTOMIZE: add here your custom parameters
+      g_iframeMode = ("1" == location.parameter[g_propEmbed]);
+    }
+    callback();
+  });
+}
+
+let g_replyPost = {};
+function setReplyPost(eventName, fn) {
+  g_replyPost[eventName] = fn;
+}
+
+function executeReplyPost(data) {
+  if (!data.reply)
+    warn_("no data.reply");
+  const fn = g_replyPost[data.reply];
+  if (fn) {
+    g_replyPost[data.reply] = null;
+    fn(data);
+  }
+}
+
+/**
+ * Requests the user object from the parent window.
+ * @param {force} true if it must log-in (shows UI if needed). false for silent (no UI)
+ * @returns {Promise<object>} A promise that resolves with the data from the parent.
+ */
+function getUser(force, addIdToken = true) {
+  return new Promise((resolve, reject) => {
+    const nameEvent = "getUser";
+    setReplyPost(nameEvent, function (data) {
+      resolve(data);
+    });
+
+    postSiteMessage(nameEvent, { force: force, addIdToken: addIdToken });
+  });
+}
+
+function logoutUser() {
+  return new Promise((resolve, reject) => {
+    const nameEvent = "logoutUser";
+    setReplyPost(nameEvent, function (data) {
+      resolve(data);
+    });
+    postSiteMessage(nameEvent, {});
+  });
+}
