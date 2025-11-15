@@ -16,8 +16,12 @@
 - **`util-org-sig/readme.md`** – Companion doc describing how to generate signing keys for the multi-org loader.
 
 ## Index
+- [Documentation map](#documentation-map)
 - [Method #1: Use a regular frontend (prefered)](#method-1-use-a-regular-frontend-prefered)
+  - [Why this method is needed](#why-this-method-is-needed)
+  - [Features](#features)
 - [Method #2: Load GAS HTMLService as an iframe](#method-2-load-gas-htmlservice-as-an-iframe)
+  - [Features](#features-1)
 - [Additional functionality for both methods #1 and #2](#additional-functionality-for-both-methods-1-and-2)
 - [Firebase Auth](#firebase-auth)
 - [Demos](#demos)
@@ -27,13 +31,14 @@
 - [Website project `website/`](#website-project-website)
   - [Key Features](#key-features)
   - [Setup & Configuration](#setup--configuration)
+  - [Key Files](#key-files)
 - [Google Apps Script project `google-apps-script/`](#google-apps-script-project-google-apps-script)
   - [Key Features](#key-features-1)
   - [Setup & Configuration](#setup--configuration-1)
   - [Local debugging](#local-debugging)
   - [Script Properties](#script-properties)
   - [Sample Pages](#sample-pages)
-  - [Key Files](#key-files)
+  - [Key Files](#key-files-1)
   - [Deploy Apps Script](#deploy-apps-script)
 - [Customization](#customization)
 - [Messaging Protocol](#messaging-protocol)
