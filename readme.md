@@ -43,7 +43,10 @@
 
 
 ## Method #1️⃣: Use a regular frontend (prefered)
-The coolest one. Completely liberates you from all GAS webapp limitations but it does not support [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates)
+The coolest one. Completely liberates you from all GAS webapp limitations but it does not support [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates).
+Why this method is needed: GAS webapps make it hard to call the backend from outside the HTMLService. There is a an [execution API](https://developers.google.com/apps-script/api/how-tos/execute) but it can only be used if all your GAS backend runs under the user's credentials. You cant use it when running under the developer credentials. Also, if you try to use doGet returning contentService to publish as an "API", it has two inconveniencea: it will cause a redirect and another fetch from the frontend, to usercontent.google.com, making it slower from the frontend, and requires to return a "JSONP", which needs to be queried as an injected <script> in the frontend, which is ugly, slower and gives you less control.  
+This method will insert an iframe only once, and then it handles API calls like a regular frontend call, withour redirects or contentService.  
+Features:
 1. Runs the frontend in the top window, outside of the GAS webapp iframe.
 2. Provides a mirror `google.script` API as a transparent bridge for invoking `.gs` server-side functions.
 3. Develop, debug an publish the frontend using any tooling, frameworks, libraries or languages (React, Vue, Typescript, Vite, live reloading, etc.)
