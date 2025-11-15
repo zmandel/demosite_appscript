@@ -3,7 +3,7 @@
 **Develop, debug and publish Google Apps Script webapps as a regular website without any frontend restrictions**
 
  → Provides two robust methods (#1 and #2) to load your GAS pages depending on your needs.  
- → Sample, live Apps Script pages illustrate various interaction patterns.
+ → Sample, live Apps Script pages illustrate various interaction patterns.  
  → `agents.md` files to facilitate your use of AI coding agents.  
 
 **This repo contains two projects**, one for the website and another for the GAS. Both projects work together and implement the functionalities for methods #1 and #2. Additionally, the website contains an optional sub-project for a Firebase backend.
