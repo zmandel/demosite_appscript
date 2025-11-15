@@ -3,14 +3,44 @@
 This Vite project implements the website that hosts the Apps Script web app via an iframe bridge.
 
 ## Project layout
-- `src/index.html`, `src/page{1-3}.html`, and `src/login.html` are Vite entry points defined in `vite.config.js`.
-- `src/js/common.js` centralizes iframe loading, messaging, Google Tag Manager loading, logging queue management, and translation helpers.
-- `src/js/page*.js` and `src/js/login.js` contain page-specific bootstrap logic that imports helpers from `common.js`.
-- `src/components/` has reusable components. UI use `lit`.
-- `src/components/js/gscriptrun` Key library that mirrors the `google.script.` API to call `.gs` GAS functions.
+- `src/index.html`, `src/page{1-3}.html`, and `src/login.html` are Vite entry points defined in `vite.config.js`. Page 1 & 2 embed the GAS HTMLService (method #2), while `page3` demonstrates the top-level bridge (method #1).
+- `src/js/common.js` centralizes iframe loading, messaging, Google Tag Manager loading, logging queue management, cryptographic validation, and translation helpers. Most new pages wire themselves by calling `initializePage(...)` from this module.
+- `src/js/page*.js` and `src/js/login.js` contain page-specific bootstrap logic that imports helpers from `common.js`. Each file is responsible for invoking `initializePage` with the right callbacks and query parameters.
+- `src/js/firebaseauth.js` wraps the Firebase SDK configuration, dialog lifecycle, and exposes helpers (`setupAuth`, `getCurrentUser`, `signOutCurrentUser`) used by the demo pages and iframe message handlers.
+- `src/components/` has reusable components. UI uses `lit` and ships the Firebase auth dialog (`components/js/authdialog.js`).
+- `src/components/js/gscriptrun` mirrors the `google.script` API so method #1 pages can call `.gs` functions from the parent window. Use `import { server }` for promise-based calls or the `google.script.run` proxy for chaining callbacks.
 - `src/css/` contains shared styles. Keep selectors descriptive; components import what they need explicitly.
 - `static/` exposes assets copied verbatim by Vite. Anything referenced from HTML should live here or under `src/`.
 - `functions/api/logs.js` defines the Cloud Function that relays console output to Cloud Logging. It relies on the `ALLOWED_HOST` environment variable (see `firebase.json`).
+
+### Adding a new page or entry point
+- Create the HTML file under `src/` and register it in `vite.config.js -> build.rollupOptions.input`.
+- Provide a page script under `src/js/` that calls `initializePage` and, if needed, imports Firebase auth helpers.
+- For iframe-backed flows (method #2) keep the messaging contract in sync with `google-apps-script/src/js/bridge.js`. For parent-hosted flows (method #1) use the `GS` helper from `components/js/gscriptrun.js` or the mirrored `google.script` namespace.
+
+## Environment & configuration
+Environment variables live in `website/src/.env` and `website/src/.env.local` (not committed). The following keys are consumed in code:
+
+| Key | Used in | Description |
+| --- | ------- | ----------- |
+| `VITE_ORG_DEFAULT` | `js/common.js` | Default organization identifier passed to the iframe bridge.
+| `VITE_ENDPOINT_PUT_LOGS` | `js/common.js` | HTTPS endpoint (Firebase function) that receives batched console logs.
+| `VITE_FIREBASE_PROJNAME` | `js/common.js`, `js/firebaseauth.js` | Firebase project ID shared with the Apps Script runtime.
+| `VITE_ROOT_DOMAIN` | `js/common.js`, `js/firebaseauth.js` | Hostname expected during domain validation and Firebase Auth.
+| `VITE_GTM_ID` | `js/common.js` | Google Tag Manager container ID.
+| `VITE_LANG_DEFAULT` | `js/common.js` | Default locale for translations.
+| `VITE_PUBLIC_KEY_X`, `VITE_PUBLIC_KEY_Y` | `js/common.js` | Elliptic-curve public key used to validate iframe signatures (generate via `util-org-sig`).
+| `VITE_FIREBASE_KEY` | `js/firebaseauth.js` | Firebase Web API key.
+| `VITE_GOOGLE_SIGNIN_CLIENT_ID` | `js/authService.js` | Optional Google One Tap client ID if not injected via `<meta>` or global.
+
+Keep `.env.local` for developer overrides (e.g., enabling localhost embedding with `VITE_ALLOW_ANY_EMBEDDING=true` to match the GAS project). Update both the website and Apps Script environments when adjusting shared values such as domain or organization identifiers.
+
+## Core runtime flow
+- `initializePage` orchestrates GTM loading, iframe bootstrapping, and message routing. Supply callbacks such as `callbackIframeLoadEvents` to react to `IframeLoadEvents`, or `callbackMessage` to handle `postMessage` actions sent by GAS (see `_util.gs` and `bridge.js`).
+- The iframe is lazily created via `loadIframeFromCurrentUrl`. Parent pages can delay the load until Firebase auth finishes.
+- Logging is buffered until `sendLogsToServer` can push to the Cloud Function. During local development the queue stays client-side to avoid noise.
+- Authentication flows originate from `firebaseauth.js` and `authService.js`, which render the `<auth-dialog>` component. Redirect logins reuse `/login.html`, which only hosts the JS bootstrap.
+- To extend analytics, add custom dimensions in `g_dimensionsGTM` or send events via the exported `analytics` helper.
 
 ## Development workflow
 1. Run `npm install` in `website/` and, separately, in `website/functions/` if you change the Cloud Function code.
@@ -22,7 +52,7 @@ This Vite project implements the website that hosts the Apps Script web app via 
 ## Coding standards
 - Use **2 spaces** for indentation in JavaScript, HTML, and CSS to match the existing files.
 - Prefer double quotes for strings and terminate statements with semicolons.
-- Keep translation dictionaries (`translations` objects in `common.js`, `authService.js`, `components/js/*.js`) in sync across supported languages when introducing new keys.
+- Keep translation dictionaries (`translations` objects in `common.js`, `authService.js`, `firebaseauth.js`, and `components/js/*.js`) in sync across supported languages when introducing new keys.
 - When adding new iframe events, update the handler switch in `common.js` and mirror the contract on the Apps Script side (`google-apps-script/src/js/bridge.js`).
 - Route all log output through the queuing helpers in `common.js` so the Firebase function can forward them consistently.
 
