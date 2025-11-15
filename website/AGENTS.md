@@ -33,7 +33,6 @@ Environment variables live in `website/src/.env` and `website/src/.env.local`. T
 | `VITE_ENDPOINT_PUT_LOGS` | `js/common.js` | HTTPS endpoint (Firebase function) that receives batched console logs.
 | `VITE_FIREBASE_PROJNAME` | `js/common.js`, `js/firebaseauth.js` | Firebase project ID shared with the Apps Script runtime.
 | `VITE_ROOT_DOMAIN` | `js/common.js`, `js/firebaseauth.js` | Hostname expected during domain validation and Firebase Auth.
-| `VITE_ALLOW_ANY_EMBEDDING` | `src/.env`, consumed by GAS via env sync | Set `true` on local builds so Apps Script accepts any origin. Mirror the value in `google-apps-script/src/.env`.
 | `VITE_GTM_ID` | `js/common.js` | Google Tag Manager container ID.
 | `VITE_LANG_DEFAULT` | `js/common.js` | Default locale for translations.
 | `VITE_PUBLIC_KEY_X`, `VITE_PUBLIC_KEY_Y` | `js/common.js` | Elliptic-curve public key used to validate iframe signatures (generate via `util-org-sig`).

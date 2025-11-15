@@ -21,7 +21,7 @@ When you add new bridge or iframe messages, update both projects and keep the co
 
 ## .env configurations
 - The `.env` files are configured once and generally not modified. `.env.local` is used to overwrite values in `.env`, only for development builds.
-- Keep matching variables (for example `URL_WEBSITE`, `ALLOW_ANY_EMBEDDING`/`VITE_ALLOW_ANY_EMBEDDING`, Firebase project identifiers, and shared public keys) aligned between the website and Apps Script directories.
+- Keep matching variables (for example `URL_WEBSITE`, Firebase project identifiers, and shared public keys) aligned between the website and Apps Script directories.
 
 ## Build & validation commands
 - Website static build: `npm run build` inside `website/`.

@@ -40,7 +40,7 @@ This project bundles the Apps Script web app that the Vite-powered `website/` pr
 - All placeholders come from environment variables stored in `src/.env` and optionally overridden by `src/.env.local`.
 - Key variables:
   * `URL_WEBSITE` – canonical parent origin. Must match the origin enforced in `website/src/.env` so iframe validation and bridge responses work.
-  * `ALLOW_ANY_EMBEDDING` – `true` during local development (enables `*` as the `postMessage` target). Leave `false` for prod to block other domains from embedding the iframe.
+  * `ALLOW_ANY_EMBEDDING` – `true` during local development. Leave `false` for prod to block other domains from embedding the iframe.
   * `IS_PRODUCTION` – toggles verbose bridge logging and should mirror the website build so error paths stay consistent.
   * `FIREBASE_PROJECT_ID` – used by server-side logging/auth helpers. The value should match the Firebase project used by the website and the optional `util-org-sig/` tooling.
 - `npm run checks-prod` verifies that `.env.local` does not override prod builds. Run it before publishing to ensure no developer-specific overrides leak.

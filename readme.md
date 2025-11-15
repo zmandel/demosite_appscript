@@ -93,7 +93,7 @@ NOTE: The demo websites do not have a public login API key configured so the dem
 clone, then inside `website/src` and `google-apps-script/src`, create your `.env.local` files for each `src` directory.
 - `npm install` at `website/` and at `google-apps-script/`
 - To use cloud logging for the frontend, use the firebase function in `website/functions/api/logs.js`.
-- For improved security set the `ALLOWED_HOST` and `URL_WEBSITE` environment variable to the same domain in both `.env` files and set `VITE_ALLOW_ANY_EMBEDDING=false`
+- For improved security set the `ALLOWED_HOST` and `URL_WEBSITE` environment variable to the same domain in both `.env` files and set `ALLOW_ANY_EMBEDDING=false` in `google-apps-script/`.
 
 ## Website project `website/`
 
@@ -150,11 +150,14 @@ clone, then inside `website/src` and `google-apps-script/src`, create your `.env
 - Do the common setup in the section above.
 - `npm install` at `website/`
 - `npm run login`: authorizes Firebase
-- `npm run dev`: live preview on localhost (ensure you allow embedding with `VITE_ALLOW_ANY_EMBEDDING=true` in your `website/src/env.local` file
+- `npm run dev`: live preview on localhost. See `ALLOW_ANY_EMBEDDING` in `google-apps-script/` so GAS can load in localhost.
 - `npm run deploy`: deploys to Firebase
-  
+
+### Local debugging
+- Run the website from localhost. This requires `ALLOW_ANY_EMBEDDING=true`. The easiest way is to publish to production allowing any embedding. To make it more robust only allow any embedding from the dev build by setting `ALLOW_ANY_EMBEDDING=true` and doing a build without publishing, thus the dev deploy in GAS will allow embedding while the production deploy will not. You can then set the script id to be the GAS development ID instead of the production ID in `.env.local`, or by generating a new org/sig pair with the utility in `util-org-sig`. This last method allows you to  generate a URL so the website loads the dev GAS instead of the default production one, giving you an easy way to run production and dev without having to constantly change and deploy the GAS or website.
+
 ### Script Properties
-The script´s crypto implementation automatically downloads and updates the Firebase Certificates needed to verify signatures, and stores it in Script Properties.
+For Firebase auth, the script´s crypto implementation automatically downloads and updates the Firebase Certificates needed to verify signatures, and stores it in Script Properties.
 - FIREBASE_CERTS_JSON: holds the cert.
 - FIREBASE_CERTS_UNTIL: holds its expiration.
 
@@ -166,16 +169,19 @@ The script´s crypto implementation automatically downloads and updates the Fire
   * Custom analytics events
   * URL parameter changes without refresh
   * Login / Logout
+  * GAS HTMLService is used for the UI.
 
 * **Page 2** (method #2):
 
   * Progressive load notifications
   * Title updates
   * Custom analytics events
+  * GAS HTMLService is used for the UI.
 
 * **Page 3** (method #1):
 
-  * Frontend lives in the parent, as a regular frontend, which calls a `.gs` server function.
+  * Frontend lives in the parent as a regular frontend, which calls a `.gs` server function.
+  * GAS HTMLService is **not used** for the UI.
     
 ### Key Files
 
