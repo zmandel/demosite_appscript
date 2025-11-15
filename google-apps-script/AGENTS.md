@@ -31,7 +31,7 @@ two integration modes described in the repo readme:
 
 ## Integration with `website/`
 - The iframe protocol shared between both projects uses `postMessage` events. When you introduce new actions in `util.js` or
-  `bridge.js`, update the handler switch in `website/src/js/common.js` and the `components/js/gscriptrun` helpers to keep the
+  `bridge.js`, update the handler switch in `website/src/js/common.js` and the `website/src/components/js/gscriptrun` helpers to keep the
   message contract in sync.
 - Logging from Apps Script pages flows through `util.js` → parent window → `website/functions/api/logs.js`, which writes to Google
   Cloud Logging. Avoid bypassing the helpers (`log_`, `warn_`, `error_`, `captureConsole`) so logs continue to reach Firebase.
