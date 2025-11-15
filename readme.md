@@ -6,7 +6,7 @@
 - Sample, live Apps Script pages illustrate various interaction patterns.
 - `agents.md` files to facilitate your use of AI coding agents.  
 
-**This repo contains two projects**, one for the website and another for the GAS. Both projects work together and implement the functionalities for methods #1 and #2. Additionally, the website contains an optional sub-project for a Firebase backend.
+**This monorepo contains two projects**, one for the website and another for the GAS. Both projects work together and implement the functionalities for methods #1 and #2. Additionally, the website contains an optional sub-project for a Firebase backend.
 
 ## Documentation map
 - **`readme.md` (this file)** – Conceptual overview of the bridge and iframe modes, setup notes, and the shared messaging contract table. Keep this file in sync whenever integrations change.
