@@ -9,7 +9,7 @@ It implementes two different methods (#1 and #2) for hosting the Apps Script. Me
 - `src/js/page*.js` contain page-specific bootstrap logic that imports helpers from `common.js`. Each file (including `src/js/index.js`) is responsible for invoking `initializePage` with the right callbacks and query parameters.
 - `src/login.html` is a fallback page for Firebase login, used when both fedCM and Popup modes fail, opened with an oauth redirect flow.
 - `src/js/firebaseauth.js` wraps the Firebase SDK configuration, dialog lifecycle, and exposes helpers (`setupAuth`, `getCurrentUser`, `signOutCurrentUser`) used by the demo pages and iframe message handlers.
-- Pair it with `src/js/authService.js`, which orchestrates the `<auth-dialog>` component shown by the login flow.
+- It is paired with `src/js/authService.js`, which orchestrates the `<auth-dialog>` component shown by the login flow.
 - `src/components/` has reusable components. UI uses `lit` and ships the Firebase auth dialog (`components/js/authdialog.js`).
 - `src/components/js/gscriptrun` mirrors the `google.script` API so method #1 pages can call `.gs` functions from the parent window. Use `import { server }` for promise-based calls or directly use the `google.script.run` proxy.
 - `src/css/` contains shared styles. Keep selectors descriptive; components import what they need explicitly.
