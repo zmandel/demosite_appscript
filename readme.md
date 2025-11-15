@@ -1,44 +1,51 @@
 # Google Apps Script Website Integration Framework
 
-Develop, debug and publish Google Apps Script webapps as a regular website without any frontend restrictions.
-The framework provides two methods to load your GAS pages allowing to use one method for some pages and the other for the rest.
-Provides "agents.md" files to facilitate your use of AI coding agents.
-Sample, live Apps Script pages illustrate various interaction patterns.
+**Develop, debug and publish Google Apps Script webapps as a regular website without any frontend restrictions**
+
+ → Provides two methods to load your GAS pages depending on your needs.
+
+ → `agents.md` files to facilitate your use of AI coding agents.
+
+ → Sample, live Apps Script pages illustrate various interaction patterns.
+
+**This repo contains two projects**, one for the website and another for the GAS. Both projects work together and implement the functionalities for methods #1 and #2.
 
 ## Method 1️⃣: Use a regular frontend
-Completely liberates you from all GAS webapp limitations but it does not support [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates).
+The coolest one. Completely liberates you from all GAS webapp limitations but it does not support [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates)
 1. Runs the frontend in the top window, outside of the GAS webapp iframe.
-2. Provides a mirror `google.script` API as a transparent bridge for invoking .gs server-side functions.
+2. Provides a mirror `google.script` API as a transparent bridge for invoking `.gs` server-side functions.
 3. Develop, debug an publish the frontend using any tooling, frameworks, libraries or languages (React, Vue, Typescript, Vite, live reloading, etc.)
-4. Use all the browser functionalities without restrictions imposed by the GAS iframe like localStorage, notifications, credential APIS, serviceWorker, direct URL access, etc.
+4. Use all the browser functionalities without restrictions imposed by the GAS iframe like localStorage, notifications, credential APIs, serviceWorker, direct URL access, etc.
 5. Build as SPA, MPA or PWA.
+6. Reduce GAS load by moving all the frontend serving outside of GAS.
 
-## Method 2️⃣: Load GAS as an iframe.
+## Method 2️⃣: Load GAS HTMLService as an iframe
 Runs any exiting GAS webapp inside an iframe while providing helpers to behave more like a regular frontend webapp.
 This was the original functionality of this framework and can still be useful if you rely heavily on [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates).
 Useful to run an MPA, each page using a different GAS frontend HTMLService.
 
-It provides functionality to workarround limitations of a GAS frontend (inside an iframe):
+Works arround the limitations of a GAS frontend inside an iframe:
 1. **Custom Domain Serving**: Serves apps under a custom domain, providing more control than Google Sites.
-2. **Secure domain serving**: Only allows your specific domain to embed the apps script iframes.
-3. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
-4. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
-5. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
-6. **Change the browser header colorscheme** to match the script webapp.
-7. **Fullscreen support**
+2. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
+3. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
+4. **Responsive Design**: Ensures compatibility on both mobile and desktop devices.
+5. **Change the browser header colorscheme** to match the script webapp.
+6. **Fullscreen support**
 
-## Additional functionality for both methods 1 & 2:
-1. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts.
-2. **Google Workspace Compatibility**: Handles redirects typically problematic when users are under a Google Workspace account profile.
+## Additional functionality for both methods #1 and #2:
+1. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts (a long standing issue with GAS HTMLService.)
+2. **Google Workspace Compatibility**: Handles redirects typically problematic when users are under a Google Workspace account profile (another long standing issue with GAS HTMLService.)
 3. **Dynamic Multiple Script version Loading**: Securely loads different script versions (could be on the same or a different Google Workspace or Google Account) under the same website routes by passing parameters for different "organizations" you can create with the "org/sig" feature.
-4. **Firebase auth** including the new Google Sign-in by fedCM with automatic popup and redirect mode fallback without reloading the current page.
-5. **Promise-based calls to google.script.** with automatic retries for common communication errors to the server.
-6. **Bundling system** for apps script:
+4. **Secure domain serving**: Only allows your specific domain to embed the apps script iframes.
+5. **Firebase auth** including the new Google Sign-in by fedCM with automatic popup and redirect mode fallback without reloading the current page.
+6. **Promise-based calls to google.script.** with automatic retries for common communication errors to the server.
+7. **Bundling system** for apps script:
     - organize files as html, js, css, gs.
-    - use .env / .envlocal variables shared in .js and .gs files to better organize and share variables without hardcoded values.
+    - use `.env` / `.env.local` variables shared in `.js` and `.gs` files to better organize and share variables without hardcoded values.
     - For method #2: bundle into inlined html files to improve performance and comply with the apps script format.
-7. **Logs to GCP Logging**: Sends logging events to the parent website, which sends the frontend logs to GCP (same place where the .gs logs go.)
-8. **Easy installation and customization**: just "npm install" in both the website and apps script directories, customize .env.local files and "npm deploy". The website uses vite and the apps script uses a custom npm bundling script and "clasp" to deploy from the command-line.
+    - Website only bundles what you use.
+8. **Logs to GCP Logging**: Sends logging events to the parent website, which sends the frontend logs to GCP (same place where the .gs logs go.)
+9. **Easy installation and customization**: just `npm install` in both the website and apps script directories, customize `.env.local` files and `npm deploy`. The website uses vite and the apps script uses a custom npm bundling script and `clasp` to deploy from the command-line.
 
 ## Firebase Auth
 Can be used with both hosting methods.
@@ -54,9 +61,9 @@ It can actually be used independent of apps script. Its a lit component with:
   - Redirect method: Works with all browsers. does it *without leaving the apps script page*.
 
 **On the redirect method**: If the first two methods fail (browser is too old and popups were blocked) it automatically opens a new [login](website/src/login.html) page which handles the login.
-It uses the new Firebase sync mechanism "indexedDBLocalPersistence" and the BroadcastChannel API to communicate with the original "opener" (where the user was trying to log-in) and thus finishes the original login flow. All this is done without refreshing the Apps Script webapp.
+It uses the new Firebase sync mechanism `indexedDBLocalPersistence` and the `BroadcastChannel` API to communicate with the original "opener" (where the user was trying to log-in) and thus finishes the original login flow. All this is done without refreshing the Apps Script webapp.
 On the Apps Script:
-- Adds the missing Crypto support in .gs, to securely validate a firebase idToken.
+- Adds the missing Crypto support in `.gs`, to securely validate a firebase idToken.
 - It can define a page as requiring authentication before loading, or can login on-demand after load. 
 - It has new messages to request the user to log-in, or get an idToken.
   
@@ -72,14 +79,21 @@ NOTE: The demo websites do not have a public login API key configured so the dem
 
 ## Production Website using this framework 
 * Visit [Tutor For Me](https://tutorforme.org)
-* Optional login: Do a demo lesson from the homepage. You can view the page without login, then use the login-on-demand feature at the time you save the page.
-* Forced login: [Tutor For Me | My lessons](https://tutorforme.org/lessonplans)
-
+* **Optional login**: Do a demo lesson from the homepage. You can view the page without login, then use the login-on-demand feature at the time you save the page.
+* **Forced login**: [Tutor For Me | My lessons](https://tutorforme.org/lessonplans)
+* This website only uses method #2, but its in the process of migrating to method #1.
+  
 ## Directory Structure
 
 * **`website/`**: Parent website project managing the bridge, Apps Script embedding, communication, analytics and login.
 * **`google-apps-script/`**: Google Apps Script project (compiles separate from the parent website project).
 * **`util-org-sig/`**: Crypto utility functions for the "org/sig" feature. See `util-org-sig/readme.md` for key generation and signing instructions.
+
+## Setup & Configuration common to both projects (website and apps script)
+clone, then inside `website/src` and `google-apps-script/src`, create your `.env.local` files for each `src` directory.
+- `npm install` at `website/` and at `google-apps-script/`
+- To use cloud logging for the frontend, use the firebase function in `website/functions/api/logs.js`.
+- For improved security set the `ALLOWED_HOST` and `URL_WEBSITE` environment variable to the same domain in both `.env` files and set `VITE_ALLOW_ANY_EMBEDDING=false`
 
 ## Website project `website/`
 
@@ -99,24 +113,17 @@ NOTE: The demo websites do not have a public login API key configured so the dem
   * Load state notifications
 * **Analytics**: Integrated Google Tag Manager (GTM).
 * **Centralized Logging**: Logs iframe error events via Firebase Cloud Functions to Google Cloud Logging.
-* **Backend**: Uses Firebase cloud functions under [`functions`](website/functions), it implements the "api/logs/putLogs" endpoint to send frontend logs to GCP logging. It can be easily extended to add more API endpoints.
+* **Backend**: Uses Firebase cloud functions under [`functions`](website/functions), it implements the `api/logs/putLogs` endpoint to send frontend logs to GCP logging. It can be easily extended to add more API endpoints.
 
 ### Setup & Configuration
-clone, then inside `website/src` and `google-apps-script/src`, create your .env.local files for each `src` directory.
-- install "clasp" in `google-apps-script/` : `npm install @google/clasp -g`
-- [create or clone a GAS](https://developers.google.com/apps-script/guides/clasp#create_a_new_project) with clasp.
-- `npm install` at `website/` and at `google-apps-script/`
-- on apps script:
-  - `npm run login`: authorizes "clasp"
-  - `npm run build`: builds and uploads to apps script "dev" environment.
-  - add your apps script production id to "pub-prod" in `package.json` in the `google-apps-script/` project
-  - `npm run deploy`: deploys the script to production.
-- on the website:
-  - `npm run login`: authorizes Firebase
-  - `npm run dev`: live preview on localhost.
-  - `npm run deploy`: deploys to Firebase
-    
-To use cloud logging for the frontend, use the firebase function in `website/functions/api/logs.js`. For improved security set the `ALLOWED_HOST` environment variable to the same domain in both `.env` files.
+- Do the common setup in the section above.
+- install `clasp` in `google-apps-script/` : `npm install @google/clasp -g`
+- [create or clone a GAS](https://developers.google.com/apps-script/guides/clasp#create_a_new_project) with `clasp`.
+- `npm install` at `google-apps-script/`
+- `npm run login`: authorizes `clasp`
+- `npm run build`: builds and uploads to apps script "dev" environment.
+- add your apps script production id to "pub-prod" in `package.json` in the `google-apps-script/` project
+- `npm run deploy`: deploys the script to production.
 
 ### Key Files
 
@@ -130,15 +137,22 @@ To use cloud logging for the frontend, use the firebase function in `website/fun
 
 ### Key Features
 
-* **Bridge** to execute .gs server function (for method #1)
+* **Bridge** to execute `.gs` server function (for method #1)
 * **Enhanced Logging**: Captures GAS frontend an backend logs and sends to parent, to the same GCP backend projectl logs.
 * **Iframe Communication**: Manages message passing for method #2 (analytics, login, events, load states).
 * **Crypto support** to securely validate idToken signatures and expiration from Firebase Auth (for method #2)
 * **Promise-based** calls to google.script with automatic retries:
     `await server.run('myServerFn', arg1, arg2);`
     `const loc = await server.getLocation();`
-* **separate html/js/css/gs**. Contains npm scripts to bundle, push, use `.env`/`.envLocal` and publish with "clasp".
+* **separate html/js/css/gs**. Contains npm scripts to bundle, push, use `.env`/`.env.local` and publish with `clasp`.
 
+### Setup & Configuration
+- Do the common setup in the section above.
+- `npm install` at `website/`
+- `npm run login`: authorizes Firebase
+- `npm run dev`: live preview on localhost (ensure you allow embedding with `VITE_ALLOW_ANY_EMBEDDING=true` in your `website/src/env.local` file
+- `npm run deploy`: deploys to Firebase
+  
 ### Script Properties
 The script´s crypto implementation automatically downloads and updates the Firebase Certificates needed to verify signatures, and stores it in Script Properties.
 - FIREBASE_CERTS_JSON: holds the cert.
@@ -161,12 +175,12 @@ The script´s crypto implementation automatically downloads and updates the Fire
 
 * **Page 3** (method #1):
 
-  * Frontend lives in the parent, as a regular frontend, which calls a .gs server function.
+  * Frontend lives in the parent, as a regular frontend, which calls a `.gs` server function.
     
 ### Key Files
 
 * [`util.js`](google-apps-script/src/js/util.js): Client-side utilities
-* [`util.gs`](google-apps-script/src/gs/util.gs): Server-side utilities, including the list of your public .gs function for method #1, in `PUBLIC_FUNCTIONS`.
+* [`util.gs`](google-apps-script/src/gs/util.gs): Server-side utilities, including the list of your public `.gs` function for method #1, in `PUBLIC_FUNCTIONS`.
 * [`page1.html`, `page1.js`](google-apps-script/src/html/page1.html): Sample Page 1 (method #2)
 * [`page2.html`, `page2.js`](google-apps-script/src/html/page2.html): Sample Page 2 (method #2)
 * [`bridge.html`, `bridge.js`](website/src/html/page3.html): Sample Page 3 (method #1)
@@ -176,7 +190,7 @@ The script´s crypto implementation automatically downloads and updates the Fire
   * Use standard GCP project for centralized logs ([instructions](https://developers.google.com/apps-script/guides/cloud-platform-projects#standard)) using the same gcp project for this and the firebase project.
      
 ## Customization
-* create and configure .env.local files both in website/src and google-apps-script/src base on their respective .env files. 
+* create and configure `.env.local` files both in website/src and google-apps-script/src base on their respective `.env` files. 
 * Search for `CUSTOMIZE:` comments in the repo for key spots to extend to your needs.
 
 ## Messaging Protocol
@@ -187,7 +201,7 @@ messages are emitted by the Google Apps Script frontend and processed by
 
 | Action | From → To | Description | Sample data Payload |
 | ------ | --------- | -------------- | -------------- |
-| `serverRequest` `serverResponse` | → parent → iframe → parent | Send and Respond to a server request from the frontend (method #1) | `{"data": { "response": response } or error: error }` |
+| `serverRequest` `serverResponse` | parent → iframe → parent | Send and Respond to a server request from the frontend (method #1) | `{"data": { "response": response } or error: error }` |
 | `siteInited` | iframe → parent | Tells the parent that the iframe can be displayed, with or without stopping the progress animation | `{"data": { "dontStopProgress": false } }` |
 | `siteFullyLoaded` | iframe → parent | used only when siteInited was sent with dontStopProgress:true. It tells the parent to stop the progress animation |  |
 | `titleChange` | iframe → parent | change the title of the website | `{"data": { "title": "new title" } }` |
@@ -199,7 +213,7 @@ messages are emitted by the Google Apps Script frontend and processed by
 ### Messaes highlight
 - `validateDomain`: The parent page validates the domain after receiving `siteInited`, responding with `validateDomain`, then enabling the GAS.
 - `serverResponse`: Responds to the backend API call requests.
-- The other messages are for controlling the iframe load and implementing features for the GAS frontend in method #2.
+- The rest are for controlling the iframe load and implementing features for the GAS frontend in method #2.
 
 ## License
 
