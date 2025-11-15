@@ -1,7 +1,9 @@
 # Website Guidelines
 
 This Vite project implements the website that hosts the Apps Script web app via an iframe bridge.  
-It implementes two different methods (#1 and #2) for hosting the Apps Script. Method #1 embeds the GAS webapp, which shows its frontend inside the iframe. Method #2 keeps the frontend on the top window, outside the GAS iframe, using GAS only to call .gs backend functions.
+It implementes two different methods (#1 and #2) for hosting the Apps Script:
+- Method #1 embeds the GAS webapp, which shows its frontend inside the iframe.
+- Method #2 keeps the frontend on the top window, outside the GAS iframe, using GAS only to call .gs backend functions.
 
 ## Project layout
 - `src/index.html`, `src/page{1-3}.html`, and `src/login.html` are Vite entry points defined in `vite.config.js`. Page 1 & 2 embed the GAS HTMLService (method #2), while `page3` demonstrates the top-level bridge (method #1).
@@ -48,7 +50,7 @@ Keep `.env.local` for developer overrides. Update both the website and Apps Scri
 ## Core runtime flow
 - `initializePage` orchestrates GTM loading, iframe bootstrapping, and message routing. Supply optional callbacks such as `callbackIframeLoadEvents` to react to `IframeLoadEvents`, or `callbackMessage` to handle `postMessage` actions sent by GAS (see `_util.gs` and `bridge.js`).
 - The iframe is lazily created via `loadIframeFromCurrentUrl`. Parent pages can delay the load until Firebase auth finishes.
-- The mirrored `serverRequest` helper (re-exported through `components/js/gscriptrun.js`) sends requests into GAS for method #1 and resolves when the iframe replies with a `serverResponse`.
+- `serverRequest` is the raw function to send requests into GAS for method #1 and resolves when the iframe replies with a `serverResponse`. This function is used from `gscriptrun.js`.
 - Logging is buffered until `sendLogsToServer` can push to the Cloud Function. During local development the queue stays client-side to avoid noise.
 - Authentication flows originate from `firebaseauth.js` and `authService.js`, which render the `<auth-dialog>` component. Redirect logins are used as fallback, opening `/login.html` to automatically handle it.
 - To extend analytics, add custom dimensions in `g_dimensionsGTM`.
