@@ -16,8 +16,8 @@
 - **`util-org-sig/readme.md`** – Companion doc describing how to generate signing keys for the multi-org loader.
 
 ## Index
-- [Method #1️⃣: Use a regular frontend (prefered)](#method-1️⃣-use-a-regular-frontend-prefered)
-- [Method #2️⃣: Load GAS HTMLService as an iframe](#method-2️⃣-load-gas-htmlservice-as-an-iframe)
+- [Method #1: Use a regular frontend (prefered)](#method-1-use-a-regular-frontend-prefered)
+- [Method #2: Load GAS HTMLService as an iframe](#method-2-load-gas-htmlservice-as-an-iframe)
 - [Additional functionality for both methods #1 and #2](#additional-functionality-for-both-methods-1-and-2)
 - [Firebase Auth](#firebase-auth)
 - [Demos](#demos)
@@ -42,11 +42,13 @@
 
 
 
-## Method #1️⃣: Use a regular frontend (prefered)
+## Method #1: Use a regular frontend (prefered)
 The coolest one. Completely liberates you from all GAS webapp limitations but it does not support [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates).
-Why this method is needed: GAS webapps make it hard to call the backend from outside the HTMLService. There is a an [execution API](https://developers.google.com/apps-script/api/how-tos/execute) but it can only be used if all your GAS backend runs under the user's credentials. You cant use it when running under the developer credentials. Also, if you try to use doGet returning contentService to publish as an "API", it has two inconveniencea: it will cause a redirect and another fetch from the frontend, to usercontent.google.com, making it slower from the frontend, and requires to return a "JSONP", which needs to be queried as an injected <script> in the frontend, which is ugly, slower and gives you less control.  
-This method will insert an iframe only once, and then it handles API calls like a regular frontend call, withour redirects or contentService.  
-Features:
+###Why this method is needed
+GAS webapps make it hard to call the backend from outside the HTMLService. There is a an [execution API](https://developers.google.com/apps-script/api/how-tos/execute) but it can only be used if all your GAS backend runs under the user's credentials. You cant use it when running under the developer credentials. Also, if you try to use doGet returning contentService to publish as an "API", it has two inconveniencea: it will cause a redirect and another fetch from the frontend, to usercontent.google.com, making it slower from the frontend, and requires to return a "JSONP", which needs to be queried as an injected <script> in the frontend, which is ugly, slower and gives you less control.  
+This method will insert an iframe only once, and then it handles API calls like a regular frontend call, withour redirects or contentService.
+
+###Features
 1. Runs the frontend in the top window, outside of the GAS webapp iframe.
 2. Provides a mirror `google.script` API as a transparent bridge for invoking `.gs` server-side functions.
 3. Develop, debug an publish the frontend using any tooling, frameworks, libraries or languages (React, Vue, Typescript, Vite, live reloading, etc.)
@@ -54,7 +56,7 @@ Features:
 5. Build as SPA, MPA or PWA.
 6. Reduce GAS load by moving all the frontend serving outside of GAS.
 
-## Method #2️⃣: Load GAS HTMLService as an iframe
+## Method #2: Load GAS HTMLService as an iframe
 Run an MPA, each page using a different GAS frontend HTMLService. Runs the GAS webapps inside an iframe. Can behave more like a regular frontend by using special helpers to avoid HTMLService limitations.
 This was the original functionality of the framework and can still be useful if you rely heavily on [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates), otherwise its best to migrate your HTML template to regular HTML and handle the templating from the frontend js.  
 
