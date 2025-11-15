@@ -104,13 +104,6 @@ function doGet(e) {
 }
 
 /**
- * include script files from html
- */
-function include_(filename) {
-  return HtmlService.createHtmlOutputFromFile(filename).getContent();
-}
-
-/**
  * Checks the response for errors.
  * Optionally parses error details, logs warnings, and throws if an error is found.
  * @param {Object} response - The response object to check.

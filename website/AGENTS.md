@@ -1,13 +1,13 @@
 # Website Guidelines
 
-This Vite project powers the Firebase-hosted companion site that embeds the Apps Script web app via an iframe bridge.
+This Vite project implements the website that hosts the Apps Script web app via an iframe bridge.
 
 ## Project layout
 - `src/index.html`, `src/page{1-3}.html`, and `src/login.html` are Vite entry points defined in `vite.config.js`.
-- `src/js/common.js` centralizes iframe messaging, Google Tag Manager loading, logging queue management, and translation helpers. Reuse the existing message types when extending parent/iframe communication.
+- `src/js/common.js` centralizes iframe loading, messaging, Google Tag Manager loading, logging queue management, and translation helpers.
 - `src/js/page*.js` and `src/js/login.js` contain page-specific bootstrap logic that imports helpers from `common.js`.
-- `src/components/js/` hosts Lit-based components (for example `authdialog.js`, `gscriptrun.js`) that import their HTML fragments via `?raw` and register custom elements.
-- `src/components/html/` stores template fragments consumed by the Lit components.
+- `src/components/` has reusable components. UI use `lit`.
+- `src/components/js/gscriptrun` Key library that mirrors the `google.script.` API to call `.gs` GAS functions.
 - `src/css/` contains shared styles. Keep selectors descriptive; components import what they need explicitly.
 - `static/` exposes assets copied verbatim by Vite. Anything referenced from HTML should live here or under `src/`.
 - `functions/api/logs.js` defines the Cloud Function that relays console output to Cloud Logging. It relies on the `ALLOWED_HOST` environment variable (see `firebase.json`).
