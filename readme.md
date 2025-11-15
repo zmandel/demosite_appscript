@@ -211,7 +211,7 @@ you add new events, update both `website/src/js/common.js` and
 
 | Action | From → To | Description | Sample data Payload |
 | ------ | --------- | -------------- | -------------- |
-| `serverRequest` / `serverResponse` | parent → iframe → parent | Send and respond to a server request from the frontend (method #1 bridge) | `{ type: "FROM_PARENT", action: "serverRequest", data: { functionName, arguments }, idRequest }` and `{ type: "FROM_IFRAME", action: "serverResponse", data: { result }, idRequest }` |
+| `serverRequest` / `serverResponse` | parent → iframe → parent | Send and respond to a server request from the frontend (method #1 bridge) | `{ "type": "FROM_PARENT", "action": "serverRequest", "data": { "functionName": "...", "arguments": [...] }, "idRequest": "..." }` and `{ "type": "FROM_IFRAME", "action": "serverResponse", "data": { "result": ... }, "idRequest": "..." }` |
 | `siteInited` | iframe → parent | Tells the parent that the iframe can be displayed, with or without stopping the progress animation | `{ "data": { "dontStopProgress": false } }` |
 | `siteFullyLoaded` | iframe → parent | Used only when `siteInited` set `dontStopProgress: true`; tells the parent when to stop the progress animation |  |
 | `titleChange` | iframe → parent | Change the title of the website | `{ "data": { "title": "new title" } }` |
