@@ -1,31 +1,39 @@
 # Google Apps Script Guidelines
 
-This project bundles the Apps Script web app that the `website/` project embeds inside an iframe. The Apps Script bundle exposes two integration modes described in the repo readme:
+This project bundles the Apps Script web app that the Vite-powered `website/` project embeds inside an iframe. The Apps Script bundle exposes two integration modes described in the repo readme:
 
-* **Method #1 (bridge)** – When the `bridge=1` query parameter is present, `doGet` serves `src/html/bridge.html` and the companion `src/js/bridge.js`. The bridge mirrors the `google.script` client API for the website MPA/SPA defined in `website/` so top page-level code can call Apps Script functions while running outside GAS.
+* **Method #1 (bridge)** – When the `bridge=1` query parameter is present, `doGet` serves `src/html/bridge.html` and the companion `src/js/bridge.js`. The bridge mirrors the `google.script` client API for the website MPA/SPA defined in `website/` so top page-level code (see `website/src/components/js/gscriptrun`) can call Apps Script functions while running outside GAS, and it forwards validated payloads to `google.script.run.processServerRequest`.
 
 * **Method #2 (iframe HTMLService)** – `doGet` renders `src/html/page1.html` or `page2.html` and drives the iframe protocol used by `website/src/js/common.js` to manage analytics, URL mutations, loading states, and login prompts. In this method, the GAS frontend runs inside the iframe, like a regular GAS webapp.
 
 ## Project structure
 - `src/gs/` contains server-side `.gs` code. `_util.gs` wires up routing (`doGet`), structured logging helpers, and the
-  `PUBLIC_FUNCTIONS` whitelist that the bridge can invoke. `rsasign.gs` hosts the Firebase Auth signature verification utilities and certificate cache for method #2 using firebase auth.
+  `PUBLIC_FUNCTIONS` whitelist that the bridge can invoke; helpers that should stay private should end with `_` (note: GAS still exposes them publicly, but the bridge will not call them). `rsasign.gs`
+  hosts the Firebase Auth signature verification utilities and caches Google certs in script properties (`FIREBASE_CERTS_JSON`,
+  `FIREBASE_CERTS_UNTIL`).
 - `src/html/` provides the HTML entry points. Files pull in client bundles with `<script inline>` / `<link inline>` tags so that the build step can inline assets for HTMLService.
-- `src/js/` holds browser-side scripts. `util.js` bootstraps the iframe messaging contract (logging, analytics, URL mutations, authentication prompts). `page*.js` are demo flows for Method #2 pages. `bridge.js`, for Method #1, listens for `serverRequest` messages from the parent window and calls `google.script.run.processServerRequest` to service Method #1 requests.
+- `src/js/` holds browser-side scripts. `util.js` bootstraps the iframe messaging contract (logging, analytics, URL mutations,
+  authentication prompts) and sends lifecycle events such as `siteInited`, `siteFullyLoaded`, and `validateDomain`. `page*.js`
+  are demo flows for Method #2 pages. `bridge.js`, for Method #1, validates the parent origin, listens for `serverRequest`
+  messages from the parent window, and calls `google.script.run.processServerRequest` to service Method #1 requests.
 - `src/css/` stores styles that are inlined during the build. Reference them from HTML using `<link inline>` to have
   `inline-source` flatten them into the output bundle.
 - `build/scripts/` drive the custom bundling pipeline:
   * `build-html.js` runs `posthtml-include` to resolve partials, rewrites JS paths to the `.inline-cache/` staging folder, and runs
     `inline-source` to inline CSS/JS.
-  * `build-js.js` copies JS into `src/.inline-cache/`, loads environment variables from `src/.env` and `src/.env.local`, and replaces `__VAR__` placeholders.
-  * `build-gs.js` (server code) mirrors the placeholder replacement for `.gs` files.
+  * `build-js.js` copies JS into `src/.inline-cache/`, loads environment variables from `src/.env` and `src/.env.local`, and replaces `__VAR__` placeholders. The staging directory is cleaned automatically; never commit it.
+  * `build-gs.js` (server code) mirrors the placeholder replacement for `.gs` files and writes the output to `dist/gs`.
   * `checks-prod.js` ensures `.env.local` is empty before production deploys so prod builds do not pick up local overrides.
 - `appsscript.json` defines the manifest that `clasp` pushes.
 
+`npm run build` runs `clean`, `copy-files`, and the HTML inliner before calling `clasp push --force`. `npm run deploy` reuses the build and finishes with the `pub-prod` clasp deploy step configured in `package.json`.
+
 ## Integration with `website/`
 - The iframe protocol shared between both projects uses `postMessage` events. When you introduce new actions in `util.js` or
-  `bridge.js`, update the handler switch in `website/src/js/common.js` and the `website/src/components/js/gscriptrun` helpers to keep the message contract in sync.
-- Logging from Apps Script pages flows through `util.js` → parent window → `website/functions/api/logs.js`, which writes to Google Cloud Logging. console.log, warn, error are bootstrapped so logs reach GCP logging.
+  `bridge.js`, update the handler switch in `website/src/js/common.js`, the `website/src/components/js/gscriptrun` helpers, and the table in the repo `readme.md` to keep the message contract in sync.
+- Logging from Apps Script pages flows through `util.js` → parent window → `website/functions/api/logs.js`, which writes to Google Cloud Logging. console.log, warn, error are bootstrapped so logs reach GCP logging, and the Firebase project ID (`FIREBASE_PROJECT_ID`) must match between both projects.
 - Authentication utilities (`getUser`, `logoutUser`, `verifyFirebaseIdToken_`) rely on the website’s Firebase configuration. Keep the `.env` values aligned between `google-apps-script/src/.env` and `website/src/.env` (`URL_WEBSITE`, `ALLOW_ANY_EMBEDDING`, Firebase IDs) to ensure both sides validate the same origins.
+- Optional organization/signature flows rely on material generated by `util-org-sig/`; share the resulting public keys with any `.gs` verification helpers you add.
 - Method #1 bridge requests are issued by `website/src/components/js/gscriptrun.js`. For security, every callable server function must appear in `_util.gs` under `PUBLIC_FUNCTIONS`, and helpers should end with `_` so they cannot be invoked remotely (the bridge wont call them, but GAS would still expose them as public.)
 
 ## Environment configuration
@@ -35,19 +43,19 @@ This project bundles the Apps Script web app that the `website/` project embeds 
   * `ALLOW_ANY_EMBEDDING` – `true` during local development (enables `*` as the `postMessage` target). Leave `false` for prod to block other domains from embedding the iframe.
   * `IS_PRODUCTION` – toggles verbose bridge logging and should mirror the website build so error paths stay consistent.
   * `FIREBASE_PROJECT_ID` – used by server-side logging/auth helpers. The value should match the Firebase project used by the website and the optional `util-org-sig/` tooling.
-- `npm run checks-prod` verifies that `.env.local` does not override prod builds. Run it before publishing.
+- `npm run checks-prod` verifies that `.env.local` does not override prod builds. Run it before publishing to ensure no developer-specific overrides leak.
 
 ## Development workflow
-1. Install dependencies with `npm install`. The tooling assumes `@google/clasp` is already installed globally.
+1. Install dependencies with `npm install` (Node ≥18). The tooling assumes `@google/clasp` is already installed globally.
 2. Authenticate clasp via `npm run login` before the first push.
 3. Use `npm run build` for iterative development—this cleans `dist/`, copies the manifest, inlines assets, and executes
    `clasp push --force`.
 4. Use `npm run deploy` for production: it runs `build`, then `pub-prod` (`clasp deploy -i YOUR_GAS_DEPLOYMENT_ID -d Prod`). Update
    the deployment ID in `package.json` before running it.
-5. Supporting scripts such as `npm run clean`, `npm run copy-files`, and `npm run build-html` are exposed individually for debugging the bundler when needed.
+5. Supporting scripts such as `npm run clean`, `npm run copy-files`, and `npm run build-html` are exposed individually for debugging the bundler when needed. Keep the website project in sync when you add or rename iframe or bridge events.
 
 ## Coding standards
-- Use **2 spaces** for indentation in `.gs`, `.js`, and `.html` files. Prefer double quotes for strings and terminate statements with semicolons.
+- Use **2 spaces** for indentation in `.gs`, `.js`, `.html`, and `.css` files. Prefer double quotes for strings and terminate statements with semicolons.
 - Document public functions with comments describing arguments and side effects.
 - Keep the iframe message names documented in `readme.md` accurate; update both the Apps Script and website implementations when you add or rename events.
 - Only expose server functions via the `PUBLIC_FUNCTIONS` whitelist in `_util.gs`. Names ending with `_` are treated as private helpers.
