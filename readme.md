@@ -2,15 +2,40 @@
 
 **Develop, debug and publish Google Apps Script webapps as a regular website without any frontend restrictions**
 
- → Provides two methods to load your GAS pages depending on your needs.
-
- → `agents.md` files to facilitate your use of AI coding agents.
-
+ → Provides two robust methods (#1 and #2) to load your GAS pages depending on your needs.  
  → Sample, live Apps Script pages illustrate various interaction patterns.
+ → `agents.md` files to facilitate your use of AI coding agents.  
 
-**This repo contains two projects**, one for the website and another for the GAS. Both projects work together and implement the functionalities for methods #1 and #2.
+**This repo contains two projects**, one for the website and another for the GAS. Both projects work together and implement the functionalities for methods #1 and #2. Additionally, the website contains an optional sub-project for a Firebase backend.
 
-## Method 1️⃣: Use a regular frontend
+## Index
+- [Method #1️⃣: Use a regular frontend (prefered)](#method-1️⃣-use-a-regular-frontend-prefered)
+- [Method #2️⃣: Load GAS HTMLService as an iframe](#method-2️⃣-load-gas-htmlservice-as-an-iframe)
+- [Additional functionality for both methods #1 and #2](#additional-functionality-for-both-methods-1-and-2)
+- [Firebase Auth](#firebase-auth)
+- [Demos](#demos)
+- [Production Website using this framework](#production-website-using-this-framework)
+- [Directory Structure](#directory-structure)
+- [Setup & Configuration common to both projects (website and apps script)](#setup--configuration-common-to-both-projects-website-and-apps-script)
+- [Website project `website/`](#website-project-website)
+  - [Key Features](#key-features)
+  - [Setup & Configuration](#setup--configuration)
+- [Google Apps Script project `google-apps-script/`](#google-apps-script-project-google-apps-script)
+  - [Key Features](#key-features-1)
+  - [Setup & Configuration](#setup--configuration-1)
+  - [Local debugging](#local-debugging)
+  - [Script Properties](#script-properties)
+  - [Sample Pages](#sample-pages)
+  - [Key Files](#key-files)
+  - [Deploy Apps Script](#deploy-apps-script)
+- [Customization](#customization)
+- [Messaging Protocol](#messaging-protocol)
+  - [Message highlights](#message-highlights)
+- [License](#license)
+
+
+
+## Method #1️⃣: Use a regular frontend (prefered)
 The coolest one. Completely liberates you from all GAS webapp limitations but it does not support [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates)
 1. Runs the frontend in the top window, outside of the GAS webapp iframe.
 2. Provides a mirror `google.script` API as a transparent bridge for invoking `.gs` server-side functions.
@@ -19,10 +44,9 @@ The coolest one. Completely liberates you from all GAS webapp limitations but it
 5. Build as SPA, MPA or PWA.
 6. Reduce GAS load by moving all the frontend serving outside of GAS.
 
-## Method 2️⃣: Load GAS HTMLService as an iframe
-Runs any exiting GAS webapp inside an iframe while providing helpers to behave more like a regular frontend webapp.
-This was the original functionality of this framework and can still be useful if you rely heavily on [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates).
-Useful to run an MPA, each page using a different GAS frontend HTMLService.
+## Method #2️⃣: Load GAS HTMLService as an iframe
+Run an MPA, each page using a different GAS frontend HTMLService. Runs the GAS webapps inside an iframe. Can behave more like a regular frontend by using special helpers to avoid HTMLService limitations.
+This was the original functionality of the framework and can still be useful if you rely heavily on [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates), otherwise its best to migrate your HTML template to regular HTML and handle the templating from the frontend js.  
 
 Works arround the limitations of a GAS frontend inside an iframe:
 1. **Custom Domain Serving**: Serves apps under a custom domain, providing more control than Google Sites.
@@ -46,11 +70,15 @@ Works arround the limitations of a GAS frontend inside an iframe:
     - Website only bundles what you use.
 8. **Logs to GCP Logging**: Sends logging events to the parent website, which sends the frontend logs to GCP (same place where the .gs logs go.)
 9. **Easy installation and customization**: just `npm install` in both the website and apps script directories, customize `.env.local` files and `npm deploy`. The website uses vite and the apps script uses a custom npm bundling script and `clasp` to deploy from the command-line.
+10. Optional helpers to support multiple languages in your website (both in `website` and `HTMLService`) using `i18n` tags.
 
 ## Firebase Auth
 Can be used with both hosting methods.
-I implemented this because I couldnt find a good firebase UI that could be a) bundable (generates much smaller code) and b) handled all possible cases in the auth flow.
-It can actually be used independent of apps script. Its a lit component with:
+I implemented this because I couldnt find a good firebase UI that could be:
+- bundable to generate much smaller code.
+- handled all possible cases in the auth flow automatically, including redirection when both fedCM and popups are blocked or on older browsers.  
+
+It can be used independent of Apps Script. Its a `lit` component with:
 - English & Spanish translations.
 - Bundling support (the official FirebaseUI can´t bundle).
 - "Google" signin and "Email & Password" signin, including the "verify email flow".
@@ -193,7 +221,7 @@ For Firebase auth, the script´s crypto implementation automatically downloads a
 * [`page2.html`, `page2.js`](google-apps-script/src/html/page2.html): Sample Page 2 (method #2)
 * [`bridge.html`, `bridge.js`](website/src/html/page3.html): Sample Page 3 (method #1)
 
-## Deploy Apps Script:
+### Deploy Apps Script
   * Deploy as Web App (Execute: Me, Access: Anyone)
   * Use standard GCP project for centralized logs ([instructions](https://developers.google.com/apps-script/guides/cloud-platform-projects#standard)) using the same gcp project for this and the firebase project.
      
@@ -202,12 +230,7 @@ For Firebase auth, the script´s crypto implementation automatically downloads a
 * Search for `CUSTOMIZE:` comments in the repo for key spots to extend to your needs.
 
 ## Messaging Protocol
-
-The iframe and parent page communicate via `postMessage` events. The following
-messages are emitted by the Google Apps Script frontend and processed by
-`website/src/js/common.js`, letting you provide further processing if needed. When
-you add new events, update both `website/src/js/common.js` and
-`google-apps-script/src/js/util.js`/`bridge.js` so the contract stays in sync.
+You only need to know this protocol if you plan to modify it. The iframe and parent page communicate via `postMessage` events. The following messages are emitted by the Google Apps Script frontend and processed by `website/src/js/common.js`, letting you provide further processing if needed. When you add new events, update both `website/src/js/common.js` and `google-apps-script/src/js/util.js`/`bridge.js` so the contract stays in sync.
 
 | Action | From → To | Description | Sample data Payload |
 | ------ | --------- | -------------- | -------------- |
