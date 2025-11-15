@@ -14,7 +14,7 @@ This monorepo demonstrates how a Firebase-hosted site exchanges data with an emb
 
 ## Build & validation commands
 - Website static build: `npm run build` inside `website/`.
-- Firebase functions deployment dry-run: `npm run serve` or `npm run deploy` from `website/functions/`.
+- Firebase functions deployment: `npm run deploy` from `website/functions/`. For local emulation, use `npm run serve`.
 - Apps Script bundle & push: `npm run build` inside `google-apps-script/` (runs the HTML/JS inliner and `clasp push`).
 - No automated tests are defined; please run the relevant build steps above before submitting changes.
 
