@@ -8,7 +8,7 @@ This project bundles the Apps Script web app that the Vite-powered `website/` pr
 
 ## Project structure
 - `src/gs/` contains server-side `.gs` code. `_util.gs` wires up routing (`doGet`), structured logging helpers, and the
-  `PUBLIC_FUNCTIONS` whitelist that the bridge can invoke; helpers that should stay private should end with `_`. `rsasign.gs`
+  `PUBLIC_FUNCTIONS` whitelist that the bridge can invoke; helpers that should stay private should end with `_` (note: GAS still exposes them publicly, but the bridge will not call them). `rsasign.gs`
   hosts the Firebase Auth signature verification utilities and caches Google certs in script properties (`FIREBASE_CERTS_JSON`,
   `FIREBASE_CERTS_UNTIL`).
 - `src/html/` provides the HTML entry points. Files pull in client bundles with `<script inline>` / `<link inline>` tags so that the build step can inline assets for HTMLService.
