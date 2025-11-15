@@ -1,9 +1,11 @@
 # Website Guidelines
 
-This Vite project implements the website that hosts the Apps Script web app via an iframe bridge.  
+This Vite project implements the website that hosts the Apps Script web app via an iframe bridge.
 It implementes two different methods (#1 and #2) for hosting the Apps Script:
 - Method #1 embeds the GAS webapp, which shows its frontend inside the iframe.
 - Method #2 keeps the frontend on the top window, outside the GAS iframe, using GAS only to call .gs backend functions.
+
+Consult the root `readme.md` whenever you modify either method so the repo-wide documentation (especially the messaging table) matches the behavior described here and in `google-apps-script/AGENTS.md`.
 
 ## Project layout
 - `src/index.html`, `src/page{1-3}.html`, and `src/login.html` are Vite entry points defined in `vite.config.js`. Page 1 & 2 embed the GAS HTMLService (method #2), while `page3` demonstrates the top-level bridge (method #1).

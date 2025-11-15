@@ -8,6 +8,13 @@
 
 **This repo contains two projects**, one for the website and another for the GAS. Both projects work together and implement the functionalities for methods #1 and #2. Additionally, the website contains an optional sub-project for a Firebase backend.
 
+## Documentation map
+- **`readme.md` (this file)** – Conceptual overview of the bridge and iframe modes, setup notes, and the shared messaging contract table. Keep this file in sync whenever integrations change.
+- **`AGENTS.md`** – Repository-wide contribution guide. When you edit any directory, read the `AGENTS.md` closest to that file for coding standards.
+- **`website/AGENTS.md`** – Build/deploy instructions plus architectural notes for the Vite website (including the optional `functions/` folder).
+- **`google-apps-script/AGENTS.md`** – Bundling, clasp, and iframe/bridge coordination details for the Apps Script project.
+- **`util-org-sig/readme.md`** – Companion doc describing how to generate signing keys for the multi-org loader.
+
 ## Index
 - [Method #1️⃣: Use a regular frontend (prefered)](#method-1️⃣-use-a-regular-frontend-prefered)
 - [Method #2️⃣: Load GAS HTMLService as an iframe](#method-2️⃣-load-gas-htmlservice-as-an-iframe)
@@ -112,6 +119,8 @@ NOTE: The demo websites do not have a public login API key configured so the dem
 * This website only uses method #2, but its in the process of migrating to method #1.
   
 ## Directory Structure
+
+Each folder listed below also ships an `AGENTS.md` or readme with implementation notes—read them before editing so the bridge/iframe contract stays aligned.
 
 * **`website/`**: Parent website project managing the bridge, Apps Script embedding, communication, analytics and login.
 * **`website/functions/`**: Optional Firebase Cloud Functions (Node.js 22) project. `api/logs.js` proxies frontend logs into Google Cloud Logging and can be extended with more endpoints.
