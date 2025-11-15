@@ -1,16 +1,19 @@
 # Website Guidelines
 
-This Vite project implements the website that hosts the Apps Script web app via an iframe bridge.
+This Vite project implements the website that hosts the Apps Script web app via an iframe bridge.  
+It implementes two different methods (#1 and #2) for hosting the Apps Script. Method #1 embeds the GAS webapp, which shows its frontend inside the iframe. Method #2 keeps the frontend on the top window, outside the GAS iframe, using GAS only to call .gs backend functions.
 
 ## Project layout
 - `src/index.html`, `src/page{1-3}.html`, and `src/login.html` are Vite entry points defined in `vite.config.js`. Page 1 & 2 embed the GAS HTMLService (method #2), while `page3` demonstrates the top-level bridge (method #1).
-- `src/js/common.js` centralizes iframe loading, messaging, Google Tag Manager loading, logging queue management, cryptographic validation, and translation helpers. Most new pages wire themselves by calling `initializePage(...)` from this module.
-- `src/js/page*.js` and `src/js/login.js` contain page-specific bootstrap logic that imports helpers from `common.js`. Each file is responsible for invoking `initializePage` with the right callbacks and query parameters.
+- `src/js/common.js` centralizes iframe loading, messaging, Google Tag Manager loading, logging queue management, cryptographic validation for the org/sig feature, and translation helpers. Pages wire themselves by calling `initializePage(...)` from this module.
+- `src/js/page*.js` contain page-specific bootstrap logic that imports helpers from `common.js`. Each file is responsible for invoking `initializePage` with the right callbacks and query parameters.
+- `src/html/login.html` is a fallback page for Firebase login, used when both fedCM and Popup modes fail, opened with an oauth redirect flow. 
 - `src/js/firebaseauth.js` wraps the Firebase SDK configuration, dialog lifecycle, and exposes helpers (`setupAuth`, `getCurrentUser`, `signOutCurrentUser`) used by the demo pages and iframe message handlers.
 - `src/components/` has reusable components. UI uses `lit` and ships the Firebase auth dialog (`components/js/authdialog.js`).
-- `src/components/js/gscriptrun` mirrors the `google.script` API so method #1 pages can call `.gs` functions from the parent window. Use `import { server }` for promise-based calls or the `google.script.run` proxy for chaining callbacks.
+- `src/components/js/gscriptrun` mirrors the `google.script` API so method #1 pages can call `.gs` functions from the parent window. Use `import { server }` for promise-based calls or directly use the `google.script.run` proxy.
 - `src/css/` contains shared styles. Keep selectors descriptive; components import what they need explicitly.
 - `static/` exposes assets copied verbatim by Vite. Anything referenced from HTML should live here or under `src/`.
+- `functions/` is a separate optional project that implements Firebase Cloud functions, used for logging to GCP.
 - `functions/api/logs.js` defines the Cloud Function that relays console output to Cloud Logging. It relies on the `ALLOWED_HOST` environment variable (see `firebase.json`).
 
 ### Adding a new page or entry point
@@ -19,7 +22,7 @@ This Vite project implements the website that hosts the Apps Script web app via 
 - For iframe-backed flows (method #2) keep the messaging contract in sync with `google-apps-script/src/js/bridge.js`. For parent-hosted flows (method #1) use the `GS` helper from `components/js/gscriptrun.js` or the mirrored `google.script` namespace.
 
 ## Environment & configuration
-Environment variables live in `website/src/.env` and `website/src/.env.local` (not committed). The following keys are consumed in code:
+Environment variables live in `website/src/.env` and `website/src/.env.local`. The following keys are consumed in code:
 
 | Key | Used in | Description |
 | --- | ------- | ----------- |
@@ -33,14 +36,14 @@ Environment variables live in `website/src/.env` and `website/src/.env.local` (n
 | `VITE_FIREBASE_KEY` | `js/firebaseauth.js` | Firebase Web API key.
 | `VITE_GOOGLE_SIGNIN_CLIENT_ID` | `js/authService.js` | Optional Google One Tap client ID if not injected via `<meta>` or global.
 
-Keep `.env.local` for developer overrides (e.g., enabling localhost embedding with `VITE_ALLOW_ANY_EMBEDDING=true` to match the GAS project). Update both the website and Apps Script environments when adjusting shared values such as domain or organization identifiers.
+Keep `.env.local` for developer overrides. Update both the website and Apps Script environments when adjusting shared values such as domain or organization identifiers.
 
 ## Core runtime flow
-- `initializePage` orchestrates GTM loading, iframe bootstrapping, and message routing. Supply callbacks such as `callbackIframeLoadEvents` to react to `IframeLoadEvents`, or `callbackMessage` to handle `postMessage` actions sent by GAS (see `_util.gs` and `bridge.js`).
+- `initializePage` orchestrates GTM loading, iframe bootstrapping, and message routing. Supply optional callbacks such as `callbackIframeLoadEvents` to react to `IframeLoadEvents`, or `callbackMessage` to handle `postMessage` actions sent by GAS (see `_util.gs` and `bridge.js`).
 - The iframe is lazily created via `loadIframeFromCurrentUrl`. Parent pages can delay the load until Firebase auth finishes.
 - Logging is buffered until `sendLogsToServer` can push to the Cloud Function. During local development the queue stays client-side to avoid noise.
-- Authentication flows originate from `firebaseauth.js` and `authService.js`, which render the `<auth-dialog>` component. Redirect logins reuse `/login.html`, which only hosts the JS bootstrap.
-- To extend analytics, add custom dimensions in `g_dimensionsGTM` or send events via the exported `analytics` helper.
+- Authentication flows originate from `firebaseauth.js` and `authService.js`, which render the `<auth-dialog>` component. Redirect logins are used as fallback, opening `/login.html` to automatically handle it.
+- To extend analytics, add custom dimensions in `g_dimensionsGTM`.
 
 ## Development workflow
 1. Run `npm install` in `website/` and, separately, in `website/functions/` if you change the Cloud Function code.
