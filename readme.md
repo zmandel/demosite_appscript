@@ -86,13 +86,15 @@ NOTE: The demo websites do not have a public login API key configured so the dem
 ## Directory Structure
 
 * **`website/`**: Parent website project managing the bridge, Apps Script embedding, communication, analytics and login.
+* **`website/functions/`**: Optional Firebase Cloud Functions (Node.js 22) project. `api/logs.js` proxies frontend logs into Google Cloud Logging and can be extended with more endpoints.
 * **`google-apps-script/`**: Google Apps Script project (compiles separate from the parent website project).
 * **`util-org-sig/`**: Crypto utility functions for the "org/sig" feature. See `util-org-sig/readme.md` for key generation and signing instructions.
 
 ## Setup & Configuration common to both projects (website and apps script)
 clone, then inside `website/src` and `google-apps-script/src`, create your `.env.local` files for each `src` directory.
-- `npm install` at `website/` and at `google-apps-script/`
+- `npm install` at `website/` and at `google-apps-script/`. If you change the Firebase function proxy, also run `npm install` inside `website/functions/` (Cloud Functions require Node.js 22, while Vite/dev builds work with Node.js ≥18).
 - To use cloud logging for the frontend, use the firebase function in `website/functions/api/logs.js`.
+- Keep shared environment variables (`URL_WEBSITE`, Firebase project IDs, and the `org/sig` public keys) aligned between both `.env` trees so the iframe/bridge validation logic matches on each side.
 - For improved security set the `ALLOWED_HOST` and `URL_WEBSITE` environment variable to the same domain in both `.env` files and set `ALLOW_ANY_EMBEDDING=false` in `google-apps-script/`.
 
 ## Website project `website/`
@@ -203,23 +205,29 @@ For Firebase auth, the script´s crypto implementation automatically downloads a
 
 The iframe and parent page communicate via `postMessage` events. The following
 messages are emitted by the Google Apps Script frontend and processed by
-`website/src/js/common.js`, letting you provide futher processing if needed.
+`website/src/js/common.js`, letting you provide further processing if needed. When
+you add new events, update both `website/src/js/common.js` and
+`google-apps-script/src/js/util.js`/`bridge.js` so the contract stays in sync.
 
 | Action | From → To | Description | Sample data Payload |
 | ------ | --------- | -------------- | -------------- |
-| `serverRequest` `serverResponse` | parent → iframe → parent | Send and Respond to a server request from the frontend (method #1) | `{"data": { "response": response } or error: error }` |
-| `siteInited` | iframe → parent | Tells the parent that the iframe can be displayed, with or without stopping the progress animation | `{"data": { "dontStopProgress": false } }` |
-| `siteFullyLoaded` | iframe → parent | used only when siteInited was sent with dontStopProgress:true. It tells the parent to stop the progress animation |  |
-| `titleChange` | iframe → parent | change the title of the website | `{"data": { "title": "new title" } }` |
-| `logs` | iframe → parent | send a logs batch to the parent (which then sends it to GCP logging) | `{"data": { "logs": [ { "message": "..." } ] } }` |
-| `analyticsEvent` | iframe → parent | send an analytics event | `"data": { "name": "customEvent" } }` |
-| `urlParamChange` | iframe → parent | change a url param of the main website | `{data": { "refresh": false, "urlParams": { "lang": "en" } } }` |
-| `validateDomain` | parent → iframe → parent  | received by the iframe. If the domain is correct, it enables the iframe, otherwise it remains hidden to prevent clickjacking | |
+| `serverRequest` / `serverResponse` | parent → iframe → parent | Send and respond to a server request from the frontend (method #1 bridge) | `{ "type": "FROM_PARENT", "action": "serverRequest", "data": { "functionName": "...", "arguments": [...] }, "idRequest": "..." }` and `{ "type": "FROM_IFRAME", "action": "serverResponse", "data": { "result": ... }, "idRequest": "..." }` |
+| `siteInited` | iframe → parent | Tells the parent that the iframe can be displayed, with or without stopping the progress animation | `{ "data": { "dontStopProgress": false } }` |
+| `siteFullyLoaded` | iframe → parent | Used only when `siteInited` set `dontStopProgress: true`; tells the parent when to stop the progress animation |  |
+| `titleChange` | iframe → parent | Change the title of the website | `{ "data": { "title": "new title" } }` |
+| `logs` | iframe → parent | Send a logs batch to the parent (which then sends it to GCP logging) | `{ "data": { "logs": [ { "message": "..." } ] } }` |
+| `analyticsEvent` | iframe → parent | Send an analytics event | `{ "data": { "name": "customEvent" } }` |
+| `urlParamChange` | iframe → parent | Change a URL param of the main website | `{ "data": { "refresh": false, "urlParams": { "lang": "en" } } }` |
+| `openUrlWithProps` | iframe → parent | Open or replace a route with specific query/path props (method #2 navigation helper) | `{ "data": { "pathname": "/lesson", "props": { "step": 2 } } }` |
+| `toggleFullscreen` | iframe → parent | Ask the parent to toggle fullscreen mode for smoother demos |  |
+| `getUser` / `logoutUser` | iframe → parent (reply sent via the same event name) | Coordinate Firebase login prompts and user info exchange | `{ "data": { "force": true, "addIdToken": true } }` |
+| `validateDomain` | parent → iframe → parent  | Received by the iframe. If the domain is correct, it enables the iframe; otherwise it remains hidden to prevent clickjacking |  |
 
-### Messaes highlight
-- `validateDomain`: The parent page validates the domain after receiving `siteInited`, responding with `validateDomain`, then enabling the GAS.
-- `serverResponse`: Responds to the backend API call requests.
-- The rest are for controlling the iframe load and implementing features for the GAS frontend in method #2.
+### Message highlights
+- `validateDomain`: The parent page validates the domain after receiving `siteInited`, responding with `validateDomain`, then enabling the GAS (and keeping unknown origins hidden to prevent clickjacking).
+- `serverRequest`/`serverResponse`: Wire up the method #1 bridge—exposed via the mirrored `google.script` proxy—so `.gs` functions can be invoked from the top-level website.
+- `getUser`/`logoutUser`: Allow method #2 pages to show login prompts or sign out from the iframe while reusing the website’s Firebase session state.
+- The rest are for controlling the iframe load lifecycle and implementing UX features for the GAS frontend in method #2.
 
 ## License
 
