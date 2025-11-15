@@ -59,9 +59,9 @@ This method will insert an iframe only once, and then it handles API calls like 
 
 ## Method #2: Load GAS HTMLService as an iframe
 Run an MPA, each page using a different GAS frontend HTMLService. Runs the GAS webapps inside an iframe. Can behave more like a regular frontend by using special helpers to avoid HTMLService limitations.
-This was the original functionality of the framework and can still be useful if you rely heavily on [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates), otherwise its best to migrate your HTML template to regular HTML and handle the templating from the frontend js.  
+This was the original functionality of the framework and can still be useful if you rely heavily on [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates), otherwise its best to migrate your HTML template to regular HTML and handle the templating from the frontend js, using method #1 to embed.
 
-Works arround the limitations of a GAS frontend inside an iframe:
+### Features:
 1. **Custom Domain Serving**: Serves apps under a custom domain, providing more control than Google Sites.
 2. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
 3. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
