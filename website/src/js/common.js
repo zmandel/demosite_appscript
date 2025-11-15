@@ -161,16 +161,6 @@ export function sendLogsToServer(logQueue) {
     });
 }
 
-/**
- * events that the iframe can send:
- * - analyticsEvent
- * - siteInited
-* - siteFullyLoaded
-* - logs
-* - titleChange
-* - urlParamChange 
-*/
-
 export function setTitle(title) {
   document.title = title + "  |  Tutor for Me";
 }
@@ -194,6 +184,18 @@ export function openUrlWithProps(dataEvent) {
   window.open(url, dataEvent.replacePage ? "_self" : "_blank");
 }
 
+/**
+ * events that the iframe can send:
+ * - analyticsEvent
+ * - siteInited
+ * - siteFullyLoaded
+ * - logs
+ * - titleChange
+ * - urlParamChange 
+ * - toggleFullscreen
+ * - serverResponse
+ * - openUrlWithProps
+*/
 export function processAction(data, event, callbackMessage) {
   if (data.action == "siteInited") {
     if (event)

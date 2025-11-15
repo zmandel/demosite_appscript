@@ -11,7 +11,8 @@
  * By convention, any function whose name ends with an underscore (_) is considered private.
  */
 
-// Whitelist
+// Whitelist.
+// CUSTOMIZE: your public functions.
 const PUBLIC_FUNCTIONS = {
   demoServerFunction: demoServerFunction,
 };
