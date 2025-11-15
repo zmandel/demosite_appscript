@@ -23,4 +23,4 @@ This monorepo demonstrates how a Firebase-hosted site exchanges data with an emb
 - Prefer descriptive comments for exported/public functions so that the integration points stay discoverable.
 - Keep logging consistent: use the helpers in each subproject (`log_`, `warn_`, `error_` on the Apps Script side and the logging queue in `website/src/js/common.js`).
 
-Refer to the AGENT file in the subdirectory you are modifying for more specific conventions.
+Refer to the AGENTS file in the subdirectory you are modifying for more specific conventions.
