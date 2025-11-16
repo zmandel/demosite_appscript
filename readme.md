@@ -1,6 +1,6 @@
 # Google Apps Script Website Integration Framework
 
-**Develop, debug and publish Google Apps Script webapps as a regular website without any frontend restrictions** or frontend load delays.
+**Develop, debug and publish Google Apps Script webapps as a regular website without any frontend restrictions or load delays.**
 
 - Provides two robust methods to load your GAS pages depending on your needs.
 - Sample, live Apps Script pages illustrate various interaction patterns.
