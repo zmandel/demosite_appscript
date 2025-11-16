@@ -21,7 +21,7 @@
 - [Demos](#demos)
 - [Production Website using this framework](#production-website-using-this-framework)
 - [Directory Structure](#directory-structure)
-- [Setup & Configuration common to both projects (website and apps script)](#setup--configuration-common-to-both-projects-website-and-apps-script)
+- [Setup & Configuration common to both projects](#setup--configuration-common-to-both-projects)
 - [Website project `website/`](#website-project-website)
   - [Key Features](#key-features)
   - [Setup & Configuration](#setup--configuration)
