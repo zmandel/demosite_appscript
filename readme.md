@@ -1,6 +1,6 @@
 # Google Apps Script Website Integration Framework
 
-**Develop, debug and publish Google Apps Script webapps as a regular website without any frontend restrictions**.
+**Develop, debug and publish Google Apps Script webapps as a regular website without any frontend restrictions** or frontend load delays.
 
 - Provides two robust methods to load your GAS pages depending on your needs.
 - Sample, live Apps Script pages illustrate various interaction patterns.
@@ -52,8 +52,8 @@ GAS webapps make it hard to call the backend from outside the HTMLService. There
 This method will insert an iframe only once, and then it handles API calls like a regular frontend call, withour redirects or contentService.
 
 ### Features
-1. Runs the frontend in the top window, outside of the GAS webapp iframe.
-2. Provides a mirror `google.script` API as a transparent bridge for invoking `.gs` server-side functions.
+1. Runs the frontend in the top window, outside of the GAS webapp iframe, loading instantly and without limitations.
+2. Provides a mirror `google.script` API as a transparent bridge for invoking `.gs` server-side functions and loads on-demand or asynchronously at page load time.
 3. Develop, debug an publish the frontend using any tooling, frameworks, libraries or languages (React, Vue, Typescript, Vite, live reloading, etc.)
 4. Use all the browser functionalities without restrictions imposed by the GAS iframe like localStorage, notifications, credential APIs, serviceWorker, direct URL access, etc.
 5. Build as SPA, MPA or PWA.
