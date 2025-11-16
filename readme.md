@@ -120,7 +120,7 @@ Shows a simple website with three pages.
 - Page 2: uses method #2 with a more complex flow where the page partially loads while the loading animation (from the parent website) continues. It then loads external libraries and the rest of the page, then stops the parent loading animation.
 - Page 3: showcases method #1. Loads the GAS bridge asynchronously, with a button that calls a GAS backend API.
 
-NOTE: The demo websites do not have a public login API key configured so the demos only show the login UI. You can try the full login features on the production website.
+NOTE: The demo websites do not have a public auth (login) API key configured so the demos only show the login UI. You can try the full login features on the production website.
 * **Demo Website**: [fir-apps-script.firebaseapp.com](https://fir-apps-script.firebaseapp.com/)
 * **Using the "org/sig" with sample URL parameters**: [fir-apps-script.firebaseapp.com?org=xxx&sig=yyy](https://fir-apps-script.firebaseapp.com?org=XXXX&sig=YYYY)
 
@@ -128,7 +128,7 @@ NOTE: The demo websites do not have a public login API key configured so the dem
 * Visit [Tutor For Me](https://tutorforme.org)
 * **Optional login**: Do a demo lesson from the homepage. You can view the page without login, then use the login-on-demand feature at the time you save the page.
 * **Forced login**: [Tutor For Me | My lessons](https://tutorforme.org/lessonplans)
-* This website only uses method #2, but its in the process of migrating to method #1.
+* The website only uses embedding method #2 for the GAS, but its in the process of migrating to method #1.
   
 ## Directory Structure
 
