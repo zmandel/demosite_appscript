@@ -4,6 +4,7 @@
 
 - Provides two robust methods to load your GAS pages depending on your needs.
 - Sample, live Apps Script pages illustrate various interaction patterns.
+- Meant for GAS webapps that run as the developer (not as the user.)
 - `agents.md` files to facilitate your use of AI coding agents.  
 
 **This monorepo contains two projects**, one for the website and another for the GAS. Both projects work together and implement the functionalities for methods #1 and #2. Additionally, the website contains an optional sub-project for a Firebase backend.
@@ -45,7 +46,7 @@
 - **`util-org-sig/readme.md`** – Companion doc describing how to generate signing keys for the optional multi-org feature.
 
 ## Method #1: Use a regular frontend (prefered)
-The coolest one. Completely liberates you from all GAS webapp limitations but it does not support [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates).
+The coolest one. Completely liberates you from all GAS webapp limitations and load delays but it does not support [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates).
 
 ### Why this method is needed
 GAS webapps make it hard to call the backend from outside the HTMLService. There is a an [execution API](https://developers.google.com/apps-script/api/how-tos/execute) but it can only be used if all your GAS backend runs under the user's credentials. You cant use it when running under the developer credentials. Also, if you try to use doGet returning contentService to publish as an "API", it has two inconveniencea: it will cause a redirect and another fetch from the frontend, to usercontent.google.com, making it slower from the frontend, and requires to return a "JSONP", which needs to be queried as an injected <script> in the frontend, which is ugly, slower and gives you less control.  
