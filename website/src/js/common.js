@@ -156,6 +156,7 @@ export function sendLogsToServer(logQueue) {
   })
     .then(res => {
       if (!res.ok) {
+        console.error("Error sending logs, status:", res.status);
         throw new Error(`HTTP ${res.status}`);
       }
       return res;
@@ -402,8 +403,10 @@ export function getLang() {
 export function setLang(lang, mapTranslations) {
   if (!lang)
     lang = g_langDefault;
-  if (lang !== "en" && lang !== "es")
+  if (lang !== "en" && lang !== "es") {
+    console.error("invalid language in setLang: " + lang);
     throw new Error("invalid language");
+  }
   g_lang = lang;
 
   if (mapTranslations) {
@@ -703,7 +706,9 @@ function getContainer(pos) {
  */
 export function toast(text, opts = {}) {
   if (typeof document === "undefined") {
-    throw new Error("mini-toast requires a browser environment");
+    const msgError = "mini-toast requires a browser environment";
+    console.error(msgError);
+    throw new Error(msgError);
   }
   injectCSS();
 

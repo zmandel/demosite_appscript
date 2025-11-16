@@ -1,6 +1,6 @@
 /* Utilities for:
  * - manual structured logging (with callstacks) to GCP. (error_, warn_, log_)
- * - error handling (throwOnError, throwError, etc.)
+ * - error handling (throwOnError, throwError, etc.) that also generates logs
  * - router to call GAS from the frontend
  * - a simple sample routing for two pages
  */
@@ -31,26 +31,26 @@ function processServerRequest(e) {
 
     // Validate that functionName is provided and is a string.
     if (!payload || typeof payload.functionName !== 'string') {
-      throw new Error("Missing or invalid functionName.");
+      throwError("Missing or invalid functionName.");
     }
 
     var functionName = payload.functionName;
 
     // Do not allow calls to functions that are considered private (names ending with an underscore).
     if (functionName.slice(-1) === '_') {
-      throw new Error("Attempt to call a private function: " + functionName);
+      throwError("Attempt to call a private function: " + functionName);
     }
 
     // Verify that the requested function is in our whitelist.
     if (!(functionName in PUBLIC_FUNCTIONS)) {
-      throw new Error("Function not found or not allowed: " + functionName);
+      throwError("Function not found or not allowed: " + functionName);
     }
 
     var func = PUBLIC_FUNCTIONS[functionName];
 
     // Ensure that the target is indeed a function.
     if (typeof func !== 'function') {
-      throw new Error("Target is not a function: " + functionName);
+      throwError("Target is not a function: " + functionName);
     }
 
     // Call the function with the provided arguments.

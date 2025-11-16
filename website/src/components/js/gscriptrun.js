@@ -39,12 +39,15 @@ Object.defineProperty(google.script, "run", {
                 return async function (...args) {
                     try {
                         const response = await serverRequest(prop, ...args);
-                        if (!response || response.error)
-                          throw new Error(`Server request failed: ${response ? response.error : 'No response'}`);
-                        
-                        if (!response.hasOwnProperty("result"))
+                        if (!response || response.error) {
+                          const errorMsg = response ? response.error : 'No response';
+                          console.error("GScriptrun: server request failed", errorMsg);
+                          throw new Error(`Server request failed: ${errorMsg}`);
+                        }
+                        if (!response.hasOwnProperty("result")) {
+                          console.error("GScriptrun: server response missing result", response);
                           throw new Error('Server response missing result');
-                        
+                        }
                         onSuccess(response.result, userObject);
                     } catch (err) {
                         onFailure(err, userObject);
@@ -136,7 +139,10 @@ export class GS {
   #getLocation() {
     const { script } = this.#ensureAvailable();
     const getLoc = script?.url?.getLocation;
-    if (typeof getLoc !== 'function') throw new Error('google.script.url.getLocation is not available');
+    if (typeof getLoc !== 'function') {
+      console.error('GScriptrun: google.script.url.getLocation is not available');
+      throw new Error('google.script.url.getLocation is not available');
+    }
     return new Promise((resolve) => getLoc(resolve));
   }
 

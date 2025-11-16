@@ -251,7 +251,7 @@ let g_iframeMode = false; //set in initializeSession
 class GS {
   #ensureAvailable() {
     const g = globalThis.google;
-    if (!g?.script?.run) throw new Error('google.script.run is not available yet');
+    if (!g?.script?.run) throwError('google.script.run is not available yet');
     return g;
   }
 
@@ -287,7 +287,7 @@ class GS {
   #getLocation() {
     const { script } = this.#ensureAvailable();
     const getLoc = script?.url?.getLocation;
-    if (typeof getLoc !== 'function') throw new Error('google.script.url.getLocation is not available');
+    if (typeof getLoc !== 'function') throwError('google.script.url.getLocation is not available');
     return new Promise((resolve) => getLoc(resolve));
   }
 

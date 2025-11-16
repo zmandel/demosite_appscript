@@ -222,7 +222,10 @@ export class AuthDialog extends LitElement {
     }
     
     if (!this.#authInitialized) {
-      if (!auth) throw new Error("AuthDialog requires an auth instance");
+      if (!auth) {
+        console.error("AuthDialog: auth instance is required for initialization");
+        throw new Error("AuthDialog requires an auth instance");
+      }
       initAuth(auth, headerText, this, this);
       this.#authInitialized = true;
     }
