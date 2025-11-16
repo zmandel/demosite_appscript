@@ -136,7 +136,7 @@ Each folder listed below also ships an `AGENTS.md` or readme with implementation
 * **`google-apps-script/`**: Google Apps Script project (compiles separate from the parent website project).
 * **`util-org-sig/`**: Crypto utility functions for the "org/sig" feature. See `util-org-sig/readme.md` for key generation and signing instructions.
 
-## Setup & Configuration common to both projects (website and apps script)
+## Setup & Configuration common to both projects
 clone, then inside `website/src` and `google-apps-script/src`, create your `.env.local` files for each `src` directory.
 - `npm install` at `website/` and at `google-apps-script/`. If you change the Firebase function proxy, also run `npm install` inside `website/functions/` (Cloud Functions require Node.js 22, while Vite/dev builds work with Node.js ≥18).
 - To use cloud logging for the frontend, use the firebase function in `website/functions/api/logs.js`.
