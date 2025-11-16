@@ -2,7 +2,8 @@
     "name": "demo-webapp-script",
     "version": "0.1.0",
     "devDependencies": {
-        "vite": "^7.2.2"
+        "vite": "^7.2.2",
+        "vite-plugin-inline-source": "^4.1.0"
     },
     "scripts": {
         "dev": "vite",

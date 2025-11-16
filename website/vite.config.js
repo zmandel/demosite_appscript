@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import fs from 'fs';
 import { resolve } from 'node:path'
+import inlineSource from 'vite-plugin-inline-source';
 
 export default defineConfig(({ command }) => {
   
@@ -18,6 +19,7 @@ export default defineConfig(({ command }) => {
   return {
     root: 'src',
     publicDir: '../static',
+    plugins: [inlineSource()],
     build: {
       outDir: '../dist',
       emptyOutDir: true,
