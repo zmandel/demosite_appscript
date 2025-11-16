@@ -2,7 +2,7 @@
 
 **Develop, debug and publish Google Apps Script webapps as a regular website without any frontend restrictions**.
 
-- Provides two robust methods (#1 and #2) to load your GAS pages depending on your needs.
+- Provides two robust methods to load your GAS pages depending on your needs.
 - Sample, live Apps Script pages illustrate various interaction patterns.
 - `agents.md` files to facilitate your use of AI coding agents.  
 
