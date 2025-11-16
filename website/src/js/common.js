@@ -99,7 +99,11 @@ export async function serverRequest(prop, ...args) {
       resolve(response);
     });
     g_signalFrameLoaded.then(() => {
+      //note we post with no domain filtering ("*") because the GAS domain varies, but we validate g_sourceIframe when its set
       g_sourceIframe.postMessage({ type: "FROM_PARENT", action: "serverRequest", data: { functionName: prop, arguments: strArgs }, idRequest: idRequest }, "*");
+    }).catch((error) => {
+      console.error("Error: iframe not loaded", error);
+      resolve({error: "iframe not loaded"});
     });
   });
 }
@@ -198,9 +202,8 @@ export function openUrlWithProps(dataEvent) {
 */
 export function processAction(data, event, callbackMessage) {
   if (data.action == "siteInited") {
-    if (event)
+    if (!g_sourceIframe && event)
       g_sourceIframe = event.source;
-    document.documentElement.classList.remove("scrollY");
     g_loadedFrame = true;
     g_loadingFrame = false;
     event.source.postMessage({ type: 'validateDomain' }, event.origin);
@@ -574,7 +577,7 @@ export function loadIframeFromCurrentUrl(paramsExtra = "") {
     g_loadingFrame = false;
     if (g_callbackIframeLoadEvents)
         g_callbackIframeLoadEvents(IframeLoadEvents.ERRORLOADING);
-    
+    g_signalFrameLoaded.reject(new Error("iframe load timeout"));    
   }
 
   iframeElem.addEventListener("load", (event) => {
