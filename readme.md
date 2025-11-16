@@ -8,12 +8,6 @@
 
 **This monorepo contains two projects**, one for the website and another for the GAS. Both projects work together and implement the functionalities for methods #1 and #2. Additionally, the website contains an optional sub-project for a Firebase backend.
 
-## Documentation map
-- **`AGENTS.md`** – Repository-wide contribution guide. When you edit any directory, read the `AGENTS.md` closest to that file for coding standards.
-- **`website/AGENTS.md`** – Build/deploy instructions plus architectural notes for the Vite website (including the optional `functions/` folder).
-- **`google-apps-script/AGENTS.md`** – Bundling, clasp, and iframe/bridge coordination details for the Apps Script project.
-- **`util-org-sig/readme.md`** – Companion doc describing how to generate signing keys for the optional multi-org feature.
-
 ## Index
 - [Documentation map](#documentation-map)
 - [Method #1: Use a regular frontend (prefered)](#method-1-use-a-regular-frontend-prefered)
@@ -44,7 +38,11 @@
   - [Message highlights](#message-highlights)
 - [License](#license)
 
-
+## Documentation map
+- **`AGENTS.md`** – Repository-wide contribution guide. When you edit any directory, read the `AGENTS.md` closest to that file for coding standards.
+- **`website/AGENTS.md`** – Build/deploy instructions plus architectural notes for the Vite website (including the optional `functions/` folder).
+- **`google-apps-script/AGENTS.md`** – Bundling, clasp, and iframe/bridge coordination details for the Apps Script project.
+- **`util-org-sig/readme.md`** – Companion doc describing how to generate signing keys for the optional multi-org feature.
 
 ## Method #1: Use a regular frontend (prefered)
 The coolest one. Completely liberates you from all GAS webapp limitations but it does not support [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates).
