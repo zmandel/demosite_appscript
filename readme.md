@@ -1,54 +1,73 @@
 # Google Apps Script Website Integration Framework
 
-**Develop, debug and publish Google Apps Script webapps as a regular website without any frontend restrictions**
+**Develop, debug and publish Google Apps Script webapps as a regular website without any frontend restrictions or load delays.**
 
- → Provides two robust methods (#1 and #2) to load your GAS pages depending on your needs.  
- → Sample, live Apps Script pages illustrate various interaction patterns.
- → `agents.md` files to facilitate your use of AI coding agents.  
+- Provides two robust methods to load your GAS pages depending on your needs.
+- Sample, live Apps Script pages illustrate various interaction patterns.
+- Meant for GAS webapps that run as the developer (not as the user.)
+- `agents.md` files to facilitate your use of AI coding agents.  
 
-**This repo contains two projects**, one for the website and another for the GAS. Both projects work together and implement the functionalities for methods #1 and #2. Additionally, the website contains an optional sub-project for a Firebase backend.
+**This monorepo contains two projects**, one for the website and another for the GAS. Both projects work together and implement the functionalities for methods #1 and #2. Additionally, the website contains an optional sub-project for a Firebase backend.
 
 ## Index
-- [Method #1️⃣: Use a regular frontend (prefered)](#method-1️⃣-use-a-regular-frontend-prefered)
-- [Method #2️⃣: Load GAS HTMLService as an iframe](#method-2️⃣-load-gas-htmlservice-as-an-iframe)
+- [Documentation map](#documentation-map)
+- [Method #1: Use a regular frontend (prefered)](#method-1-use-a-regular-frontend-prefered)
+  - [Why this method is needed](#why-this-method-is-needed)
+  - [Features](#features)
+- [Method #2: Load GAS HTMLService as an iframe](#method-2-load-gas-htmlservice-as-an-iframe)
+  - [Features](#features-1)
 - [Additional functionality for both methods #1 and #2](#additional-functionality-for-both-methods-1-and-2)
 - [Firebase Auth](#firebase-auth)
 - [Demos](#demos)
 - [Production Website using this framework](#production-website-using-this-framework)
 - [Directory Structure](#directory-structure)
-- [Setup & Configuration common to both projects (website and apps script)](#setup--configuration-common-to-both-projects-website-and-apps-script)
+- [Setup & Configuration common to both projects](#setup--configuration-common-to-both-projects)
 - [Website project `website/`](#website-project-website)
   - [Key Features](#key-features)
   - [Setup & Configuration](#setup--configuration)
+  - [Key Files](#key-files)
 - [Google Apps Script project `google-apps-script/`](#google-apps-script-project-google-apps-script)
   - [Key Features](#key-features-1)
   - [Setup & Configuration](#setup--configuration-1)
   - [Local debugging](#local-debugging)
   - [Script Properties](#script-properties)
   - [Sample Pages](#sample-pages)
-  - [Key Files](#key-files)
+  - [Key Files](#key-files-1)
   - [Deploy Apps Script](#deploy-apps-script)
 - [Customization](#customization)
 - [Messaging Protocol](#messaging-protocol)
   - [Message highlights](#message-highlights)
 - [License](#license)
 
+## Documentation map
+- **`AGENTS.md`** – Repository-wide contribution guide. When you edit any directory, read the `AGENTS.md` closest to that file for coding standards.
+- **`website/AGENTS.md`** – Build/deploy instructions plus architectural notes for the Vite website (including the optional `functions/` folder).
+- **`google-apps-script/AGENTS.md`** – Bundling, clasp, and iframe/bridge coordination details for the Apps Script project.
+- **`util-org-sig/readme.md`** – Companion doc describing how to generate signing keys for the optional multi-org feature.
 
+## Method #1: Use a regular frontend (prefered)
+The coolest one. Completely liberates you from all GAS webapp limitations and load delays but it does not support [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates).
 
-## Method #1️⃣: Use a regular frontend (prefered)
-The coolest one. Completely liberates you from all GAS webapp limitations but it does not support [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates)
-1. Runs the frontend in the top window, outside of the GAS webapp iframe.
-2. Provides a mirror `google.script` API as a transparent bridge for invoking `.gs` server-side functions.
+### Why this method is needed
+GAS webapps make it hard to call the backend from outside the HTMLService. There is a an [execution API](https://developers.google.com/apps-script/api/how-tos/execute) but it can only be used if all your GAS backend runs under the user's credentials. You cant use it when running under the developer credentials.  
+
+Also, if you try to use doGet returning contentService to publish as an "API", it has two inconveniencea: it will cause a redirect and another fetch from the frontend, to usercontent.google.com, making it slower from the frontend, and requires to return a "JSONP", which needs to be injected as a <script> per call in the frontend, which is slower, more brittle and gives you less control.  
+
+This method will insert an iframe only once, and then it handles API calls like a regular frontend call, without redirects or contentService.
+
+### Features
+1. Runs the frontend in the top window, outside of the GAS webapp iframe, loading instantly and without limitations.
+2. Provides a mirror `google.script` API as a transparent bridge for invoking `.gs` server-side functions and loads on-demand or asynchronously at page load time.
 3. Develop, debug an publish the frontend using any tooling, frameworks, libraries or languages (React, Vue, Typescript, Vite, live reloading, etc.)
 4. Use all the browser functionalities without restrictions imposed by the GAS iframe like localStorage, notifications, credential APIs, serviceWorker, direct URL access, etc.
 5. Build as SPA, MPA or PWA.
 6. Reduce GAS load by moving all the frontend serving outside of GAS.
 
-## Method #2️⃣: Load GAS HTMLService as an iframe
+## Method #2: Load GAS HTMLService as an iframe
 Run an MPA, each page using a different GAS frontend HTMLService. Runs the GAS webapps inside an iframe. Can behave more like a regular frontend by using special helpers to avoid HTMLService limitations.
-This was the original functionality of the framework and can still be useful if you rely heavily on [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates), otherwise its best to migrate your HTML template to regular HTML and handle the templating from the frontend js.  
+This was the original functionality of the framework and can still be useful if you rely heavily on [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates), otherwise its best to migrate your HTML template to regular HTML and handle the templating from the frontend js, using method #1 to embed.
 
-Works arround the limitations of a GAS frontend inside an iframe:
+### Features:
 1. **Custom Domain Serving**: Serves apps under a custom domain, providing more control than Google Sites.
 2. **Analytics Integration**: Manages Google Analytics through GTM, receiving events from embedded Apps Scripts.
 3. **Smooth Transitions**: Avoids flashing screens by smoothly transitioning page loads on a MPA webapp.
@@ -56,7 +75,7 @@ Works arround the limitations of a GAS frontend inside an iframe:
 5. **Change the browser header colorscheme** to match the script webapp.
 6. **Fullscreen support**
 
-## Additional functionality for both methods #1 and #2:
+## Additional functionality for both methods:
 1. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts (a long standing issue with GAS HTMLService.)
 2. **Google Workspace Compatibility**: Handles redirects typically problematic when users are under a Google Workspace account profile (another long standing issue with GAS HTMLService.)
 3. **Dynamic Multiple Script version Loading**: Securely loads different script versions (could be on the same or a different Google Workspace or Google Account) under the same website routes by passing parameters for different "organizations" you can create with the "org/sig" feature.
@@ -101,7 +120,7 @@ Shows a simple website with three pages.
 - Page 2: uses method #2 with a more complex flow where the page partially loads while the loading animation (from the parent website) continues. It then loads external libraries and the rest of the page, then stops the parent loading animation.
 - Page 3: showcases method #1. Loads the GAS bridge asynchronously, with a button that calls a GAS backend API.
 
-NOTE: The demo websites do not have a public login API key configured so the demos only show the login UI. You can try the full login features on the production website.
+NOTE: The demo websites do not have a public auth (login) API key configured so the demos only show the login UI. You can try the full login features on the production website.
 * **Demo Website**: [fir-apps-script.firebaseapp.com](https://fir-apps-script.firebaseapp.com/)
 * **Using the "org/sig" with sample URL parameters**: [fir-apps-script.firebaseapp.com?org=xxx&sig=yyy](https://fir-apps-script.firebaseapp.com?org=XXXX&sig=YYYY)
 
@@ -109,16 +128,18 @@ NOTE: The demo websites do not have a public login API key configured so the dem
 * Visit [Tutor For Me](https://tutorforme.org)
 * **Optional login**: Do a demo lesson from the homepage. You can view the page without login, then use the login-on-demand feature at the time you save the page.
 * **Forced login**: [Tutor For Me | My lessons](https://tutorforme.org/lessonplans)
-* This website only uses method #2, but its in the process of migrating to method #1.
+* The website only uses embedding method #2 for the GAS, but its in the process of migrating to method #1.
   
 ## Directory Structure
+
+Each folder listed below also ships an `AGENTS.md` or readme with implementation notes—read them before editing so the bridge/iframe contract stays aligned.
 
 * **`website/`**: Parent website project managing the bridge, Apps Script embedding, communication, analytics and login.
 * **`website/functions/`**: Optional Firebase Cloud Functions (Node.js 22) project. `api/logs.js` proxies frontend logs into Google Cloud Logging and can be extended with more endpoints.
 * **`google-apps-script/`**: Google Apps Script project (compiles separate from the parent website project).
 * **`util-org-sig/`**: Crypto utility functions for the "org/sig" feature. See `util-org-sig/readme.md` for key generation and signing instructions.
 
-## Setup & Configuration common to both projects (website and apps script)
+## Setup & Configuration common to both projects
 clone, then inside `website/src` and `google-apps-script/src`, create your `.env.local` files for each `src` directory.
 - `npm install` at `website/` and at `google-apps-script/`. If you change the Firebase function proxy, also run `npm install` inside `website/functions/` (Cloud Functions require Node.js 22, while Vite/dev builds work with Node.js ≥18).
 - To use cloud logging for the frontend, use the firebase function in `website/functions/api/logs.js`.

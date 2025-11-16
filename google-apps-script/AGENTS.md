@@ -6,6 +6,8 @@ This project bundles the Apps Script web app that the Vite-powered `website/` pr
 
 * **Method #2 (iframe HTMLService)** – `doGet` renders `src/html/page1.html` or `page2.html` and drives the iframe protocol used by `website/src/js/common.js` to manage analytics, URL mutations, loading states, and login prompts. In this method, the GAS frontend runs inside the iframe, like a regular GAS webapp.
 
+Review `readme.md` (messaging table) and `website/AGENTS.md` whenever you change the iframe/bridge protocol so both projects document the same contract.
+
 ## Project structure
 - `src/gs/` contains server-side `.gs` code. `_util.gs` wires up routing (`doGet`), structured logging helpers, and the
   `PUBLIC_FUNCTIONS` whitelist that the bridge can invoke; helpers that should stay private should end with `_` (note: GAS still exposes them publicly, but the bridge will not call them). `rsasign.gs`

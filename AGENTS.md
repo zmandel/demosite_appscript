@@ -8,6 +8,8 @@ This monorepo provides the code and demonstrates how a website can use Google Ap
 - `google-apps-script/` – Source, build scripts, and deployment helpers for the Apps Script project. See `google-apps-script/AGENTS.md`.
 - `util-org-sig/` (optional) – Helper scripts described in `util-org-sig/readme.md` for creating ECDSA keys used by both projects.
 
+For a conceptual overview of both methods and the shared messaging contract, start with `readme.md`. Update that document, plus the relevant `AGENTS.md`, whenever you change integration behavior so the docs stay consistent.
+
 ## Integration overview
 Two flows are maintained in parallel:
 1. **Bridge (parent-hosted)** – The website proxies `google.script.run` calls via `website/src/components/js/gscriptrun.js`, talking to Apps Script HTML served from `google-apps-script/src/html/bridge.html`.
