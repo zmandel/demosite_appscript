@@ -49,8 +49,11 @@
 The coolest one. Completely liberates you from all GAS webapp limitations and load delays but it does not support [GAS HTML Templates](https://developers.google.com/apps-script/guides/html/templates).
 
 ### Why this method is needed
-GAS webapps make it hard to call the backend from outside the HTMLService. There is a an [execution API](https://developers.google.com/apps-script/api/how-tos/execute) but it can only be used if all your GAS backend runs under the user's credentials. You cant use it when running under the developer credentials. Also, if you try to use doGet returning contentService to publish as an "API", it has two inconveniencea: it will cause a redirect and another fetch from the frontend, to usercontent.google.com, making it slower from the frontend, and requires to return a "JSONP", which needs to be queried as an injected <script> in the frontend, which is ugly, slower and gives you less control.  
-This method will insert an iframe only once, and then it handles API calls like a regular frontend call, withour redirects or contentService.
+GAS webapps make it hard to call the backend from outside the HTMLService. There is a an [execution API](https://developers.google.com/apps-script/api/how-tos/execute) but it can only be used if all your GAS backend runs under the user's credentials. You cant use it when running under the developer credentials.  
+
+Also, if you try to use doGet returning contentService to publish as an "API", it has two inconveniencea: it will cause a redirect and another fetch from the frontend, to usercontent.google.com, making it slower from the frontend, and requires to return a "JSONP", which needs to be injected as a <script> per call in the frontend, which is slower, more brittle and gives you less control.  
+
+This method will insert an iframe only once, and then it handles API calls like a regular frontend call, without redirects or contentService.
 
 ### Features
 1. Runs the frontend in the top window, outside of the GAS webapp iframe, loading instantly and without limitations.
@@ -72,7 +75,7 @@ This was the original functionality of the framework and can still be useful if 
 5. **Change the browser header colorscheme** to match the script webapp.
 6. **Fullscreen support**
 
-## Additional functionality for both methods #1 and #2:
+## Additional functionality for both methods:
 1. **Multi-account Compatibility**: Ensures functionality even when users are signed into multiple Google accounts (a long standing issue with GAS HTMLService.)
 2. **Google Workspace Compatibility**: Handles redirects typically problematic when users are under a Google Workspace account profile (another long standing issue with GAS HTMLService.)
 3. **Dynamic Multiple Script version Loading**: Securely loads different script versions (could be on the same or a different Google Workspace or Google Account) under the same website routes by passing parameters for different "organizations" you can create with the "org/sig" feature.
