@@ -7,22 +7,17 @@ import { server } from "/components/js/gscriptrun.js";
  */
 function handleIframeLoadEvent(iframeLoadEvent) {
   const loadingPage = document.getElementById("loadingPage");
-  const loadingPageLong = document.getElementById("loadingPageLong");
 
   switch (iframeLoadEvent) {
     case IframeLoadEvents.LOADING:
-      loadingPageLong.style.display = "none";
-      loadingPage.style.display = "";
       loadingPage.textContent = "Loading GAS iframe... (you can click the Call button while it loads)";
       break;
 
     case IframeLoadEvents.ERRORLOADING:
-      loadingPage.style.display = "none";
-      loadingPageLong.style.display = "";
+      loadingPage.textContent = "Error loading GAS iframe.";
       break;
 
     case IframeLoadEvents.LOADED:
-      loadingPageLong.style.display = "none";
       loadingPage.textContent = "GAS iframe is loaded.";
       break;
   }

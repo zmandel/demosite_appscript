@@ -26,16 +26,6 @@
       color: var(--primary-text-color);
     }
 
-    #loadingPageLong a {
-      text-underline-offset: 5px;
-    }
-
-    button {
-      padding: 10px 20px;
-      margin-top: 20px;
-      cursor: pointer;
-    }
-
   </style>
 </head>
 
@@ -48,10 +38,7 @@
     publickey-credentials-get *; sync-xhr *; payment *" src="" frameborder="0" style="opacity: 0;display:none;">
   </iframe>
   <script type="module" src="/js/page3.js"></script>
-  <div id="loadingPage"></div>
-  <div id="loadingPageLong" class="centerMessage" style="display:none">
-    Failed to load GAS bridge. <a href="javascript:void(0);" onclick="window.location.reload();">Retry</a>
-  </div>
+  <div id="loadingPage" style="margin-bottom: 10px;"></div>
   <button id="callGAS">Call GAS</button>
 </body>
 
