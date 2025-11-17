@@ -38,7 +38,7 @@ initializeSession(() => {
   const library2Promise = waitForEvent('library2Loaded');
   const backendPromise = new Promise((resolve, reject) => {
     setTimeout(() => {
-      resolve(); //note it also resolves on errors, which are saved in g_dataHistory.messageError
+      resolve(); //note it also resolves on errors
     }, 3000);
   });
 

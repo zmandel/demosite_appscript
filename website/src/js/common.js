@@ -91,35 +91,18 @@ let g_sourceIframe = null;
 
 export async function serverRequest(prop, ...args) {
   const strArgs = JSON.stringify(args);
-  if (!g_loadedFrame && !g_loadingFrame)
-    loadIframeFromCurrentUrl(); //start the iframe loading process
 
+  await loadIframeFromCurrentUrl();
+
+  //TODO: if the frame loads ok but the .gs function never responds, we should have a timeout here to reject the promise.
   return new Promise(resolve => {
     const idRequest = g_callbackRunner.setCallback(function (response) {
-      resolve(response);
+      resolve(response); //Note the response can be a success or error return from the .gs server function
     });
-    g_signalFrameLoaded.then(() => {
-      //note we post with no domain filtering ("*") because the GAS domain varies, but we validate g_sourceIframe when its set
-      g_sourceIframe.postMessage({ type: "FROM_PARENT", action: "serverRequest", data: { functionName: prop, arguments: strArgs }, idRequest: idRequest }, "*");
-    }).catch((error) => {
-      console.error("Error: iframe not loaded", error);
-      resolve({error: "iframe not loaded"});
-    });
+    //note we post with no domain filtering ("*") because the GAS domain varies, but we validate g_sourceIframe when its set
+    g_sourceIframe.postMessage({ type: "FROM_PARENT", action: "serverRequest", data: { functionName: prop, arguments: strArgs }, idRequest: idRequest }, "*");
   });
 }
-
-export function makeSignal() {
-  let resolve, reject;
-  const p = new Promise((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  p.resolve = resolve;
-  p.reject = reject;
-  return p;
-}
-
-const g_signalFrameLoaded = makeSignal();
 
 /**
  * Loads the Google Tag Manager (GTM) script
@@ -208,9 +191,9 @@ export function processAction(data, event, callbackMessage) {
     g_loadedFrame = true;
     g_loadingFrame = false;
     event.source.postMessage({ type: 'validateDomain' }, event.origin);
-        
+
     document.querySelector("iframe").style.opacity = "1";
-    
+
     if (g_callbackIframeLoadEvents)
       g_callbackIframeLoadEvents(IframeLoadEvents.LOADED);
   }
@@ -271,7 +254,7 @@ export function processAction(data, event, callbackMessage) {
   }
 
   if (data.action == "siteInited")
-    g_signalFrameLoaded.resolve();
+    g_signalLoadFrame.resolve();
   
   if (callbackMessage)
     callbackMessage(data, event); //propagate
@@ -553,58 +536,84 @@ async function initializeBase() {
 
 let g_loadedFrame = false;
 let g_loadingFrame = false;
+let g_signalLoadFrame = null;
+
 /**
  * Loads the iframe from the current URL with the given extra parameters. 
 * if paramsExtra is not provided, uses the one set during initializePage.
  * @param {string} paramsExtra - Extra parameters to append to the iframe URL.
  */
-export function loadIframeFromCurrentUrl(paramsExtra = "") {
+export async function loadIframeFromCurrentUrl(paramsExtra = "", selector = "iframe") {
   if (g_loadedFrame || g_loadingFrame)
-    return;
+    return g_signalLoadFrame.promise;
   g_loadingFrame = true;
   if (!paramsExtra)
     paramsExtra = g_iframeParamsExtra;
 
-  const iframeElem = document.querySelector("iframe");
+  const iframeElem = document.querySelector(selector);
   let startedRetry = false;
 
-  if (!iframeElem) {
-    console.error("No iframe found");
-    return;
-  }
+  function executor(resolve, reject) {
+    if (!iframeElem) {
+      console.error("No iframe found");
+      reject(new Error("no iframe found"));
+    }
 
-  function setRetryMode() {
-    if (startedRetry)
-      return;
-    startedRetry = true;
-    g_loadingFrame = false;
-    if (g_callbackIframeLoadEvents)
+    function setRetryMode() {
+      if (startedRetry)
+        return;
+      startedRetry = true;
+      g_loadingFrame = false;
+      if (g_callbackIframeLoadEvents)
         g_callbackIframeLoadEvents(IframeLoadEvents.ERRORLOADING);
-    g_signalFrameLoaded.reject(new Error("iframe load timeout"));    
-  }
+      reject(new Error("iframe load timeout"));
+    }
 
-  iframeElem.addEventListener("load", (event) => {
-    if (g_loadedFrame)
-      return;
-
-    setTimeout(() => {
+    iframeElem.addEventListener("load", (event) => {
       if (g_loadedFrame)
         return;
+
+      setTimeout(() => {
+        if (g_loadedFrame)
+          return;
+        setRetryMode();
+      }, 5000);
+    });
+
+    setTimeout(() => {
+      if (g_loadedFrame || startedRetry)
+        return;
+      //in rare cases (ie frame load cancelled), the iframe load event is never called.
       setRetryMode();
-    }, 5000);
+    }, 12000);
+
+    if (g_callbackIframeLoadEvents)
+      g_callbackIframeLoadEvents(IframeLoadEvents.LOADING);
+    iframeElem.style.opacity = "0";
+    iframeElem.src = getScriptUrlWithParams(paramsExtra);
+  }
+
+  g_signalLoadFrame = makeSignal(executor);
+  return g_signalLoadFrame.promise;
+}
+
+export function makeSignal(executor) {
+  let resolve, reject;
+
+  const promise = new Promise((res, rej) => {
+    // 1. Capture the resolver functions
+    resolve = res;
+    reject = rej;
+
+    // 2. Run user code (your previous executor logic)
+    if (executor) {
+      // Pass the same resolve/reject you would have gotten in new Promise(...)
+      executor(res, rej);
+      // or: executor(resolve, reject);  // same functions
+    }
   });
 
-  setTimeout(() => {
-    if (g_loadedFrame || startedRetry)
-      return;
-    //in rare cases (ie frame load cancelled), the iframe load event is never called.
-    setRetryMode();
-  }, 12000);
-
-  if (g_callbackIframeLoadEvents)
-      g_callbackIframeLoadEvents(IframeLoadEvents.LOADING);
-  iframeElem.style.opacity = "0";
-  iframeElem.src = getScriptUrlWithParams(paramsExtra);
+  return { promise, resolve, reject };
 }
 
 function getScriptUrlWithParams(paramsExtra) {
