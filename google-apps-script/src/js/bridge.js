@@ -33,9 +33,7 @@ window.addEventListener("message", async function (event) {
   const data = event.data.data;
   const idRequest = event.data.idRequest;
 
-  console.log("bridge received server request:", data);
   function postSiteMessage(action, data) {
-    console.log("bridge posting site message:", action, data);
     window.top.postMessage(
       {
         type: "FROM_IFRAME",

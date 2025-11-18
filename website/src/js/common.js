@@ -12,6 +12,7 @@
 
 export default toast;
 
+export const g_isProduction = ("true" === import.meta.env.VITE_IS_PRODUCTION);
 const g_orgDefault = import.meta.env.VITE_ORG_DEFAULT;
 const g_endpointPutLogs = import.meta.env.VITE_ENDPOINT_PUT_LOGS;
 const g_firebaseProjname = import.meta.env.VITE_FIREBASE_PROJNAME;
@@ -47,6 +48,12 @@ let g_paramsClean = {
   sig: "",
   lang: "en",
   //CUSTOMIZE: add or modify parameters as needed
+}
+
+//CUSTOMIZE: replace with your own. properties are appended to each log sent to the server. Return null or an empty object if you don't want to include any.
+function paramsForLogging() {
+  return {
+  };
 }
 
 /**
@@ -279,11 +286,13 @@ let g_iframeParamsExtra = "";
  * @param {Function} options.onError - Callback for error events during initialization
  * @param {Function} options.callbackContentLoaded - Callback for the content loaded event
  * @param {Function} options.callbackIframeLoadEvents - Callback for iframe loading events with IframeLoadEvents enum
+ * @param {boolean} options.captureLogs - Whether to capture logs for debugging (captures calls to console.*)
  * 
  */
 export async function initializePage({
   loadIframe,
   loadAnalytics,
+  captureLogs,
   paramsExtra,
   callbackMessage,
   onError,
@@ -292,6 +301,16 @@ export async function initializePage({
 } = {}) {
   g_callbackIframeLoadEvents = callbackIframeLoadEvents;
   g_iframeParamsExtra = paramsExtra || "";
+  if (captureLogs) {
+    enableLogCapture(payload => {
+      const paramsAppend = paramsForLogging();
+      if (paramsAppend)
+        Object.assign(payload, paramsAppend);
+    }, [
+        //CUSTOMIZE: add your own function names to ignore in the stack trace
+    ]);
+  }
+
   let initedBase = await initializeBase();
 
   window.addEventListener("message", (event) => {
@@ -886,4 +905,219 @@ function createCallbackRunner() {
 }
 
 const g_callbackRunner = createCallbackRunner();
+const g_moduleLog = "frontend";
+const g_maxLogsSend = 10;
+
+//console log capture
+function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
+  const noop = function () { };
+  if (typeof console === "undefined") {
+    window.console = {};
+  }
+  // Use a fallback if any method is missing.
+  const originalConsole = {
+    log: typeof console.log === "function" ? console.log.bind(console) : noop,
+    warn: typeof console.warn === "function" ? console.warn.bind(console) : noop,
+    error: typeof console.error === "function" ? console.error.bind(console) : noop,
+    info: typeof console.info === "function" ? console.info.bind(console) : noop,
+    debug: typeof console.debug === "function" ? console.debug.bind(console) : noop
+  };
+
+  let logQueue = [];
+  let idleScheduled = false;
+
+
+  function scheduleIdleCallback(callback, options) {
+    if (window.requestIdleCallback) {
+      return window.requestIdleCallback(callback, options);
+    } else {
+      return setTimeout(() => {
+        callback({
+          timeRemaining: function () { return 50; } // Arbitrary positive value
+        });
+      }, options && options.timeout ? options.timeout : 50);
+    }
+  }
+
+  function payloadBase(message) {
+    const unk = "unknown";
+
+    const payload = {
+      message: g_moduleLog + ": " + message,
+      functionName: unk,
+      callStack: unk,
+      moduleLog: g_moduleLog,
+    };
+
+    if (callbackContextInject) {
+      try {
+        callbackContextInject(payload);
+      } catch (e) {
+        console.error("Failed to inject console context data:", e);
+      }
+    }
+    return payload;
+  }
+
+  function generateLogPayload(...args) {
+    const unk = "unknown";
+
+    const message = args.map(arg => {
+      if (typeof arg === 'object') {
+        try {
+          if (arg instanceof Error)
+            return "Error obj: " + (arg.message || unk);
+          return JSON.stringify(arg);
+        } catch (err) {
+          return String(arg);
+        }
+      }
+      return String(arg);
+    }).join(' ');
+
+    let payload = payloadBase(message);
+
+    const IGNORED = [
+      "captureConsole",
+      "console.log",
+      "console.warn",
+      "console.error",
+      "console.info",
+      "console.debug",
+    ];
+
+    function parseFnName(line) {
+      try {
+        const match = line.match(/at (\S+) \(/);
+        if (match)
+          return match[1];
+      } catch (e) {
+        originalConsole.error(e);
+        //fall through
+      }
+      return "";
+    }
+
+    function getCleanStackLines(stackLines) {
+      let startIndex = 2;
+
+      while (startIndex < stackLines.length) {
+        const line = stackLines[startIndex].trim();
+        if (!line)
+          continue;
+
+        if (!IGNORED.includes(parseFnName(line)) && (!ignoreFnList || !ignoreFnList.includes(parseFnName(line)))) {
+          break;
+        }
+        startIndex++;
+      }
+
+      // Return the slice starting at the first valid line.
+      return stackLines.slice(startIndex);
+    }
+
+    try {
+      const error = new Error("");
+      error.name = "";
+      const stack = getCleanStackLines(error.stack?.split("\n") || []);
+
+      let nameFunction = null;
+      if (stack.length > 0)
+        nameFunction = parseFnName(stack[0]);
+
+      payload.functionName = nameFunction || unk;
+      payload.callStack = stack.join("\n") || unk;
+    } catch (e) {
+      //fall through
+    }
+    return payload;
+  }
+
+  function levelToSeverity(level) {
+    const consoleToSeverity = {
+      error: 'ERROR',
+      warn: 'WARNING',
+      log: 'INFO',
+      info: 'INFO',
+      debug: 'DEBUG'
+    };
+
+    return (consoleToSeverity[level] || 'DEFAULT');
+  }
+
+  let g_isLogging = false;
+  function captureConsole(level, ...args) {
+    try {
+      level = level.toLowerCase();
+      originalConsole[level](...args);
+      if (g_isLogging) {
+        originalConsole.error("recursive log within captureConsole");
+        return;
+      }
+      if (level === "debug") {
+        if (!g_isProduction)
+          return;
+        level = "warn"; //treat debug as warn in production (shouldnt be any debug logs in prod)
+      }
+
+      g_isLogging = true;
+      let payload = generateLogPayload(...args);
+      payload.timestamp = new Date().toISOString();
+      payload.severity = levelToSeverity(level);
+      logQueue.push(payload);
+      scheduleLogFlush();
+    } catch (e) {
+      originalConsole.error(e);
+      //ignore
+    }
+    g_isLogging = false;
+  }
+
+  function scheduleLogFlush() {
+    if (logQueue.length === 0 || idleScheduled) return;
+    idleScheduled = true;
+    scheduleIdleCallback(flushLogs, { timeout: 2000 });
+  }
+
+  function flushLogs(deadline) {
+    //deadline can be undefined. currently unused
+
+    if (logQueue.length === 0) {
+      idleScheduled = false;
+      return;
+    }
+
+
+    const logSend = logQueue.slice(0, g_maxLogsSend); //first ones only
+    logQueue = [];
+    sendLogsToServer(logSend);
+    idleScheduled = false;
+  }
+
+  // Override console methods.
+  console.log = (...args) => captureConsole("log", ...args);
+  console.warn = (...args) => captureConsole("warn", ...args);
+  console.error = (...args) => captureConsole("error", ...args);
+  console.info = (...args) => captureConsole("info", ...args);
+  console.debug = (...args) => captureConsole("debug", ...args);
+
+  // Global error handling.
+  window.onerror = function (message, source, lineno, colno, error) {
+    captureConsole("error", "Uncaught Exception:", { message, source, lineno, colno, error });
+  };
+
+  window.addEventListener("unhandledrejection", function (event) {
+    const r = event.reason;
+    if (typeof r === 'string' && r.includes('Object Not Found Matching Id')) {
+      event.preventDefault(); // avoid noisy bot link scanner
+      return;
+    }
+    captureConsole("error", "Unhandled Promise Rejection:", event.reason);
+  });
+
+  // Flush logs on page unload.
+  window.addEventListener("beforeunload", function () {
+    flushLogs();
+  });
+}
 

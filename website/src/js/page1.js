@@ -60,6 +60,7 @@ initializePage({
   loadIframe: false, //we load it later, so login is initialized first
   loadAnalytics: true,
   paramsExtra: "page=1",
+  captureLogs: true, //enable log capturing (calls to console.* are sent to server logs)
   callbackIframeLoadEvents: handleIframeLoadEvent,
   callbackMessage: async (data, event) => {
     if (!data)

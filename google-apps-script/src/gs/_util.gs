@@ -65,6 +65,77 @@ function processServerRequest(e) {
 const g_moduleLog = "backend"; //GCP logging tag
 const g_firebaseProjectId = "__FIREBASE_PROJECT_ID__";
 
+function getPemForKid_(kid) {
+  let refreshedCerts=false;
+  if (!kid) throwErrorGeneric('Missing kid in JWT header');
+
+  const props = PropertiesService.getScriptProperties();
+  const cached = props.getProperty('FIREBASE_CERTS_JSON');
+  const until  = Number(props.getProperty('FIREBASE_CERTS_UNTIL') || 0);
+  let keyMap;
+
+  if (cached && Date.now() < until) {
+    keyMap = JSON.parse(cached);
+  } else {
+    const res = UrlFetchApp.fetch(
+      'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
+      { muteHttpExceptions: true }
+    );
+    if (res.getResponseCode() !== 200) {
+      throwErrorGeneric('Failed to fetch Google certs: ' + res.getResponseCode());
+    }
+    refreshedCerts=true; //prevents possible recursion
+    keyMap = JSON.parse(res.getContentText());
+
+    // Respect Google's cache-control max-age
+    const cc = String(res.getAllHeaders()['Cache-Control'] || '');
+    const maxAge = /max-age=(\d+)/.test(cc) ? Number(RegExp.$1) : 3600;
+    props.setProperty('FIREBASE_CERTS_JSON', JSON.stringify(keyMap));
+    props.setProperty('FIREBASE_CERTS_UNTIL', String(Date.now() + maxAge * 1000));
+  }
+
+  const pemForKid = keyMap[kid];
+  if (!pemForKid) {
+    if (refreshedCerts)
+      throwErrorGeneric('invalid kid: '+kid);
+    // key rotated — force refresh once
+    props.deleteProperty('FIREBASE_CERTS_UNTIL');
+    return getPemForKid_(kid);
+  }
+  return pemForKid;
+}
+
+// Verify Firebase ID token without network calls to Google
+// can throw error message "expired"
+function verifyFirebaseIdToken_(idToken) {
+  const projectId = g_firebaseProjectId;
+  const rsaSign = getRsaSign();
+  const parts = idToken.split('.');
+  if (parts.length !== 3)
+    throwErrorGeneric('Malformed JWT');
+
+  const header  = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString());
+  const payload = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[1])).getDataAsString());
+  const now = Math.floor(Date.now()/1000);
+
+  //check expired before pem, as it could be too old and cause an unnecesary fetch to refresh pem
+  if (typeof payload.exp !== 'number' || !isFinite(payload.exp))
+    throwErrorGeneric('invalid payload.exp'); 
+  if (payload.exp <= now)
+    throwError('expired'); //not generic
+
+  const pem = getPemForKid_(header.kid);
+  const ok  = g_rsaVerify(idToken, pem, ['RS256']);
+  if (!ok)
+    throwErrorGeneric('Invalid signature');
+
+  if (payload.iss !== `https://securetoken.google.com/${projectId}`) throwErrorGeneric('Invalid issuer');
+  if (payload.aud !== projectId) throwErrorGeneric('Invalid audience');
+  if (!payload.sub) throwErrorGeneric('Missing sub');
+  if (!payload.email_verified) throwErrorGeneric('Not an email-verified account')
+  return payload;
+}
+
 /**
  * sample routing (page 1 or page 2)
  */
@@ -214,6 +285,7 @@ function payloadBase(message) {
     functionName: unk,
     callStack: unk,
     moduleLog: g_moduleLog,
+    //CUSTOMIZE: your own properties
   };
   return payload;
 }
