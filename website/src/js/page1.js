@@ -1,27 +1,27 @@
 
-import { initializePage, loadIframeFromCurrentUrl, replyUser, IframeLoadEvents } from "/js/common.js";
+import { initializePage, loadIframeFromCurrentUrl, replyUser, loadEvents } from "/js/common.js";
 import {
   setupAuth,
   signOutCurrentUser,
   getCurrentUser,
 } from "/js/firebaseauth.js";
 
-function handleIframeLoadEvent(iframeLoadEvent, data) {
+function handleloadEvent(loadEvent, data) {
   const loadingPage = document.getElementById("loadingPage");
   const loadingPageError = document.getElementById("loadingPageError");
 
-  switch (iframeLoadEvent) {
-    case IframeLoadEvents.LOADING:
+  switch (loadEvent) {
+    case loadEvents.LOADING:
       loadingPageError.style.display = "none";
       loadingPage.style.display = "";
       break;
 
-    case IframeLoadEvents.ERRORLOADING:
+    case loadEvents.ERRORLOADING:
       loadingPage.style.display = "none";
       loadingPageError.style.display = "";
       break;
 
-    case IframeLoadEvents.LOADED:
+    case loadEvents.LOADED:
       loadingPage.style.display = "none";
       loadingPageError.style.display = "none";
       break;
@@ -55,7 +55,7 @@ initializePage({
   loadAnalytics: true,
   paramsExtra: "page=1",
   captureLogs: true, //enable log capturing (calls to console.* are sent to server logs)
-  callbackIframeLoadEvents: handleIframeLoadEvent,
+  callbackLoadEvents: handleloadEvent,
   callbackMessage: async (data, event) => {
     if (!data)
       return;

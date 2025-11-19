@@ -1,22 +1,22 @@
 
-import { initializePage, loadGTM, IframeLoadEvents } from "/js/common.js";
+import { initializePage, loadGTM, loadEvents } from "/js/common.js";
 
-function handleIframeLoadEvent(iframeLoadEvent, data) {
+function handleloadEvent(loadEvent, data) {
   const loadingPage = document.getElementById("loadingPage");
   const loadingPageError = document.getElementById("loadingPageError");
 
-  switch (iframeLoadEvent) {
-    case IframeLoadEvents.LOADING:
+  switch (loadEvent) {
+    case loadEvents.LOADING:
       loadingPageError.style.display = "none";
       loadingPage.style.display = "";
       break;
 
-    case IframeLoadEvents.ERRORLOADING:
+    case loadEvents.ERRORLOADING:
       loadingPage.style.display = "none";
       loadingPageError.style.display = "";
       break;
 
-    case IframeLoadEvents.LOADED:
+    case loadEvents.LOADED:
       //note: including as an example, but in this sample, LOADED always comes with dontStopProgress set to true
       if (!data || !data.dontStopProgress) {
         loadingPage.style.display = "none";
@@ -24,7 +24,7 @@ function handleIframeLoadEvent(iframeLoadEvent, data) {
       }
       break;
 
-    case IframeLoadEvents.FULLYLOADED:
+    case loadEvents.FULLYLOADED:
       loadingPage.style.display = "none";
       loadingPageError.style.display = "none";
       break;
@@ -35,7 +35,7 @@ initializePage({
   loadIframe: true,
   loadAnalytics: false, //in this sample, we wait until a custom time later to enable it through loadGTM()
   paramsExtra: "page=2",
-  callbackIframeLoadEvents: handleIframeLoadEvent,
+  callbackLoadEvents: handleloadEvent,
   callbackMessage: async (data, event) => {
     if (!data)
       return;

@@ -179,20 +179,20 @@ export function openUrlWithProps(dataEvent) {
   window.open(url, dataEvent.replacePage ? "_self" : "_blank");
 }
 
-let g_callbackIframeLoadEvents = null;
-function setNoytifyIframeLoadEventCallback(callback) {
-  if (g_callbackIframeLoadEvents)
-    console.warn("Overwriting existing callbackIframeLoadEvents"); //unusual
+let g_callbackLoadEvents = null;
+function setNoytifyloadEventCallback(callback) {
+  if (g_callbackLoadEvents)
+    console.warn("Overwriting existing callbackLoadEvents"); //unusual
 
-  g_callbackIframeLoadEvents = callback;
+  g_callbackLoadEvents = callback;
 }
 
-function notifyIframeLoadEvent(eventType, data = null) {
-  if (IframeLoadEvents.ERRORLOADING === eventType)
+function notifyloadEvent(eventType, data = null) {
+  if (loadEvents.ERRORLOADING === eventType)
     console.error("Error loading iframe content");
 
-  if (g_callbackIframeLoadEvents)
-      g_callbackIframeLoadEvents(eventType, data);
+  if (g_callbackLoadEvents)
+      g_callbackLoadEvents(eventType, data);
 }
 
 /**
@@ -217,7 +217,7 @@ export function processAction(data, event, callbackMessage) {
 
     document.querySelector("iframe").style.opacity = "1";
 
-    notifyIframeLoadEvent(IframeLoadEvents.LOADED, data?.data);
+    notifyloadEvent(loadEvents.LOADED, data?.data);
   }
   else if (data.action == "serverResponse") {
     g_callbackRunner.runCallback(data.idRequest, data.data);
@@ -229,7 +229,7 @@ export function processAction(data, event, callbackMessage) {
     openUrlWithProps(dataEvent);
   }
   else if (data.action == "siteFullyLoaded") {
-    notifyIframeLoadEvent(IframeLoadEvents.FULLYLOADED);
+    notifyloadEvent(loadEvents.FULLYLOADED);
   }
   else if (data.action == "titleChange") {
     setTitle(data.data.title);
@@ -281,7 +281,7 @@ export function processAction(data, event, callbackMessage) {
     callbackMessage(data, event); //propagate
 }
 
-export const IframeLoadEvents = {
+export const loadEvents = {
   LOADING: "loading",
   LOADED: "loaded",
   FULLYLOADED: "fullyloaded",
@@ -297,7 +297,7 @@ let g_iframeParamsExtra = "";
  * @param {Object} options.paramsExtra - Extra parameters to pass to the iframe URL
  * @param {Function} options.callbackMessage - Callback for message events received from the iframe
  * @param {Function} options.callbackContentLoaded - Callback for the content loaded event
- * @param {(event: string, data?: any) => void} options.callbackIframeLoadEvents - Callback for iframe loading events; receives (event, data) where event is one of IframeLoadEvents and data is optional (sent by the appscript)
+ * @param {(event: string, data?: any) => void} options.callbackLoadEvents - Callback for iframe loading events; receives (event, data) where event is one of loadEvents and data is optional (sent by the appscript)
  * @param {boolean} options.captureLogs - Whether to capture logs for debugging (captures calls to console.*)
  * 
  */
@@ -308,9 +308,9 @@ export async function initializePage({
   paramsExtra,
   callbackMessage,
   callbackContentLoaded,
-  callbackIframeLoadEvents,
+  callbackLoadEvents,
 } = {}) {
-  setNoytifyIframeLoadEventCallback(callbackIframeLoadEvents);
+  setNoytifyloadEventCallback(callbackLoadEvents);
   g_iframeParamsExtra = paramsExtra || "";
   if (captureLogs) {
     enableLogCapture(payload => {
@@ -375,7 +375,7 @@ export async function initializePage({
 
   function onContentLoadedBase() {
     if (!initedBase) {
-      notifyIframeLoadEvent(IframeLoadEvents.ERRORLOADING);
+      notifyloadEvent(loadEvents.ERRORLOADING);
       return;
     }
 
@@ -384,7 +384,7 @@ export async function initializePage({
     if (callbackContentLoaded)
       callbackContentLoaded();
     if (loadIframe)
-      loadIframeFromCurrentUrl(paramsExtra).catch(() => {}); //errors are handled in notifyIframeLoadEvent
+      loadIframeFromCurrentUrl(paramsExtra).catch(() => {}); //errors are handled in notifyloadEvent
   }
 
   if (document.readyState !== "loading") {
@@ -591,7 +591,7 @@ export async function loadIframeFromCurrentUrl(paramsExtra = "", selector = "ifr
         return;
       startedRetry = true;
       g_loadingFrame = false;
-      notifyIframeLoadEvent(IframeLoadEvents.ERRORLOADING);
+      notifyloadEvent(loadEvents.ERRORLOADING);
       reject(new Error("iframe load timeout"));
     }
 
@@ -613,7 +613,7 @@ export async function loadIframeFromCurrentUrl(paramsExtra = "", selector = "ifr
       setRetryMode();
     }, 12000);
 
-    notifyIframeLoadEvent(IframeLoadEvents.LOADING);
+    notifyloadEvent(loadEvents.LOADING);
     iframeElem.style.opacity = "0";
     iframeElem.src = getScriptUrlWithParams(paramsExtra);
   }

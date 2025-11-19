@@ -49,7 +49,7 @@ Keep `.env.local` for developer overrides. Update both the website and Apps Scri
 - Keep the constants synchronized with `google-apps-script/src/js/util.js` and `google-apps-script/src/.env` so both projects validate the same signatures.
 
 ## Core runtime flow
-- `initializePage` orchestrates GTM loading, iframe bootstrapping, and message routing. Supply optional callbacks such as `callbackIframeLoadEvents` to react to `IframeLoadEvents`, or `callbackMessage` to handle `postMessage` actions sent by GAS (see `_util.gs` and `bridge.js`).
+- `initializePage` orchestrates GTM loading, iframe bootstrapping, and message routing. Supply optional callbacks such as `callbackLoadEvents` to react to `loadEvents`, or `callbackMessage` to handle `postMessage` actions sent by GAS (see `_util.gs` and `bridge.js`).
 - The iframe is lazily created via `loadIframeFromCurrentUrl`. Parent pages can delay the load until Firebase auth finishes.
 - `serverRequest` is the raw function to send requests into GAS for method #1 and resolves when the iframe replies with a `serverResponse`. This function is used from `gscriptrun.js`.
 - Logging is buffered until `sendLogsToServer` can push to the Cloud Function. During local development the queue stays client-side to avoid noise.

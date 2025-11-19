@@ -1,23 +1,23 @@
 
-import { initializePage, IframeLoadEvents } from "/js/common.js";
+import { initializePage, loadEvents } from "/js/common.js";
 import { server } from "/components/js/gscriptrun.js";
 
 /* Handles iframe load events to update the loading status on the page
  * Used only while the iframe is loading, until it loads or fails to load
  */
-function handleIframeLoadEvent(iframeLoadEvent, data) {
+function handleloadEvent(loadEvent, data) {
   const loadingPage = document.getElementById("loadingPage");
 
-  switch (iframeLoadEvent) {
-    case IframeLoadEvents.LOADING:
+  switch (loadEvent) {
+    case loadEvents.LOADING:
       loadingPage.textContent = "Loading GAS iframe... (you can click the Call button while it loads)";
       break;
 
-    case IframeLoadEvents.ERRORLOADING:
+    case loadEvents.ERRORLOADING:
       loadingPage.textContent = "Error loading GAS iframe.";
       break;
 
-    case IframeLoadEvents.LOADED:
+    case loadEvents.LOADED:
       loadingPage.textContent = "GAS iframe is loaded.";
       break;
   }
@@ -32,7 +32,7 @@ initializePage({
   loadAnalytics: true,
   paramsExtra: "bridge=1", //tells the GAS page to load the gscript-bridge
   callbackMessage: null,   //not needed since the GAS frontend is now the top window
-  callbackIframeLoadEvents: handleIframeLoadEvent,
+  callbackLoadEvents: handleloadEvent,
   callbackContentLoaded: onDomContentLoaded
 });
 
