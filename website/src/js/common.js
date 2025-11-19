@@ -179,6 +179,22 @@ export function openUrlWithProps(dataEvent) {
   window.open(url, dataEvent.replacePage ? "_self" : "_blank");
 }
 
+let g_callbackIframeLoadEvents = null;
+function setNoytifyIframeLoadEventCallback(callback) {
+  if (g_callbackIframeLoadEvents)
+    console.warn("Overwriting existing callbackIframeLoadEvents"); //unusual
+
+  g_callbackIframeLoadEvents = callback;
+}
+
+function notifyIframeLoadEvent(eventType) {
+  if (IframeLoadEvents.ERRORLOADING === eventType)
+    console.error("Error loading iframe content");
+
+  if (g_callbackIframeLoadEvents)
+      g_callbackIframeLoadEvents(eventType);
+}
+
 /**
  * events that the iframe can send:
  * - analyticsEvent
@@ -201,8 +217,7 @@ export function processAction(data, event, callbackMessage) {
 
     document.querySelector("iframe").style.opacity = "1";
 
-    if (g_callbackIframeLoadEvents)
-      g_callbackIframeLoadEvents(IframeLoadEvents.LOADED);
+    notifyIframeLoadEvent(IframeLoadEvents.LOADED);
   }
   else if (data.action == "serverResponse") {
     g_callbackRunner.runCallback(data.idRequest, data.data);
@@ -214,8 +229,7 @@ export function processAction(data, event, callbackMessage) {
     openUrlWithProps(dataEvent);
   }
   else if (data.action == "siteFullyLoaded") {
-    if (g_callbackIframeLoadEvents)
-      g_callbackIframeLoadEvents(IframeLoadEvents.FULLYLOADED);
+    notifyIframeLoadEvent(IframeLoadEvents.FULLYLOADED);
   }
   else if (data.action == "titleChange") {
     setTitle(data.data.title);
@@ -274,7 +288,6 @@ export const IframeLoadEvents = {
   ERRORLOADING: "error"
 };
 
-let g_callbackIframeLoadEvents = null;
 let g_iframeParamsExtra = "";
 /**
  * Initializes the main page logic for the Apps Script iframe integration.
@@ -283,7 +296,6 @@ let g_iframeParamsExtra = "";
  * @param {boolean} options.loadAnalytics - Whether to load analytics (can be loaded later as well)
  * @param {Object} options.paramsExtra - Extra parameters to pass to the iframe URL
  * @param {Function} options.callbackMessage - Callback for message events received from the iframe
- * @param {Function} options.onError - Callback for error events during initialization
  * @param {Function} options.callbackContentLoaded - Callback for the content loaded event
  * @param {Function} options.callbackIframeLoadEvents - Callback for iframe loading events with IframeLoadEvents enum
  * @param {boolean} options.captureLogs - Whether to capture logs for debugging (captures calls to console.*)
@@ -295,11 +307,10 @@ export async function initializePage({
   captureLogs,
   paramsExtra,
   callbackMessage,
-  onError,
   callbackContentLoaded,
   callbackIframeLoadEvents,
 } = {}) {
-  g_callbackIframeLoadEvents = callbackIframeLoadEvents;
+  setNoytifyIframeLoadEventCallback(callbackIframeLoadEvents);
   g_iframeParamsExtra = paramsExtra || "";
   if (captureLogs) {
     enableLogCapture(payload => {
@@ -364,10 +375,7 @@ export async function initializePage({
 
   function onContentLoadedBase() {
     if (!initedBase) {
-      if (g_callbackIframeLoadEvents)
-        g_callbackIframeLoadEvents(IframeLoadEvents.ERRORLOADING);
-      if (onError)
-        onError();
+      notifyIframeLoadEvent(IframeLoadEvents.ERRORLOADING);
       return;
     }
 
@@ -583,8 +591,7 @@ export async function loadIframeFromCurrentUrl(paramsExtra = "", selector = "ifr
         return;
       startedRetry = true;
       g_loadingFrame = false;
-      if (g_callbackIframeLoadEvents)
-        g_callbackIframeLoadEvents(IframeLoadEvents.ERRORLOADING);
+      notifyIframeLoadEvent(IframeLoadEvents.ERRORLOADING);
       reject(new Error("iframe load timeout"));
     }
 
@@ -606,8 +613,7 @@ export async function loadIframeFromCurrentUrl(paramsExtra = "", selector = "ifr
       setRetryMode();
     }, 12000);
 
-    if (g_callbackIframeLoadEvents)
-      g_callbackIframeLoadEvents(IframeLoadEvents.LOADING);
+    notifyIframeLoadEvent(IframeLoadEvents.LOADING);
     iframeElem.style.opacity = "0";
     iframeElem.src = getScriptUrlWithParams(paramsExtra);
   }
@@ -1102,6 +1108,7 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
   console.debug = (...args) => captureConsole("debug", ...args);
 
   // Global error handling.
+  //TODO: merge into single library together with google-apps-script\src\js\util.js
   window.onerror = function (message, source, lineno, colno, error) {
     captureConsole("error", "Uncaught Exception:", { message, source, lineno, colno, error });
   };

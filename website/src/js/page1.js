@@ -6,12 +6,6 @@ import {
   getCurrentUser,
 } from "/js/firebaseauth.js";
 
-function onErrorBaseIframe() {
-  let elem = document.querySelector("#errPage");
-  if (elem)
-    elem.style.display = "";
-}
-
 function handleIframeLoadEvent(iframeLoadEvent) {
   const loadingPage = document.getElementById("loadingPage");
   const loadingPageLong = document.getElementById("loadingPageLong");
@@ -100,6 +94,5 @@ initializePage({
       }
     }
   },
-  onError: onErrorBaseIframe,
   callbackContentLoaded: initializeAuth
 });

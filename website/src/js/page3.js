@@ -33,7 +33,6 @@ initializePage({
   paramsExtra: "bridge=1", //tells the GAS page to load the gscript-bridge
   callbackMessage: null,   //not needed since the GAS frontend is now the top window
   callbackIframeLoadEvents: handleIframeLoadEvent,
-  onError: onErrorBaseIframe,
   callbackContentLoaded: onDomContentLoaded
 });
 
@@ -55,6 +54,3 @@ async function onDomContentLoaded() {
   };
 }
 
-function onErrorBaseIframe() {
-  console.log("Error loading iframe content");
-}

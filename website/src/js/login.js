@@ -74,15 +74,9 @@ function initializeAuth() {
   })
 }
 
-function onErrorBaseIframe() {
-  let elem = document.querySelector("#errPage");
-  if (elem)
-    elem.style.display = "";
-}
 
 initializePage({
   loadIframe: false, //we load it later, so login is initialized first
   loadAnalytics: true,
-  onError: onErrorBaseIframe,
   callbackContentLoaded: initializeAuth
 });

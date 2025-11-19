@@ -1,12 +1,6 @@
 
 import { initializePage, loadGTM, IframeLoadEvents } from "/js/common.js";
 
-function onErrorBaseIframe() {
-  let elem = document.querySelector("#errPage");
-  if (elem)
-    elem.style.display = "";
-}
-
 function handleIframeLoadEvent(iframeLoadEvent) {
   const loadingPage = document.getElementById("loadingPage");
   const loadingPageLong = document.getElementById("loadingPageLong");
@@ -45,6 +39,5 @@ initializePage({
     }
 
   },
-  onError: onErrorBaseIframe,
   callbackContentLoaded: null
 });

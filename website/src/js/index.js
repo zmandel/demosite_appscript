@@ -41,6 +41,5 @@ initializePage({
   loadAnalytics: true,
   paramsExtra: "",
   callbackMessage: null,
-  onError: function () { },
   callbackContentLoaded: onContentLoaded
 });
