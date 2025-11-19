@@ -292,12 +292,12 @@ let g_iframeParamsExtra = "";
 /**
  * Initializes the main page logic for the Apps Script iframe integration.
  * @param {Object} options - Options for initialization
- * @param {boolean} options.loadIframe - Whether to load the iframe
+ * @param {boolean} options.loadIframe - Whether to load the iframe right away. false will loadit later on-demand.
  * @param {boolean} options.loadAnalytics - Whether to load analytics (can be loaded later as well)
  * @param {Object} options.paramsExtra - Extra parameters to pass to the iframe URL
  * @param {Function} options.callbackMessage - Callback for message events received from the iframe
  * @param {Function} options.callbackContentLoaded - Callback for the content loaded event
- * @param {Function} options.callbackIframeLoadEvents - Callback for iframe loading events with IframeLoadEvents enum
+ * @param {(event: string, data?: any) => void} options.callbackIframeLoadEvents - Callback for iframe loading events; receives (event, data) where event is one of IframeLoadEvents and data is optional (sent by the appscript)
  * @param {boolean} options.captureLogs - Whether to capture logs for debugging (captures calls to console.*)
  * 
  */
@@ -384,7 +384,7 @@ export async function initializePage({
     if (callbackContentLoaded)
       callbackContentLoaded();
     if (loadIframe)
-      loadIframeFromCurrentUrl(paramsExtra);
+      loadIframeFromCurrentUrl(paramsExtra).catch(() => {}); //errors are handled in notifyIframeLoadEvent
   }
 
   if (document.readyState !== "loading") {
