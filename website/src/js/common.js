@@ -189,7 +189,7 @@ function setNoytifyloadEventCallback(callback) {
 
 function notifyloadEvent(eventType, data = null) {
   if (loadEvents.ERRORLOADING === eventType)
-    console.error("Error loading iframe content");
+    console.error("Error loading");
 
   if (g_callbackLoadEvents)
       g_callbackLoadEvents(eventType, data);
