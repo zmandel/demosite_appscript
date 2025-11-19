@@ -5,7 +5,7 @@ import { server } from "/components/js/gscriptrun.js";
 /* Handles iframe load events to update the loading status on the page
  * Used only while the iframe is loading, until it loads or fails to load
  */
-function handleIframeLoadEvent(iframeLoadEvent) {
+function handleIframeLoadEvent(iframeLoadEvent, data) {
   const loadingPage = document.getElementById("loadingPage");
 
   switch (iframeLoadEvent) {

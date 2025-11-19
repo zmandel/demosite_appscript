@@ -1,7 +1,7 @@
 
 import { initializePage, loadGTM, IframeLoadEvents } from "/js/common.js";
 
-function handleIframeLoadEvent(iframeLoadEvent) {
+function handleIframeLoadEvent(iframeLoadEvent, data) {
   const loadingPage = document.getElementById("loadingPage");
   const loadingPageLong = document.getElementById("loadingPageLong");
 
@@ -14,6 +14,14 @@ function handleIframeLoadEvent(iframeLoadEvent) {
     case IframeLoadEvents.ERRORLOADING:
       loadingPage.style.display = "none";
       loadingPageLong.style.display = "";
+      break;
+
+    case IframeLoadEvents.LOADED:
+      //note: including as an example, but in this sample, LOADED always comes with dontStopProgress set to true
+      if (!data || !data.dontStopProgress) {
+        loadingPage.style.display = "none";
+        loadingPageLong.style.display = "none";
+      }
       break;
 
     case IframeLoadEvents.FULLYLOADED:

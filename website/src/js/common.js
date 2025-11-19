@@ -76,8 +76,8 @@ const g_dimensionsGTM = {
 */
 function initializeCustomDimensions(params) {
   // Example of how to set custom dimensions based on URL parameters
-  //g_dimensionsGTM["dimension1"] = params.dimension1;
-  //g_dimensionsGTM["dimension2"] = params.dimension2;
+  //g_dimensionsGTM["dimension1"] = params.dim1;
+  //g_dimensionsGTM["dimension2"] = params.dim2;
   //CUSTOMIZE: replace with your own
   // see: https://support.google.com/analytics/answer/14239696
 }
@@ -187,12 +187,12 @@ function setNoytifyIframeLoadEventCallback(callback) {
   g_callbackIframeLoadEvents = callback;
 }
 
-function notifyIframeLoadEvent(eventType) {
+function notifyIframeLoadEvent(eventType, data = null) {
   if (IframeLoadEvents.ERRORLOADING === eventType)
     console.error("Error loading iframe content");
 
   if (g_callbackIframeLoadEvents)
-      g_callbackIframeLoadEvents(eventType);
+      g_callbackIframeLoadEvents(eventType, data);
 }
 
 /**
@@ -217,7 +217,7 @@ export function processAction(data, event, callbackMessage) {
 
     document.querySelector("iframe").style.opacity = "1";
 
-    notifyIframeLoadEvent(IframeLoadEvents.LOADED);
+    notifyIframeLoadEvent(IframeLoadEvents.LOADED, data?.data);
   }
   else if (data.action == "serverResponse") {
     g_callbackRunner.runCallback(data.idRequest, data.data);

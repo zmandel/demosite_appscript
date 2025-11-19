@@ -6,7 +6,7 @@ import {
   getCurrentUser,
 } from "/js/firebaseauth.js";
 
-function handleIframeLoadEvent(iframeLoadEvent) {
+function handleIframeLoadEvent(iframeLoadEvent, data) {
   const loadingPage = document.getElementById("loadingPage");
   const loadingPageLong = document.getElementById("loadingPageLong");
 
