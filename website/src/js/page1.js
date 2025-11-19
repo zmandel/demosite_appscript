@@ -8,22 +8,22 @@ import {
 
 function handleIframeLoadEvent(iframeLoadEvent, data) {
   const loadingPage = document.getElementById("loadingPage");
-  const loadingPageLong = document.getElementById("loadingPageLong");
+  const loadingPageError = document.getElementById("loadingPageError");
 
   switch (iframeLoadEvent) {
     case IframeLoadEvents.LOADING:
-      loadingPageLong.style.display = "none";
+      loadingPageError.style.display = "none";
       loadingPage.style.display = "";
       break;
 
     case IframeLoadEvents.ERRORLOADING:
       loadingPage.style.display = "none";
-      loadingPageLong.style.display = "";
+      loadingPageError.style.display = "";
       break;
 
     case IframeLoadEvents.LOADED:
       loadingPage.style.display = "none";
-      loadingPageLong.style.display = "none";
+      loadingPageError.style.display = "none";
       break;
   }
 }
