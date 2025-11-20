@@ -35,7 +35,6 @@ function initializeAuth() {
     headerText: "to test this feature",
     redirectMode: false,
     forceRedirect: false,
-    readyPromise: null
   },
     (loginFromRedirect, errText) => {
       if (errText)

@@ -36,7 +36,6 @@ function initializeAuth() {
       headerText: "",
       redirectMode: true,
       forceRedirect,
-      readyPromise: null
     }, async (loginFromRedirect, errText) => {
     if (errText)
       messageBox("Error", errText);

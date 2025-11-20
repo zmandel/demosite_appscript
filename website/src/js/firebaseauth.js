@@ -61,10 +61,9 @@ authState.auth = getAuth(initializeApp(firebaseConfig));
 setPersistence(authState.auth, indexedDBLocalPersistence);
 /**
  * Initializes the Firebase authentication listener.
- * @param {Promise<void>} [readyPromise] - A promise to await before processing the first auth state.
  * @param {() => void} [onDone] - A callback to run once the initial user state is determined (just once).
  */
-export async function setupAuth({ doAuth, headerText, redirectMode, forceRedirect, readyPromise }, onDone) {
+export async function setupAuth({ doAuth, headerText, redirectMode, forceRedirect }, onDone) {
   authState.redirectMode = redirectMode;
   authState.headerText = headerText || "";
   let pauseActions = false;
@@ -94,10 +93,6 @@ export async function setupAuth({ doAuth, headerText, redirectMode, forceRedirec
     }
   } catch (error) {
     console.error("Error during redirect sign-in:", error);
-    if (readyPromise) {
-      await readyPromise;
-      readyPromise = null;
-    }
     onDoneOneTime(error.message);
   }
 
@@ -105,13 +100,6 @@ export async function setupAuth({ doAuth, headerText, redirectMode, forceRedirec
     authState.user = user;
     if (pauseActions)
       return;
-    if (readyPromise) {
-      // waiting here means the firebase auth async loading happens while the app page loads,
-      // thus here we finally make sure the page is ready before showing UI,
-      // for example the page might want to have its analytics loaded).
-      await readyPromise;
-      readyPromise = null;
-    }
 
     if (forceRedirect && !user) {
       doGoogleAuth(authState.auth, true);
