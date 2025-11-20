@@ -59,9 +59,15 @@ const translations = {
 let loginFromRedirect = false;
 authState.auth = getAuth(initializeApp(firebaseConfig));
 setPersistence(authState.auth, indexedDBLocalPersistence);
+
 /**
- * Initializes the Firebase authentication listener.
- * @param {() => void} [onDone] - A callback to run once the initial user state is determined (just once).
+ * Call after content loaded to set up authentication state handling.
+ * @param {Object} options - Configuration options.
+ * @param {boolean} options.doAuth - If true, prompts for login immediately if not authenticated.
+ * @param {string} [options.headerText] - Title text for the authentication dialog.
+ * @param {boolean} options.redirectMode - If true, uses page redirection for Google Sign-In instead of a popup.
+ * @param {boolean} options.forceRedirect - If true, inmediately redirects to Google Sign-In if not authenticated (skips dialog).
+ * @param {function(boolean, string=): void} [onDone] - Callback run once initial auth state is resolved. Args: (loginFromRedirect, errorMessage).
  */
 export async function setupAuth({ doAuth, headerText, redirectMode, forceRedirect }, onDone) {
   authState.redirectMode = redirectMode;

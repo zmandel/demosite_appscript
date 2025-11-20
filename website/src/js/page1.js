@@ -31,7 +31,7 @@ function handleloadEvent(loadEvent, data) {
 
 function initializeAuth() {
   setupAuth({
-    doAuth: false, //no forced login on this page
+    doAuth: false, //no forced login
     headerText: "to test this feature",
     redirectMode: false,
     forceRedirect: false,
@@ -42,8 +42,7 @@ function initializeAuth() {
       if (loginFromRedirect) {
         //handled by firebaseauth.js
       } else {
-        // Not a redirect login, so load the iframe now.
-        loadIframeFromCurrentUrl();
+        loadIframeFromCurrentUrl().catch(() => {});
       }
     });
 }

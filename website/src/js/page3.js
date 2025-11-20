@@ -43,7 +43,7 @@ async function onDomContentLoaded() {
     try {
       btn.textContent = "Calling GAS function...";
       btn.disabled = true;
-      //call GAS. You can use "server.run" (cleaner, promise-based), "google.script.run" (just like in a GAS frontend) or the raw "serverRequest" helper.
+      //use "server.run" (cleaner, promise-based), or "google.script.run" just like in a GAS frontend, or the raw "serverRequest" helper.
       const result = await server.run("demoServerFunction", "hello ","world");
       alert("GAS function returned success: " + result);
     } catch (error) {
