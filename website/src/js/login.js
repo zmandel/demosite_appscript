@@ -75,6 +75,7 @@ function initializeAuth() {
 
 
 initializePage({
+  captureLogs: true,
   loadIframe: false, //we load it later, so login is initialized first
   loadAnalytics: true,
   callbackContentLoaded: initializeAuth

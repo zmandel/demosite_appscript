@@ -384,7 +384,9 @@ export async function initializePage({
     if (callbackContentLoaded)
       callbackContentLoaded();
     if (loadIframe)
-      loadIframeFromCurrentUrl(paramsExtra).catch(() => {}); //errors are handled in notifyloadEvent
+      loadIframeFromCurrentUrl(paramsExtra).catch(err => {
+        console.error("Error loading iframe:", err); //errors are handled in notifyloadEvent
+      }); 
   }
 
   if (document.readyState !== "loading") {
@@ -592,7 +594,7 @@ export async function loadIframeFromCurrentUrl(paramsExtra = "", selector = "ifr
       startedRetry = true;
       g_loadingFrame = false;
       notifyloadEvent(loadEvents.ERRORLOADING);
-      reject(new Error("iframe load timeout"));
+      reject(new Error("Load timeout."));
     }
 
     iframeElem.addEventListener("load", (event) => {
@@ -626,15 +628,11 @@ export function makeSignal(executor) {
   let resolve, reject;
 
   const promise = new Promise((res, rej) => {
-    // 1. Capture the resolver functions
     resolve = res;
     reject = rej;
 
-    // 2. Run user code (your previous executor logic)
     if (executor) {
-      // Pass the same resolve/reject you would have gotten in new Promise(...)
       executor(res, rej);
-      // or: executor(resolve, reject);  // same functions
     }
   });
 
