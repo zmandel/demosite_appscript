@@ -131,7 +131,6 @@ export function loadGTM() {
 }
 
 export function isLocalhost() {
-  return false;
   return window.location.hostname === "localhost";
 }
 
