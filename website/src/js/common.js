@@ -20,7 +20,7 @@ const g_rootDomain = import.meta.env.VITE_ROOT_DOMAIN;
 const g_idGTM = import.meta.env.VITE_GTM_ID; //Google Tag Manager ID
 const g_langDefault = import.meta.env.VITE_LANG_DEFAULT;
 let g_lang = "";
-
+const g_propLSLogs = "logs_captured"; //to retry failed logs from previous session
 /**
  * Public key for verifying signatures.
 */
@@ -131,28 +131,73 @@ export function loadGTM() {
 }
 
 export function isLocalhost() {
+  return false;
   return window.location.hostname === "localhost";
 }
 
-export function sendLogsToServer(logQueue) {
+export function sendLogsToServer(logQueue, finalFlush = false) {
+  if (!Array.isArray(logQueue) || logQueue.length === 0)
+    return;
+
+  localStorage.setItem(g_propLSLogs, JSON.stringify(logQueue));
+  g_pendingLogs.push(...logQueue);
+
   if (isLocalhost()) {
+    g_pendingLogs = [];
+    if (g_retryTimer) {
+      clearTimeout(g_retryTimer);
+      g_retryTimer = null;
+    }
     return;
   }
+
+  if (g_isSendingLogs || g_retryTimer)
+    return;
+
+  flushPendingLogs();
+}
+
+function flushPendingLogs() {
+  if (g_isSendingLogs || g_pendingLogs.length === 0)
+    return;
+
+  g_isSendingLogs = true;
+  const payload = g_pendingLogs.splice(0, g_pendingLogs.length);
+
+  const finalize = (success) => {
+    g_isSendingLogs = false;
+    if (success) {
+      localStorage.removeItem(g_propLSLogs);
+      if (g_pendingLogs.length > 0)
+        flushPendingLogs();
+      return;
+    }
+
+    g_pendingLogs = payload.concat(g_pendingLogs);
+    if (!g_retryTimer) {
+      g_retryTimer = setTimeout(() => {
+        g_retryTimer = null;
+        if (g_pendingLogs.length > 0 && !g_isSendingLogs)
+          flushPendingLogs();
+      }, LOG_RETRY_DELAY_MS);
+    }
+  };
 
   fetch(g_endpointPutLogs, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ logs: logQueue })
+    body: JSON.stringify({ logs: payload })
   })
     .then(res => {
       if (!res.ok) {
         console.error("Error sending logs, status:", res.status);
         throw new Error(`HTTP ${res.status}`);
       }
-      return res;
     })
+    .then(() => finalize(true))
     .catch(e => {
       console.error("Error sending logs", e);
+      finalize(false);
     });
 }
 
@@ -926,6 +971,28 @@ function createCallbackRunner() {
 const g_callbackRunner = createCallbackRunner();
 const g_moduleLog = "frontend";
 const g_maxLogsSend = 10;
+let g_isSendingLogs = false;
+const LOG_RETRY_DELAY_MS = 10000;
+let g_retryTimer = null;
+let g_pendingLogs = [];
+restorePendingLogs();
+
+function restorePendingLogs() {
+  try {
+    const stored = localStorage.getItem(g_propLSLogs);
+    if (!stored)
+      return;
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed) || parsed.length === 0)
+      return;
+    g_pendingLogs.push(...parsed);
+    if (!isLocalhost() && !g_isSendingLogs && !g_retryTimer)
+      flushPendingLogs();
+  } catch (e) {
+    console.error("Failed to restore pending logs", e);
+    localStorage.removeItem(g_propLSLogs);
+  }
+}
 
 //console log capture
 function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
@@ -1098,7 +1165,7 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
     scheduleIdleCallback(flushLogs, { timeout: 2000 });
   }
 
-  function flushLogs(deadline) {
+  function flushLogs(finalFlush) {
     //deadline can be undefined. currently unused
 
     if (logQueue.length === 0) {
@@ -1109,7 +1176,7 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
 
     const logSend = logQueue.slice(0, g_maxLogsSend); //first ones only
     logQueue = [];
-    sendLogsToServer(logSend);
+    sendLogsToServer(logSend, finalFlush);
     idleScheduled = false;
   }
 
@@ -1136,7 +1203,20 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
   });
 
   // Flush logs on page unload.
-  window.addEventListener("beforeunload", function () {
-    flushLogs();
+
+  function cacheChatHistory(force) {
+  if (!force && document.visibilityState !== 'hidden')
+    return;
+  g_cacheStorage.setItem(s_prefixCacheStorageChat, g_sessionId, {
+    html: chatHistory.innerHTML
+  }, s_ttlCacheStorageChat);
+}
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden')
+      flushLogs(true);
   });
+
+  window.addEventListener('pagehide', () => flushLogs(true), { capture: true });
+  document.addEventListener('freeze', () => flushLogs(true));
 }

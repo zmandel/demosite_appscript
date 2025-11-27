@@ -218,9 +218,13 @@ let g_iframeMode = false; //set in initializeSession
     captureConsole("error", "Unhandled Promise Rejection:", event.reason);
   });
 
-  window.addEventListener("beforeunload", function () {
-    flushLogs();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden')
+      flushLogs();
   });
+
+  window.addEventListener('pagehide', () => flushLogs(), { capture: true });
+  document.addEventListener('freeze', () => flushLogs());
 
   window.addEventListener('message', (event) => {
     if (!g_allowAnyEmbedding && event.origin.toLowerCase() !== g_urlWebsite) {
