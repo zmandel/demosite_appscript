@@ -1,6 +1,7 @@
 <style>
   /* Component (light DOM) styles */
   auth-dialog {
+    max-width: 16em;
     position: fixed;
     top: 50%;
     left: 50%;
@@ -201,12 +202,6 @@
     display: block;
   }
 
-  .inline-pair {
-    display: inline-flex;
-    align-items: center;
-    gap: .25rem;
-    white-space: nowrap;
-  }
 
   .dialog>.dialog-content {
     width: fit-content;
@@ -217,10 +212,6 @@
     .dialog>.dialog-content {
       width: auto;
     }
-  }
-
-  .email-field {
-    width: clamp(18ch, 60vw, 35ch);
   }
 
   .auth-options {
@@ -264,16 +255,10 @@
     margin-bottom: 0em;
   }
 
-  #loginHeader {
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
-  }
-
 </style>
 <div id="auth-container">
   <div class="centered">
-  <p id="loginPrompt"data-i18n="loginPrompt"></p>
-  <p id="loginHeader"></p>
+  <p id="loginPrompt"></p>
   <div class ="loginSpinnerContainer"></div>
   <div class="auth-options">
     <button id="google-login-btn" class="gsi-material-button">

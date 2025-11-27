@@ -274,8 +274,21 @@ export function processAction(data, event, callbackMessage) {
     }
   }
 
-  if (data.action == "siteInited")
+  if (data.action == "siteInited") {
+    if (g_signalLoadFrame)
     g_signalLoadFrame.resolve();
+    else {
+      console.warn("No signalLoadFrame on siteInited");
+      //try to recover a timing issue
+      setTimeout(() => {
+        if (g_signalLoadFrame) {
+          g_signalLoadFrame.resolve();
+        } else {
+          console.error("No signalLoadFrame on siteInited (2nd check)");
+        }
+      }, 500);
+    }
+  }
   
   if (callbackMessage)
     callbackMessage(data, event); //propagate
@@ -631,11 +644,13 @@ export function makeSignal(executor) {
     resolve = res;
     reject = rej;
 
+    //ensure async, so caller can assign the return value before the executor runs
+    queueMicrotask(() => {
     if (executor) {
       executor(res, rej);
     }
   });
-
+  });
   return { promise, resolve, reject };
 }
 
@@ -1125,4 +1140,3 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
     flushLogs();
   });
 }
-

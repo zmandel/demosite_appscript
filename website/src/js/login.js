@@ -51,6 +51,7 @@ function initializeAuth() {
         innerHTML = t.verifyEmailBefore;
       } else {
         innerHTML = t.loginSuccess;
+        console.log("Login successful in redirect mode");
       }
     } else {
       innerHTML = t.loginCancelled;

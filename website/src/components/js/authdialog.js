@@ -10,7 +10,7 @@ import { onAuthStateChanged } from "firebase/auth";
 const translations = {
   en: {
     welcomeUser: "Welcome ",
-    loginPrompt: "Welcome! Please log in",
+    loginPrompt: "Welcome! log in ",
     signInWithGoogle: "Sign in with Google",
     signInWithEmail: "Sign in with Email",
     emailSignInTitle: "Sign in with Email",
@@ -30,7 +30,7 @@ const translations = {
   },
   es: {
     welcomeUser: "Bienvenido ",
-    loginPrompt: "¡Bienvenido! Por favor inicia sesión",
+    loginPrompt: "¡Bienvenido! inicia sesión ",
     signInWithGoogle: "Inicia sesión con Google",
     signInWithEmail: "Inicia sesión con Email",
     emailSignInTitle: "Inicia sesión con Email",
@@ -53,7 +53,7 @@ const translations = {
 function initAuth(auth, headerText, rootElement, host) {
   const $ = (id) => rootElement.querySelector(id); //shortcut
   applyTranslations(rootElement, translations);
-  $("#loginHeader").textContent = headerText || "";
+  $("#loginPrompt").textContent =t(null, translations).loginPrompt + (headerText || "");
   const googleLoginBtn = $("#google-login-btn");
   const emailOptionBtn = $("#email-option-btn");
   const emailSignupBtn = $("#email-signup-btn");
