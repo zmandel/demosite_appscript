@@ -1202,15 +1202,6 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
   });
 
   // Flush logs on page unload.
-
-  function cacheChatHistory(force) {
-  if (!force && document.visibilityState !== 'hidden')
-    return;
-  g_cacheStorage.setItem(s_prefixCacheStorageChat, g_sessionId, {
-    html: chatHistory.innerHTML
-  }, s_ttlCacheStorageChat);
-}
-
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden')
       flushLogs(true);
