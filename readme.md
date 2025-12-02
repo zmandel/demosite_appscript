@@ -128,7 +128,7 @@ NOTE: The demo websites do not have a public auth (login) API key configured so 
 * Visit [Tutor For Me](https://tutorforme.org)
 * **Optional login**: Do a demo lesson from the homepage. You can view the page without login, then use the login-on-demand feature at the time you save the page.
 * **Forced login**: [Tutor For Me | My lessons](https://tutorforme.org/lessonplans)
-* The website only uses embedding method #2 for the GAS, but its in the process of migrating to method #1.
+* The website only uses embedding method #1 for most pages.
   
 ## Directory Structure
 
