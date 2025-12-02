@@ -30,6 +30,7 @@ export default function messageBox(title, message, options = {}) {
     h2.textContent = title;
 
     const p = document.createElement("p");
+    p.style.whiteSpace = "pre-line";
     p.textContent = message;
 
     const okBtn = document.createElement("button");

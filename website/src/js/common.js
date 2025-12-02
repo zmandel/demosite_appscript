@@ -18,7 +18,7 @@ const g_endpointPutLogs = import.meta.env.VITE_ENDPOINT_PUT_LOGS;
 const g_firebaseProjname = import.meta.env.VITE_FIREBASE_PROJNAME;
 const g_rootDomain = import.meta.env.VITE_ROOT_DOMAIN;
 const g_idGTM = import.meta.env.VITE_GTM_ID; //Google Tag Manager ID
-const g_langDefault = import.meta.env.VITE_LANG_DEFAULT;
+export const g_langDefault = import.meta.env.VITE_LANG_DEFAULT;
 let g_lang = "";
 const g_propLSLogs = "logs_captured"; //to retry failed logs from previous session
 /**
@@ -38,6 +38,12 @@ let g_mapsLang = {
   "en": {},
   "es": {}
 };
+
+let g_mapsExtra = [];
+
+export function addTranslationMap(map) {
+  g_mapsExtra.push(map);
+}
 
 /**
  * Parameters allowed in the URL. Others are ignored.
@@ -488,7 +494,7 @@ export function setLang(lang, mapTranslations) {
   if (elemLang)
     elemLang.value = lang;
   localStorage.setItem("lang", lang);
-  applyTranslations(document, mapTranslations, lang);
+  applyTranslations(document, g_mapsLang, lang);
 }
 
 export function t(lang = null, translations = null) {
@@ -513,34 +519,56 @@ export function t(lang = null, translations = null) {
 let g_firstTranslationDone = false;
 
 export function applyTranslations(root, translations, lang) {
+  if (!root)
+    root = document;
+  if (!translations)
+    translations = g_mapsLang;
+  if (!lang)
+    lang = g_lang;
   let isLanding = false;
   //set isLanding if the current url is the landing page (no pathname)
   if (window.location.pathname === "/" || window.location.pathname === "/index.html") {
     isLanding = true;
   }
 
+  function detectMismatchedSEO(value, el, key) {
+    if (!g_firstTranslationDone && lang == "en" && el.innerHTML !== value) {
+        if (isLanding || el.innerHTML.trim() !== "") //avoid logging empty elements in non-landing pages
+          console.warn("unmatched translation for", key);
+          return true;
+      }
+    return false;
+  }
+
   root.querySelectorAll("[data-i18n]").forEach(el => {
     const key = el.getAttribute("data-i18n");
-    const mapped = t(lang, translations)[key];
+    let mapped = t(lang, translations)[key];
     if (typeof mapped === "string") {
-      if (!g_firstTranslationDone && lang == "en" && el.innerHTML !== mapped) {
-        if (isLanding || el.innerHTML.trim() !== "") //avoid logging empty elements in non-landing pages
-          console.log("unmatched translation for", key);
-      }
+      detectMismatchedSEO(mapped, el, key);
       el.innerHTML = mapped;
+      return;
+      }
+    //loop through extra maps (g_mapsExtra, each is a translation with en and es) until one is found with the key
+    for (let i = 0; i < g_mapsExtra.length; i++) {
+      const mapExtra = g_mapsExtra[i];
+      mapped = t(lang, mapExtra)[key];
+      if (typeof mapped === "string") {
+        detectMismatchedSEO(mapped, el, key);
+      el.innerHTML = mapped;
+        return;
     }
-    else {
+    }
+
       if (lang !== "en") {
-        console.log("Missing translation for", key, "in", lang);
+      console.warn("Missing translation for", key, "in", lang);
         const mapped2 = t("en", translations)[key];
         if (mapped2) {
           el.innerHTML = mapped2;
           return;
         }
       }
-      console.log("missing: " + key + ': "' + el.innerHTML + '"');
+    console.warn("missing: " + key + ': "' + el.innerHTML + '"');
       el.innerHTML = "?";
-    }
   });
   g_firstTranslationDone = true;
 }

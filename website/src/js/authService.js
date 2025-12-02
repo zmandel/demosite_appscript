@@ -26,7 +26,7 @@ const translations = {
     weakPassword: "Password is too weak.",
     networkError: "Network error. Check your connection.",
     popupBlocked: "Popup was blocked. Lets try again in a different way.",
-    quickLoginBlocked: "Quick login was blocked. Lets try again in a different way."
+    quickLoginBlocked: "Quick login was blocked.\nIf you are inside an app (threads, instagram etc) cancel and use '...' to open in Chrome.\nOtherwise Lets try again in a different way."
   },
   es: {
     googleLoginFailed: "Error al iniciar con Google",
@@ -41,7 +41,7 @@ const translations = {
     weakPassword: "La contraseña es demasiado débil.",
     networkError: "Error de red. Verifica tu conexión.",
     popupBlocked: "El popup fue bloqueado. Probemos nuevamente de otra forma.",
-    quickLoginBlocked: "El login rápido fue bloqueado. Probemos nuevamente de otra forma."
+    quickLoginBlocked: "El login rápido fue bloqueado.\nSi estás dentro de una app (threads, instagram, etc.) cancela y usa '...' para abrir en Chrome.\nDe lo contrario, probemos nuevamente de otra forma."
   }
 };
 
@@ -255,12 +255,11 @@ export async function doGoogleAuth(auth, redirectMode) {
   try {
     return await signInWithGoogleOneTap(auth);
   } catch (error) {
-
     if (shouldFallbackToFirebaseProvider(error)) {
       if (!redirectMode) {
         const ret = await messageBox(t(null,translations).googleLoginFailed, t(null,translations).quickLoginBlocked, { cancel: true });
         if (!ret)
-          return;
+          throw error;
       }
       const provider = new GoogleAuthProvider();
       const fbCall = redirectMode ? signInWithRedirect : signInWithPopup;

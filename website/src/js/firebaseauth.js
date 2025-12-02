@@ -33,9 +33,9 @@ export async function getCurrentUser(force, cancelable = false, addIdToken = fal
     if (!force)
       return null;
     user = await showAuthDialog(authState.headerText, cancelable);
+  }
     if (user && addIdToken)
       user.idToken = await user.getIdToken();
-  }
   return user;
 }
 
@@ -107,8 +107,10 @@ export async function setupAuth({ doAuth, headerText, redirectMode, forceRedirec
     if (pauseActions)
       return;
 
-    if (forceRedirect && !user) {
-      doGoogleAuth(authState.auth, true);
+    if (forceRedirect && !user) { //forceRedirect only happens in the Google case. TODO: generalize later
+      doGoogleAuth(authState.auth, true).catch(err => {
+        console.error("Error during forced redirect sign-in:", err);
+      });
       return;
     }
 
@@ -154,7 +156,12 @@ function isAuthDialogCreated() {
  * or rejects if the dialog is cancelled.
  */
 async function showAuthDialog(headerText, cancelable = false) {
+  try {
   await loadGIS();
+  } catch (error) {
+    console.error("Error loading Google Identity Services:", error);
+    //continue
+  }
   return new Promise((resolve, reject) => {
     let dialog = document.querySelector('auth-dialog');
     if (!dialog) {

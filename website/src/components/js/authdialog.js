@@ -4,7 +4,7 @@ import componentHTML from "../html/authdialog.html?raw";
 import "../../css/dialog.css";
 import A11yDialog from "a11y-dialog";
 import messageBox from "../../js/messagebox.js";
-import { t, toast, applyTranslations, insertSpinner } from "../../js/common.js";
+import { t, toast, applyTranslations, insertSpinner, addTranslationMap } from "../../js/common.js";
 import { onAuthStateChanged } from "firebase/auth";
 
 const translations = {
@@ -26,7 +26,6 @@ const translations = {
     passwordResetTitle: "Password reset",
     pwdResetAlert: "A password reset link will be sent to the email.",
     enterEmailReset: "Please enter your email to reset your password.",
-    passwordResetSent: "A password reset link has been sent to the email.",
   },
   es: {
     welcomeUser: "Bienvenido ",
@@ -46,9 +45,10 @@ const translations = {
     passwordResetTitle: "Restablecer contraseña",
     pwdResetAlert: "Se enviará un enlace de restablecimiento al correo.",
     enterEmailReset: "Por favor ingresa tu correo para restablecer la contraseña.",
-    passwordResetSent: "Se envió un enlace de restablecimiento al correo.",
   }
 };
+
+addTranslationMap(translations);
 
 function initAuth(auth, headerText, rootElement, host) {
   const $ = (id) => rootElement.querySelector(id); //shortcut
