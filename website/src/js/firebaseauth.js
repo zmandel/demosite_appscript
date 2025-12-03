@@ -129,7 +129,7 @@ export async function setupAuth({ doAuth, headerText, redirectMode, forceRedirec
           pauseActions = true; //temporarily prevent the recursive call to finish the flow.
           await signOutCurrentUser();
           pauseActions = false;
-          await messageBox(t(null,translations).signInTitle, t(null,translations).verifyEmailBefore);
+          await messageBox(t("signInTitle", null, translations), t("verifyEmailBefore", null, translations));
           if (!isAuthDialogCreated()) {
             //user left the app without vetrifying, just before we logged them out during onboarding.
             showAuthDialog(authState.headerText, !doAuth).catch(err => {
@@ -150,14 +150,22 @@ function isAuthDialogCreated() {
   return dialog != null;
 }
 
+let g_controllerAuthDialog = null;
 /**
  * Displays the authentication dialog.
  * @returns {Promise<import("firebase/auth").User>} A promise that resolves with the user object upon successful login,
  * or rejects if the dialog is cancelled.
  */
 async function showAuthDialog(headerText, cancelable = false) {
+  if (g_controllerAuthDialog) {
+    g_controllerAuthDialog.abort();
+    g_controllerAuthDialog = null;
+  }
+  g_controllerAuthDialog = new AbortController();
+  const { signal } = g_controllerAuthDialog;
+  
   try {
-  await loadGIS();
+    await loadGIS(); //preload
   } catch (error) {
     console.error("Error loading Google Identity Services:", error);
     //continue
@@ -170,12 +178,10 @@ async function showAuthDialog(headerText, cancelable = false) {
     }
 
     const handleSuccess = (event) => {
-      cleanUp();
       resolve(event.detail.user);
     };
 
     const handleCancel = () => {
-      cleanUp();
       reject(new Error('Authentication cancelled by user.'));
     };
 
@@ -188,7 +194,7 @@ async function showAuthDialog(headerText, cancelable = false) {
       try {
         await doGoogleAuth(authState.auth, authState.redirectMode);
       } catch (error) {
-        // doGoogleAuth already surfaces the error via messageBox; swallow to avoid unhandled rejection noise.
+        // doGoogleAuth already surfaces the error via messageBox
       } finally {
         dialog.setBusy?.(false);
       }
@@ -223,28 +229,19 @@ async function showAuthDialog(headerText, cancelable = false) {
       try {
         const { email } = event.detail;
         await doPasswordReset(authState.auth, email);
-        messageBox(t(null,translations).passwordResetTitle, t(null,translations).passwordResetSent);
+        messageBox(t("passwordResetTitle", null, translations), t("passwordResetSent", null, translations));
       } catch (error) {
         console.error("Password reset error:", error);
         // Error is already displayed by authService
       }
     };
 
-    function cleanUp() {
-      dialog.removeEventListener('success', handleSuccess);
-      dialog.removeEventListener('cancel', handleCancel);
-      dialog.removeEventListener('google-login', handleGoogleLogin);
-      dialog.removeEventListener('email-login', handleEmailLogin);
-      dialog.removeEventListener('email-signup', handleEmailSignup);
-      dialog.removeEventListener('password-reset', handlePasswordReset);
-    }
-
-    dialog.addEventListener('success', handleSuccess, { once: true });
-    dialog.addEventListener('cancel', handleCancel, { once: true });
-    dialog.addEventListener('google-login', handleGoogleLogin);
-    dialog.addEventListener('email-login', handleEmailLogin);
-    dialog.addEventListener('email-signup', handleEmailSignup);
-    dialog.addEventListener('password-reset', handlePasswordReset);
+    dialog.addEventListener('success', handleSuccess, { once: true, signal });
+    dialog.addEventListener('cancel', handleCancel, { once: true, signal });
+    dialog.addEventListener('google-login', handleGoogleLogin, { signal });
+    dialog.addEventListener('email-login', handleEmailLogin, { signal });
+    dialog.addEventListener('email-signup', handleEmailSignup, { signal });
+    dialog.addEventListener('password-reset', handlePasswordReset, { signal });
 
     dialog.show(authState.auth, headerText, authState.redirectMode, cancelable);
   });

@@ -53,7 +53,7 @@ addTranslationMap(translations);
 function initAuth(auth, headerText, rootElement, host) {
   const $ = (id) => rootElement.querySelector(id); //shortcut
   applyTranslations(rootElement, translations);
-  $("#loginPrompt").textContent =t(null, translations).loginPrompt + (headerText || "");
+  $("#loginPrompt").textContent =t("loginPrompt", null, translations) + (headerText || "");
   const googleLoginBtn = $("#google-login-btn");
   const emailOptionBtn = $("#email-option-btn");
   const emailSignupBtn = $("#email-signup-btn");
@@ -97,7 +97,7 @@ function initAuth(auth, headerText, rootElement, host) {
     
     if (user) {
       host.setBusy(false);
-      toast(t(null, translations).welcomeUser + (user.displayName || user.email || ""), { type: "success", position: "tl" });
+      toast(t("welcomeUser", null, translations) + (user.displayName || user.email || ""), { type: "success", position: "tl" });
       if (emailDialog)
         emailDialog.hide();
       if (host) {
@@ -157,7 +157,7 @@ function initAuth(auth, headerText, rootElement, host) {
     const email = (emailInput.value || "").trim();
     const password = (passwordInput.value || "").trim();
     if (!email || !password) {
-      messageBox(t(null, translations).signInTitle, t(null, translations).enterEmailPassword);
+      messageBox(t("signInTitle", null, translations), t("enterEmailPassword", null, translations));
       return;
     }
     host.dispatchEvent(new CustomEvent("email-login", {
@@ -171,7 +171,7 @@ function initAuth(auth, headerText, rootElement, host) {
     const email = (emailInput.value || "").trim();
     const password = (passwordInput.value || "").trim();
     if (!email || !password) {
-      messageBox(t(null, translations).signUpTitle, t(null, translations).enterEmailPassword);
+      messageBox(t("signUpTitle", null, translations), t("enterEmailPassword", null, translations));
       return;
     }
     host.dispatchEvent(new CustomEvent("email-signup", {
@@ -184,10 +184,10 @@ function initAuth(auth, headerText, rootElement, host) {
   forgotPasswordBtn.addEventListener("click", async () => {
     const email = (emailInput.value || "").trim();
     if (!email) {
-      messageBox(t(null, translations).passwordResetTitle, t(null, translations).enterEmailReset);
+      messageBox(t("passwordResetTitle", null, translations), t("enterEmailReset", null, translations));
       return;
     }
-    const result = await messageBox(t(null, translations).passwordResetTitle, t(null, translations).pwdResetAlert, { cancel: true });
+    const result = await messageBox(t("passwordResetTitle", null, translations), t("pwdResetAlert", null, translations), { cancel: true });
     if (!result)
       return;
 

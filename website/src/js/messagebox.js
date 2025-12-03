@@ -8,7 +8,7 @@ import A11yDialog from "a11y-dialog";
  * @param {{cancel?: boolean, okText?: string, cancelText?: string}} [options]
  * @returns {Promise<boolean>} Resolves with the button clicked.
  */
-export default function messageBox(title, message, options = {}) {
+export default async function messageBox(title, message, options = {}) {
   const { cancel = false, okText = "OK", cancelText = "Cancel" } = options;
   return new Promise((resolve) => {
     const dialogEl = document.createElement("div");

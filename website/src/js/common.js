@@ -56,6 +56,67 @@ let g_paramsClean = {
   //CUSTOMIZE: add or modify parameters as needed
 }
 
+
+const g_commonStr = {
+  "en": {
+    offlineModeActive: "Offline mode",
+    askRetryLoad: 'There was an error loading the content. Do you want to retry?',
+    msgNoUser: 'Not signed in',
+    msgSignIn: 'Sign In',
+    msgSignOut: 'Sign Out',
+    msgErrorGeneric: 'Error',
+    msgPleaseRetry: 'Please retry or refresh the page.',
+    strAlertTitle: "ℹ️ Notice",
+    strYes: "Yes",
+    strNo: "No",
+    strOK: "OK",
+    strCancel: "Cancel",
+  },
+
+  "es": {
+    offlineModeActive: "Modo sin conexión",
+    askRetryLoad: 'Hubo un error al cargar el contenido. ¿Deseas reintentar?',
+    msgNoUser: 'No has iniciado sesión',
+    msgSignIn: 'Iniciar sesión',
+    msgSignOut: 'Cerrar sesión',
+    msgErrorGeneric: 'Error',
+    msgPleaseRetry: 'Por favor, reintenta o recarga la página.',
+    strAlertTitle: "ℹ️ Aviso",
+    strYes: "Sí",
+    strNo: "No",
+    strOK: "OK",
+    strCancel: "Cancelar",
+  }
+};
+
+addTranslationMap(g_commonStr);
+
+export function tCommon(key, langParam) {
+  if (!langParam)
+    langParam = getLang();
+  if (!langParam) {
+    error_("no lang in t"); //detect bad initialization
+    langParam = g_langDefault; //recover
+  }
+  let res = g_commonStr[langParam][key];
+  if (typeof res === "undefined") {
+    //loop through extra maps (g_mapsExtra, each is a translation with en and es) until one is found with the key
+    for (let i = 0; i < g_mapsExtra.length; i++) {
+      const mapExtra = g_mapsExtra[i];
+      if (g_commonStr === mapExtra)
+        continue; //already checked
+      res = mapExtra[langParam][key];
+      if (res !== undefined)
+        break;
+    }
+    if (typeof res === "undefined") {
+      console.error("missing common translation for", key, "in", langParam);
+      return "";
+    }
+  }
+  return res;
+}
+
 //CUSTOMIZE: replace with your own. properties are appended to each log sent to the server. Return null or an empty object if you don't want to include any.
 function paramsForLogging() {
   return {
@@ -466,7 +527,7 @@ export function getLang() {
     return g_lang;
   const params = new URLSearchParams(window.location.search);
   const urlLang = params.get("lang");
-  if (urlLang)
+  if (urlLang === "en" || urlLang === "es")
     return urlLang;
 
   const stored = localStorage.getItem("lang");
@@ -497,7 +558,9 @@ export function setLang(lang, mapTranslations) {
   applyTranslations(document, g_mapsLang, lang);
 }
 
-export function t(lang = null, translations = null) {
+/* supports a prop in translations, with fallback to tCommon
+**/
+export function t(prop, lang = null, translations = null) {
   if (!translations)
     translations = g_mapsLang;
 
@@ -511,9 +574,17 @@ export function t(lang = null, translations = null) {
     console.error("no lang in t");
     lang = g_langDefault; //recover
   }
+
+  let res = null;
   if (lang == "es")
-    return translations.es;
-  return translations.en;
+    res = translations.es[prop];
+  else
+    res = translations.en[prop];
+
+  if (typeof res === "undefined")  {
+    res = tCommon(prop, lang); //tCommon logs missing translations
+  }
+  return res;
 }
 
 let g_firstTranslationDone = false;
@@ -542,33 +613,22 @@ export function applyTranslations(root, translations, lang) {
 
   root.querySelectorAll("[data-i18n]").forEach(el => {
     const key = el.getAttribute("data-i18n");
-    let mapped = t(lang, translations)[key];
+    let mapped = t(key, lang, translations);
     if (typeof mapped === "string") {
       detectMismatchedSEO(mapped, el, key);
       el.innerHTML = mapped;
       return;
       }
-    //loop through extra maps (g_mapsExtra, each is a translation with en and es) until one is found with the key
-    for (let i = 0; i < g_mapsExtra.length; i++) {
-      const mapExtra = g_mapsExtra[i];
-      mapped = t(lang, mapExtra)[key];
-      if (typeof mapped === "string") {
-        detectMismatchedSEO(mapped, el, key);
-      el.innerHTML = mapped;
-        return;
-    }
-    }
 
+    console.warn("Missing translation for", key, "in", lang);
       if (lang !== "en") {
-      console.warn("Missing translation for", key, "in", lang);
-        const mapped2 = t("en", translations)[key];
+      const mapped2 = t(key, "en", translations);
         if (mapped2) {
           el.innerHTML = mapped2;
           return;
         }
       }
-    console.warn("missing: " + key + ': "' + el.innerHTML + '"');
-      el.innerHTML = "?";
+    el.innerHTML = "";
   });
   g_firstTranslationDone = true;
 }
@@ -834,7 +894,7 @@ export function toast(text, opts = {}) {
   const {
     duration = 2400,
     type = "",
-    position = "tr",
+    position = "center",
     dismissible = true,
     max = Infinity,
   } = opts;
@@ -911,7 +971,7 @@ export function toggleFullscreen() {
   }
 }
 
-export function waitForAutoPageView(intervalMs = 50, timeoutMs = 2000) {
+export async function waitForAutoPageView(intervalMs = 50, timeoutMs = 2000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const timer = setInterval(() => {
@@ -1223,7 +1283,7 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
   window.addEventListener("unhandledrejection", function (event) {
     const r = event.reason;
     if (typeof r === 'string' && r.includes('Object Not Found Matching Id')) {
-      event.preventDefault(); // avoid noisy bot link scanner
+      event.preventDefault(); // avoid bot link scanner
       return;
     }
     captureConsole("error", "Unhandled Promise Rejection:", event.reason);
