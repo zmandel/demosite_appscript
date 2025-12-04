@@ -21,6 +21,7 @@ const g_idGTM = import.meta.env.VITE_GTM_ID; //Google Tag Manager ID
 export const g_langDefault = import.meta.env.VITE_LANG_DEFAULT;
 let g_lang = "";
 const g_propLSLogs = "logs_captured"; //to retry failed logs from previous session
+export const g_strErrorOffline = "offline_mode"; //error string for offline mode requests (throws Error with this string)
 /**
  * Public key for verifying signatures.
 */
@@ -53,6 +54,7 @@ let g_paramsClean = {
   org: g_orgDefault,
   sig: "",
   lang: "en",
+  offline: "",
   //CUSTOMIZE: add or modify parameters as needed
 }
 
@@ -163,8 +165,14 @@ const g_forceGTM = false;
 let gtag = null;
 let g_sourceIframe = null;
 
+export function isOnline() {
+  return (g_paramsClean.offline !== "1" && navigator.onLine === true);
+}
+
 export async function serverRequest(prop, ...args) {
   const strArgs = JSON.stringify(args);
+  if (!isOnline())
+    return Promise.reject(new Error(g_strErrorOffline));
 
   await loadIframeFromCurrentUrl();
 
@@ -413,6 +421,8 @@ export const loadEvents = {
 };
 
 let g_iframeParamsExtra = "";
+let g_initPageCalled = false;
+
 /**
  * Initializes the main page logic for the Apps Script iframe integration.
  * @param {Object} options - Options for initialization
@@ -434,6 +444,10 @@ export async function initializePage({
   callbackContentLoaded,
   callbackLoadEvents,
 } = {}) {
+  console.assert(!g_initPageCalled, "initializePage called multiple times");
+  if (g_initPageCalled)
+    return;
+  g_initPageCalled = true;
   setNoytifyloadEventCallback(callbackLoadEvents);
   g_iframeParamsExtra = paramsExtra || "";
   if (captureLogs) {
@@ -685,7 +699,10 @@ async function verifyScript(org, signatureBase64Url) {
   return isValid;
 }
 
+let g_initBaseCalled = false;
 async function initializeBase() {
+  console.assert(!g_initBaseCalled, "initializeBase called multiple times");
+  g_initBaseCalled = true;
   const params = new URLSearchParams(window.location.search);
   Object.keys(g_paramsClean).forEach(key => {
     if (params.has(key))
@@ -720,6 +737,12 @@ let g_signalLoadFrame = null;
 export async function loadIframeFromCurrentUrl(paramsExtra = "", selector = "iframe") {
   if (g_loadedFrame || g_loadingFrame)
     return g_signalLoadFrame.promise;
+
+  if (!isOnline()) {
+    notifyloadEvent(loadEvents.ERRORLOADING);
+    return Promise.reject(new Error(g_strErrorOffline));
+  }
+
   g_loadingFrame = true;
   if (!paramsExtra)
     paramsExtra = g_iframeParamsExtra;
@@ -1093,7 +1116,8 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
     warn: typeof console.warn === "function" ? console.warn.bind(console) : noop,
     error: typeof console.error === "function" ? console.error.bind(console) : noop,
     info: typeof console.info === "function" ? console.info.bind(console) : noop,
-    debug: typeof console.debug === "function" ? console.debug.bind(console) : noop
+    debug: typeof console.debug === "function" ? console.debug.bind(console) : noop,
+    assert: typeof console.assert === "function" ? console.assert.bind(console) : noop,
   };
 
   let logQueue = [];
@@ -1157,6 +1181,7 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
       "console.error",
       "console.info",
       "console.debug",
+      "console.assert",
     ];
 
     function parseFnName(line) {
@@ -1273,6 +1298,11 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
   console.error = (...args) => captureConsole("error", ...args);
   console.info = (...args) => captureConsole("info", ...args);
   console.debug = (...args) => captureConsole("debug", ...args);
+  console.assert = (condition, ...args) => {
+    if (!condition) {
+      captureConsole("error", "Assertion failed:", ...args);
+    }
+  };
 
   // Global error handling.
   //TODO: merge into single library together with google-apps-script\src\js\util.js
