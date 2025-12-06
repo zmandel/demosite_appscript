@@ -1,33 +1,10 @@
 
-import { initializePage, loadIframeFromCurrentUrl, replyUser, loadEvents } from "/js/common.js";
+import { initializePage, loadIframeFromCurrentUrl, replyUser, loadEvents, handleloadEvent } from "/js/common.js";
 import {
   setupAuth,
   signOutCurrentUser,
   getCurrentUser,
 } from "/js/firebaseauth.js";
-
-function handleloadEvent(loadEvent, data) {
-  const loadingPage = document.getElementById("loadingPage");
-  const loadingPageError = document.getElementById("loadingPageError");
-
-  switch (loadEvent) {
-    case loadEvents.LOADING:
-      loadingPageError.style.display = "none";
-      loadingPage.style.display = "";
-      break;
-
-    case loadEvents.ERRORLOADING:
-      loadingPage.style.display = "none";
-      loadingPageError.style.display = "";
-      break;
-
-    case loadEvents.LOADED:
-      loadingPage.style.display = "none";
-      loadingPageError.style.display = "none";
-      break;
-  }
-}
-
 
 function initializeAuth() {
   setupAuth({

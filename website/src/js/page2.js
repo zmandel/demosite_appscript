@@ -1,35 +1,5 @@
 
-import { initializePage, loadGTM, loadEvents } from "/js/common.js";
-
-function handleloadEvent(loadEvent, data) {
-  const loadingPage = document.getElementById("loadingPage");
-  const loadingPageError = document.getElementById("loadingPageError");
-
-  switch (loadEvent) {
-    case loadEvents.LOADING:
-      loadingPageError.style.display = "none";
-      loadingPage.style.display = "";
-      break;
-
-    case loadEvents.ERRORLOADING:
-      loadingPage.style.display = "none";
-      loadingPageError.style.display = "";
-      break;
-
-    case loadEvents.LOADED:
-      //note: including as an example, but in this sample, LOADED always comes with dontStopProgress set to true
-      if (!data || !data.dontStopProgress) {
-        loadingPage.style.display = "none";
-        loadingPageError.style.display = "none";
-      }
-      break;
-
-    case loadEvents.FULLYLOADED:
-      loadingPage.style.display = "none";
-      loadingPageError.style.display = "none";
-      break;
-  }
-}
+import { initializePage, loadGTM, handleloadEvent, } from "/js/common.js";
 
 initializePage({
   loadIframe: true,

@@ -1,4 +1,4 @@
-import { t } from "../js/common.js";
+import { t, isOnline } from "../js/common.js";
 import { signOut, setPersistence, indexedDBLocalPersistence, getAuth, onAuthStateChanged, getRedirectResult } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 import { doGoogleAuth, doEmailLogin, doEmailSignup, doPasswordReset, loadGIS } from "./authService.js";
@@ -11,6 +11,8 @@ const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJNAME,
 };
 
+const g_keyUserCached = "userCached";
+const g_allowCachedUsers = true; //allows to load an offline page that is protected by login, even if the auth token is no longer valid.
 const authState = {
   auth: null,
   user: null,
@@ -18,7 +20,13 @@ const authState = {
 };
 
 export async function signOutCurrentUser() {
+  if (g_allowCachedUsers)
+    localStorage.removeItem(g_keyUserCached);
   if (authState.user) {
+    if (authState.user.isCached) {
+      authState.user = null; //TODO: more robust way for future unhandled onAuthStateChanged calls
+      return;
+    }
     await signOut(authState.auth);
   }
 }
@@ -32,10 +40,17 @@ export async function getCurrentUser(force, cancelable = false, addIdToken = fal
   if (!user) {
     if (!force)
       return null;
+    
     user = await showAuthDialog(authState.headerText, cancelable);
   }
-    if (user && addIdToken)
+  
+  if (user && addIdToken && !user.isCached)
       user.idToken = await user.getIdToken();
+  
+  if (!user && !cancelable) {
+    console.error("No user error"); //bug. showAuthDialog should have been called
+    throw new Error("Authentication error");
+  }
   return user;
 }
 
@@ -104,6 +119,31 @@ export async function setupAuth({ doAuth, headerText, redirectMode, forceRedirec
 
   onAuthStateChanged(authState.auth, async user => {
     authState.user = user;
+    const isUserOnline = isOnline();
+    
+    function saveCachedUser () {
+      if (!user) {
+        if (isUserOnline)
+          localStorage.removeItem(g_keyUserCached);
+        return;
+      }
+      
+      if (!g_allowCachedUsers)
+        return;
+      let userCached = {};
+      userCached.uid = user.uid;
+      userCached.email = user.email;
+      userCached.emailVerified = user.emailVerified;
+      userCached.displayName = user.displayName;
+      userCached.isAnonymous = user.isAnonymous;
+      userCached.photoURL = user.photoURL;
+      userCached.providerData = user.providerData;
+      userCached.isCached = true;
+      localStorage.setItem(g_keyUserCached, JSON.stringify(userCached));
+    }
+    
+    saveCachedUser();
+    
     if (pauseActions)
       return;
 
@@ -115,6 +155,26 @@ export async function setupAuth({ doAuth, headerText, redirectMode, forceRedirec
     }
 
     if (doAuth && !user) {
+
+      if (!isUserOnline) {
+        if (g_allowCachedUsers) {
+          const strUser = localStorage.getItem(g_keyUserCached);
+          if (strUser) {
+            try {
+            user= JSON.parse(strUser);
+            if (!user || !user.isCached)
+              throw new Error("bad cached user format");
+            } catch (e) {
+              console.error("Error parsing cached user data:", strUser, e);
+            }
+          }
+        }
+        if (user) {
+          authState.user = user;
+          onDoneOneTime();
+          return;
+        }
+      }
       // If auth is required and there's no user, show the dialog.
       // The onAuthStateChanged listener will re-run upon successful login.
       showAuthDialog(authState.headerText, false).catch(err => {

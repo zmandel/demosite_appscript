@@ -51,6 +51,7 @@ export default async function messageBox(title, message, options = {}) {
 
     dialogEl.appendChild(overlay);
     dialogEl.appendChild(content);
+    dialogEl.style.position = "fixed";
     document.body.appendChild(dialogEl);
 
     const dialog = new A11yDialog(dialogEl);

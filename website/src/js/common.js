@@ -125,6 +125,46 @@ function paramsForLogging() {
   };
 }
 
+export function handleloadEvent(loadEvent, data) {
+  let  styleLoading = null;
+  let styleError = null;
+
+  switch (loadEvent) {
+    case loadEvents.LOADING:
+      styleError = "none";
+      styleLoading = "";
+      break;
+
+    case loadEvents.ERRORLOADING:
+      styleLoading = "none";
+      styleError = "";
+      break;
+
+    case loadEvents.LOADED:
+      styleError  = "none";
+      if (!data || !data.dontStopProgress) {
+        styleLoading = "none";
+      }
+      break;
+
+    case loadEvents.FULLYLOADED:
+      styleLoading = "none";
+      styleError = "none";
+      break;
+  }
+
+  const loadingPage = document.getElementById("loadingPage");
+  const loadingPageError = document.getElementById("loadingPageError");
+
+  if (styleLoading !== null && loadingPage) {
+    loadingPage.style.display = styleLoading;
+  }
+
+  if (styleError !== null && loadingPageError) {
+    loadingPageError.style.display = styleError;
+  }
+}
+
 /**
  * Dimensions for Google Tag Manager (GTM)
  * Use for tracking custom dimensions in GTM, for example the language of the page for the current session.
@@ -232,7 +272,7 @@ export function sendLogsToServer(logQueue, finalFlush = false) {
 }
 
 function flushPendingLogs() {
-  if (g_isSendingLogs || g_pendingLogs.length === 0)
+  if (g_isSendingLogs || g_pendingLogs.length === 0 || !isOnline())
     return;
 
   g_isSendingLogs = true;
@@ -625,12 +665,20 @@ export function applyTranslations(root, translations, lang) {
     return false;
   }
 
+  function updateElement(mapped, el, key) {
+    if (key.startsWith("placeholder.")) {
+      el.placeholder = mapped;
+    } else {
+      detectMismatchedSEO(mapped, el, key);
+      el.innerHTML = mapped;
+    }
+  }
+
   root.querySelectorAll("[data-i18n]").forEach(el => {
     const key = el.getAttribute("data-i18n");
     let mapped = t(key, lang, translations);
     if (typeof mapped === "string") {
-      detectMismatchedSEO(mapped, el, key);
-      el.innerHTML = mapped;
+      updateElement(mapped, el, key);
       return;
       }
 
@@ -638,11 +686,10 @@ export function applyTranslations(root, translations, lang) {
       if (lang !== "en") {
       const mapped2 = t(key, "en", translations);
         if (mapped2) {
-          el.innerHTML = mapped2;
+        updateElement(mapped2, el, key);
           return;
         }
       }
-    el.innerHTML = "";
   });
   g_firstTranslationDone = true;
 }
@@ -1258,6 +1305,8 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
         level = "warn"; //treat debug as warn in production (shouldnt be any debug logs in prod)
       }
 
+      if (args && args.length > 0 && (args[0] === g_strErrorOffline || (args.length > 1 && args[1] === g_strErrorOffline)))
+        return;
       g_isLogging = true;
       let payload = generateLogPayload(...args);
       payload.timestamp = new Date().toISOString();
