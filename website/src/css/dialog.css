@@ -23,3 +23,7 @@
   box-sizing: border-box;
   min-width: calc(min(20em, 100vw - 10px));
 }
+
+.messageBoxClass {
+  z-index: 2147483647;
+}

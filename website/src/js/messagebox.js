@@ -14,6 +14,7 @@ export default async function messageBox(title, message, options = {}) {
     const dialogEl = document.createElement("div");
     dialogEl.className = "dialog";
     dialogEl.setAttribute("aria-hidden", "true");
+    dialogEl.classList.add("messageBoxClass");
     const titleId = `msgbox-title-${Math.random().toString(36).slice(2)}`;
     dialogEl.setAttribute("aria-labelledby", titleId);
 
