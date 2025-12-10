@@ -85,6 +85,8 @@ setPersistence(authState.auth, indexedDBLocalPersistence);
  * @param {function(boolean, string=): void} [onDone] - Callback run once initial auth state is resolved. Args: (loginFromRedirect, errorMessage).
  */
 export async function setupAuth({ doAuth, headerText, redirectMode, forceRedirect }, onDone) {
+  if (typeof redirectMode === "undefined")
+    redirectMode = ((new URLSearchParams(window.location.search)).get("redirectMode") === "1");
   authState.redirectMode = redirectMode;
   authState.headerText = headerText || "";
   let pauseActions = false;
@@ -242,6 +244,9 @@ async function showAuthDialog(headerText, cancelable = false) {
     };
 
     const handleCancel = () => {
+      if (cancelable)
+        resolve(null);
+      else
       reject(new Error('Authentication cancelled by user.'));
     };
 

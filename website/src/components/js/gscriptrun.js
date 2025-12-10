@@ -44,7 +44,7 @@ Object.defineProperty(google.script, "run", {
                           console.error("GScriptrun: server request failed", errorMsg);
                           throw new Error(`Server request failed: ${errorMsg}`);
                         }
-                        if (!response.hasOwnProperty("result")) {
+                        if (!Object.prototype.hasOwnProperty.call(response, "result")) {
                           console.error("GScriptrun: server response missing result", response);
                           throw new Error('Server response missing result');
                         }
@@ -77,7 +77,7 @@ Object.defineProperty(google.script, "url", {
                 // Build the parameter object (single values - first occurrence)
                 const parameter = {};
                 url.searchParams.forEach((value, key) => {
-                    if (!parameter.hasOwnProperty(key)) {
+                    if (!Object.prototype.hasOwnProperty.call(parameter, key)) {
                         parameter[key] = value;
                     }
                 });
@@ -112,10 +112,6 @@ export class GS {
   #ensureAvailable() {
     const g = google;
     return g;
-  }
-
-  #isBlankErr(err) {
-    return err == null || (typeof err === 'string' && err === '');
   }
 
   #run(method, args) {

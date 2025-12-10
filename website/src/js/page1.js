@@ -10,8 +10,6 @@ function initializeAuth() {
   setupAuth({
     doAuth: false, //no forced login
     headerText: "to test this feature",
-    redirectMode: false,
-    forceRedirect: false,
   },
     (loginFromRedirect, errText) => {
       if (errText)

@@ -6,7 +6,6 @@
 * - Processes messages from the embedded iframe, including URL parameter changes, analytics events, and logs.
 * - Manages URL parameters and validates organization signatures.
 * - Utility functions for loading states, cryptographic verification.
-* - "analytics" function: Sends custom events as a "select_content" event with your specified event name as an "item_id".
 *   To be able to use reporting based on the "item_id", create a "item_id" event-scoped custom dimension in your GTM account: https://support.google.com/analytics/answer/14239696
 */
 
@@ -97,7 +96,7 @@ export function tCommon(key, langParam) {
   if (!langParam)
     langParam = getLang();
   if (!langParam) {
-    error_("no lang in t"); //detect bad initialization
+    console.error("no lang in t"); //detect bad initialization
     langParam = g_langDefault; //recover
   }
   let res = g_commonStr[langParam][key];
@@ -320,6 +319,11 @@ export function setTitle(title) {
 }
 
 export function openUrlWithProps(dataEvent) {
+  const url = getUrlWithProps(dataEvent);
+  window.open(url, dataEvent.replacePage ? "_self" : "_blank");
+}
+
+export function getUrlWithProps(dataEvent) {
   if (!dataEvent)
     return;
   const url = new URL(window.location.href);
@@ -335,7 +339,7 @@ export function openUrlWithProps(dataEvent) {
         url.searchParams.set(key, value);
     });
   }
-  window.open(url, dataEvent.replacePage ? "_self" : "_blank");
+  return url;
 }
 
 let g_callbackLoadEvents = null;
@@ -370,13 +374,30 @@ export function processAction(data, event, callbackMessage) {
   if (data.action == "siteInited") {
     if (!g_sourceIframe && event)
       g_sourceIframe = event.source;
+
+    function processSiteInited() {
+      document.documentElement.classList.remove("scrollY");
     g_loadedFrame = true;
     g_loadingFrame = false;
     event.source.postMessage({ type: 'validateDomain' }, event.origin);
+      document.querySelector("iframe").style.opacity = "1";
+      notifyloadEvent(loadEvents.LOADED, data?.data);
+    }
 
-    document.querySelector("iframe").style.opacity = "1";
+    const waitForSignal = () => {
+      // g_signalLoadFrame can be null if the iframe is loaded on-demand, and the page init hasnt yet been configured,
+      // for example when there is a sign-in flow before the page is initialized, but the browser restores the iframe from bfcache on load
+      if (g_signalLoadFrame) {
+        g_signalLoadFrame.resolve();
+        processSiteInited();
+        return;
+      }
+      //should not happen in TFM init flows because all iframes are loaded during page init, not on-demand.
+      console.warn("Waiting for g_signalLoadFrame...");
+      setTimeout(waitForSignal, 1000);
+    };
 
-    notifyloadEvent(loadEvents.LOADED, data?.data);
+    waitForSignal();
   }
   else if (data.action == "serverResponse") {
     g_callbackRunner.runCallback(data.idRequest, data.data);
@@ -433,22 +454,6 @@ export function processAction(data, event, callbackMessage) {
     }
   }
 
-  if (data.action == "siteInited") {
-    if (g_signalLoadFrame)
-    g_signalLoadFrame.resolve();
-    else {
-      console.warn("No signalLoadFrame on siteInited");
-      //try to recover a timing issue
-      setTimeout(() => {
-        if (g_signalLoadFrame) {
-          g_signalLoadFrame.resolve();
-        } else {
-          console.error("No signalLoadFrame on siteInited (2nd check)");
-        }
-      }, 500);
-    }
-  }
-  
   if (callbackMessage)
     callbackMessage(data, event); //propagate
 }
@@ -609,6 +614,12 @@ export function setLang(lang, mapTranslations) {
   if (elemLang)
     elemLang.value = lang;
   localStorage.setItem("lang", lang);
+
+  g_paramsClean.lang = lang;
+  const url = new URL(window.location.href);
+  url.searchParams.set("lang", lang);
+  window.history.replaceState({}, "", url.toString());
+
   applyTranslations(document, g_mapsLang, lang);
 }
 
@@ -795,6 +806,12 @@ export async function loadIframeFromCurrentUrl(paramsExtra = "", selector = "ifr
     paramsExtra = g_iframeParamsExtra;
 
   const iframeElem = document.querySelector(selector);
+  const setSrc = (iframeElem.src === "");  //race condition: even thou the html src is empty, the browser may restore it from bfcache with the src set.
+
+  if (!setSrc) {
+    console.warn("Iframe src already set, not reloading"); //remove this warning if you load the iframe on-demand and do stuff before initializePage
+  }
+
   let startedRetry = false;
 
   function executor(resolve, reject) {
@@ -832,6 +849,7 @@ export async function loadIframeFromCurrentUrl(paramsExtra = "", selector = "ifr
 
     notifyloadEvent(loadEvents.LOADING);
     iframeElem.style.opacity = "0";
+    if (setSrc)
     iframeElem.src = getScriptUrlWithParams(paramsExtra);
   }
 
@@ -917,7 +935,7 @@ function injectCSS() {
   const s = document.createElement("style");
   s.id = STYLE_ID;
   s.textContent = `
-    ._toaster{position:fixed;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+    ._toaster{position:fixed;z-index:2147483647;display:flex;flex-direction:column;gap:8px;pointer-events:none}
     ._toaster.tr{top:12px;right:12px;align-items:flex-end}
     ._toaster.tl{top:12px;left:12px}
     ._toaster.br{bottom:12px;right:12px;align-items:flex-end}
@@ -1305,10 +1323,15 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
         level = "warn"; //treat debug as warn in production (shouldnt be any debug logs in prod)
       }
 
-      if (args && args.length > 0 && (args[0] === g_strErrorOffline || (args.length > 1 && args[1] === g_strErrorOffline)))
-        return;
       g_isLogging = true;
       let payload = generateLogPayload(...args);
+
+      if ((payload.message || "").indexOf(g_strErrorOffline) !== -1) {
+        //hackish: skip errors about being offline
+        g_isLogging = false;
+        return;
+      }
+
       payload.timestamp = new Date().toISOString();
       payload.severity = levelToSeverity(level);
       logQueue.push(payload);

@@ -1,5 +1,4 @@
 <style>
-
   auth-dialog {
     max-width: 18em;
     position: fixed;
@@ -12,7 +11,7 @@
     padding-top: 0rem;
     padding-bottom: 0.5rem;
     border-radius: 8px;
-    z-index: 1000;
+    z-index: var(--zindex-auth);
     color: #fff;
     display: none;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
@@ -194,7 +193,7 @@
     background: rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
-    z-index: 990;
+    z-index: calc(var(--zindex-auth) - 1);
     display: none;
   }
 

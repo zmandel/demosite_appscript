@@ -1,4 +1,10 @@
 
+:root {
+  --zindex-auth: 2000;
+  --zindex-topmost: calc(var(--zindex-auth) - 5);
+  --zindex-modal: 1050;
+}
+
 .centerMessage {
   position: fixed;
   left: 50vw;
@@ -8,7 +14,7 @@
   transform: translate(-50%, -50%);
   max-width: 80ch;
   text-align: center;
-  font-size: 1.5em;
+  font-size: 1.2em;
   cursor: default;
 }
 
@@ -16,6 +22,9 @@
   display: none !important;
 }
 
+.scrollY {
+  overflow-y: scroll;
+}
 
 button {
   margin-right: 0.5rem;
