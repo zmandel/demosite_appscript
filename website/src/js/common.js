@@ -11,17 +11,19 @@
 */
 
 export default toast;
-
 export const g_isProduction = ("true" === import.meta.env.VITE_IS_PRODUCTION);
+export const g_langDefault = import.meta.env.VITE_LANG_DEFAULT;
+export const g_strErrorOffline = "offline_mode"; //error string for offline mode requests (throws Error with this string)
+
 const g_orgDefault = import.meta.env.VITE_ORG_DEFAULT;
 const g_endpointPutLogs = import.meta.env.VITE_ENDPOINT_PUT_LOGS;
 const g_firebaseProjname = import.meta.env.VITE_FIREBASE_PROJNAME;
 const g_rootDomain = import.meta.env.VITE_ROOT_DOMAIN;
 const g_idGTM = import.meta.env.VITE_GTM_ID; //Google Tag Manager ID
-export const g_langDefault = import.meta.env.VITE_LANG_DEFAULT;
 let g_lang = "";
 const g_propLSLogs = "logs_captured"; //to retry failed logs from previous session
-export const g_strErrorOffline = "offline_mode"; //error string for offline mode requests (throws Error with this string)
+let g_logAuthEvents = false; //use url param "logauth=1" to enable
+
 /**
  * Public key for verifying signatures.
 */
@@ -119,7 +121,8 @@ export function tCommon(key, langParam) {
   return res;
 }
 
-//CUSTOMIZE: replace with your own. properties are appended to each log sent to the server. Return null or an empty object if you don't want to include any.
+//CUSTOMIZE: replace with your own. properties are appended to each log sent to the server.
+//Return null (or an empty object) if you don't want to include any.
 function paramsForLogging() {
   return {
   };
@@ -169,7 +172,7 @@ export function handleloadEvent(loadEvent, data) {
  * Dimensions for Google Tag Manager (GTM)
  * Use for tracking custom dimensions in GTM, for example the language of the page for the current session.
  * You need to first set up your custom dimensions "item_id" in your GTM account, then configure them here.
- see: https://support.google.com/analytics/answer/14239696
+ * see: https://support.google.com/analytics/answer/14239696
 */
 //g_dimensionsGTM: custom dimensions for GTM. can be empty.
 const g_dimensionsGTM = {
@@ -254,12 +257,17 @@ const g_moduleLog = "frontend";
 const g_maxLogsSend = 10;
 let g_isSendingLogs = false;
 let g_pendingLogs = [];
-
+let g_warnedFailedLogSend = false;
 
 function flushPendingLogs() {
   if (g_isSendingLogs || g_pendingLogs.length === 0 || !isOnline())
     return;
 
+  if (isLocalhost()) {
+    g_pendingLogs = [];
+    return;    
+  }
+  
   g_isSendingLogs = true;
   const payload = g_pendingLogs.splice(0, g_maxLogsSend); //pop
   localStorage.setItem(g_propLSLogs, JSON.stringify(payload));
@@ -281,14 +289,20 @@ function flushPendingLogs() {
   })
     .then(res => {
       if (!res.ok) {
+        if (!g_warnedFailedLogSend) {
+          g_warnedFailedLogSend = true; //prevent eternal logging loops
         console.error("Error sending logs, status:", res.status);
+        }
         throw new Error(`HTTP ${res.status}`);
       }
       return res;
     })
     .then(() => finalize(true))
     .catch(e => {
+      if (!g_warnedFailedLogSend) {
+        g_warnedFailedLogSend = true;
       console.error("Error sending logs", e);
+      }
       finalize(false);
     });
 }
@@ -399,7 +413,7 @@ export function processAction(data, event, callbackMessage) {
       console.error("Invalid logs");
       return;
     }
-    g_pendingLogs = g_pendingLogs.concat(logs);
+    g_pendingLogs = g_pendingLogs.concat(logs); //.push( into logs
     flushPendingLogs();
   }
   else if (data.action == "toggleFullscreen") {
@@ -742,6 +756,10 @@ async function initializeBase() {
   console.assert(!g_initBaseCalled, "initializeBase called multiple times");
   g_initBaseCalled = true;
   const params = new URLSearchParams(window.location.search);
+  if (params.has("logauth")) {
+    g_logAuthEvents = (params.get("logauth") === "1");
+  }
+
   Object.keys(g_paramsClean).forEach(key => {
     if (params.has(key))
       g_paramsClean[key] = params.get(key);
@@ -1172,7 +1190,7 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
         callback({
           timeRemaining: function () { return 50; } // Arbitrary positive value
         });
-      }, options && options.timeout ? options.timeout : 50);
+      }, options && options.timeout ? options.timeout : 5000);
     }
   }
 
@@ -1275,7 +1293,7 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
     const consoleToSeverity = {
       error: 'ERROR',
       warn: 'WARNING',
-      log: 'INFO',
+      log: 'INFO', //no "LOG" severity in GCP logging
       info: 'INFO',
       debug: 'DEBUG'
     };
@@ -1292,10 +1310,13 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
         originalConsole.error("recursive log within captureConsole");
         return;
       }
-      if (level === "debug") {
-        if (!g_isProduction)
+
+      if (isLocalhost())
+        return; //server only accepts the app domain
+
+      if (level === "debug" || level === "log") {
+        if (g_isProduction)
           return;
-        level = "warn"; //treat debug as warn in production (shouldnt be any debug logs in prod)
       }
 
       g_isLogging = true;
@@ -1322,7 +1343,7 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
     if (g_pendingLogs.length === 0 || idleScheduled)
       return;
     idleScheduled = true;
-    scheduleIdleCallback(flushLogs, { timeout: 2000 });
+    scheduleIdleCallback(flushLogs, { timeout: 5000 });
   }
 
   function flushLogs() {
@@ -1375,4 +1396,9 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
 
 export function getViewportHeight() {
   return window.visualViewport?.height ?? window.innerHeight;
+}
+
+export function logAuth(...args) {
+  if (g_logAuthEvents)
+    console.log("Auth:", ...args);
 }

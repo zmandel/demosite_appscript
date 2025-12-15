@@ -9,7 +9,7 @@ import {
   signInWithRedirect,
   signInWithCredential,
 } from "firebase/auth";
-import { getLang, t, addTranslationMap } from "./common.js";
+import { getLang, t, addTranslationMap, logAuth } from "./common.js";
 import messageBox from "../components/js/messagebox.js";
 
 const translations = {
@@ -26,7 +26,7 @@ const translations = {
     weakPassword: "Password is too weak.",
     networkError: "Network error. Check your connection.",
     popupBlocked: "Popup was blocked. Lets try again in a different way.",
-    quickLoginBlocked: "Quick login was blocked.\n\nIf you are inside an app (threads, instagram etc) cancel and use '...' to open in Chrome.\nOtherwise Lets try again in a different way."
+    quickLoginBlocked: "Thats alright. If you are inside an app (threads, instagram, facebook etc) cancel and use the top menu to open in Chrome.\n\nOtherwise click OK to try again with a different method.",
   },
   es: {
     googleLoginFailed: "Error al iniciar con Google",
@@ -41,7 +41,7 @@ const translations = {
     weakPassword: "La contraseña es demasiado débil.",
     networkError: "Error de red. Verifica tu conexión.",
     popupBlocked: "El popup fue bloqueado. Probemos nuevamente de otra forma.",
-    quickLoginBlocked: "El login rápido fue bloqueado.\n\nSi estás dentro de una app (threads, instagram, etc.) cancela y usa '...' para abrir en Chrome.\nDe lo contrario, probemos nuevamente de otra forma."
+    quickLoginBlocked: "No hay problema. Si estás dentro de una app (threads, instagram, facebook, etc) cancela y usa el menú superior para abrir en Chrome.\n\nDe lo contrario, haz clic en Aceptar para intentar nuevamente con un método diferente.",
   }
 };
 
@@ -88,6 +88,7 @@ function createOneTapError(code, message) {
 }
 
 async function loadGoogleIdentityServices() {
+  logAuth("loadGoogleIdentityServices");
   if (window.google?.accounts?.id)
     return Promise.resolve();
 
@@ -101,6 +102,7 @@ async function loadGoogleIdentityServices() {
       script.defer = true;
       script.onload = () => {
         if (window.google?.accounts?.id) {
+        logAuth("Google Identity Services loaded");
           resolve();
         } else {
           reject(createOneTapError("one-tap-unavailable", "Google Identity Services did not initialize."));
@@ -125,19 +127,25 @@ export async function loadGIS() {
 }
 
 let g_timerGISLogin = null;
-function finalizePromptCompletion(callback) {
-  let completed = false;
-  return (value) => {
+function cleanupGISTimer() {
     if (g_timerGISLogin) {
       clearTimeout(g_timerGISLogin);
       g_timerGISLogin = null;
     }
+}
+
+function finalizePromptCompletion(callback) {
+  let completed = false;
+  return (value) => {
+    cleanupGISTimer();
     if (completed)
       return;
     completed = true;
     try {
-      if (window.google?.accounts?.id?.cancel)
+      if (window.google?.accounts?.id?.cancel) {
+        logAuth("Cancelling Google One Tap prompt");
         window.google.accounts.id.cancel();
+      }
     } catch {
       console.warn("Failed to cancel Google One Tap prompt");
       // ignore cancellation errors
@@ -162,12 +170,14 @@ async function signInWithGoogleOneTap(auth) {
     const safeReject = finalizePromptCompletion(reject);
 
     if (!g_timerGISLogin) {
+      //under some cases (ie on instagram browser) GIS fails without any error or callback.
       g_timerGISLogin = setTimeout(() => {
         g_timerGISLogin = null;
         safeReject(createOneTapError("one-tap-unavailable", "Google One Tap timed out."));
       }, 10000); // 10 seconds timeout
     }
     try {
+      logAuth("Initializing Google One Tap");
       window.google.accounts.id.initialize({
         client_id: clientId,
         cancel_on_tap_outside: false,
@@ -186,6 +196,7 @@ async function signInWithGoogleOneTap(auth) {
               const userCredential = await signInWithCredential(auth, credential);
               safeResolve(userCredential);
             } catch (error) {
+              console.warn("Google One Tap sign-in failed:", error);
               safeReject(error);
             }
           })();
@@ -199,10 +210,12 @@ async function signInWithGoogleOneTap(auth) {
       safeReject(err);
       return;
     }
+
+    logAuth("Prompting Google One Tap");
     window.google.accounts.id.prompt((notification) => {
       const momentType = notification?.getMomentType?.() || "dismissed";
 
-      if (momentType === "skipped" || (typeof notification?.isSkippedMoment === "function" && notification.isSkippedMoment())) {
+      if (momentType === "skipped" || (momentType !== "dismissed" && typeof notification?.isSkippedMoment === "function" && notification.isSkippedMoment())) {
         // With FedCM we no longer receive a specific reason; treat as an intentional dismissal.
         safeReject(createOneTapError("one-tap-dismissed", "skipped"));
         return;
@@ -210,16 +223,16 @@ async function signInWithGoogleOneTap(auth) {
 
       if (momentType === "dismissed" || (typeof notification?.isDismissedMoment === "function" && notification.isDismissedMoment())) {
         const reason = notification.getDismissedReason?.();
-        if (reason === "credential_returned")
+        if (reason === "credential_returned") {
+          logAuth("Google One Tap dismissed after credential returned");
+          cleanupGISTimer();
           return;
+        }
         if (reason === "tap_outside" || reason === "user_cancelled" || reason === "cancel_called") {
           safeReject(createOneTapError("one-tap-dismissed", reason));
           return;
         }
-        if (reason === "issuing_failed" || reason === "secure_context_required" || reason === "unregistered_rp") {
-          safeReject(createOneTapError("one-tap-unavailable", reason));
-          return;
-        }
+
         safeReject(createOneTapError("one-tap-unavailable", reason || "Google One Tap was dismissed."));
       }
     });
@@ -237,6 +250,7 @@ function shouldFallbackToFirebaseProvider(error) {
 }
 
 async function handleFirebaseProviderError(e) {
+  logAuth("handleFirebaseProviderError", e);
   if (!e)
     return;
   const code = e.code;
@@ -246,6 +260,7 @@ async function handleFirebaseProviderError(e) {
   if (code === "auth/popup-blocked") {
     messageBox(title, message, { cancel: true }).then((result) => {
       if (result) {
+        logAuth("Opening login window after popup blocked");
         const url = new URL(window.location.href);
         url.pathname = "/login";
         url.searchParams.set("forceRedirect", "1");
@@ -279,8 +294,9 @@ async function handleFirebaseProviderError(e) {
 let g_alertedGISLoadError = false;
 let g_googleProvider = null;
 export async function doGoogleAuth(auth, redirectMode) {
-
+  logAuth("doGoogleAuth ", redirectMode ? "redirect mode" : "popup/one-tap mode");
   async function handleFirebaseProvider() {
+    logAuth("Using Firebase Google Auth Provider");
     if (!g_googleProvider)
       g_googleProvider = new GoogleAuthProvider({ prompt: "select_account" });
     const fbCall = redirectMode ? signInWithRedirect : signInWithPopup;
