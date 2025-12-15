@@ -7,6 +7,7 @@
 * - Manages URL parameters and validates organization signatures.
 * - Utility functions for loading states, cryptographic verification.
 *   To be able to use reporting based on the "item_id", create a "item_id" event-scoped custom dimension in your GTM account: https://support.google.com/analytics/answer/14239696
+* - GAS frame loading: when loading explicitly or on-demand, errors are reported by rejecting the promise with an Error object that has property isIframeLoadTimeout = true.
 */
 
 export default toast;
@@ -248,34 +249,20 @@ export function isLocalhost() {
   return window.location.hostname === "localhost";
 }
 
-export function sendLogsToServer(logQueue, finalFlush = false) {
-  if (!Array.isArray(logQueue) || logQueue.length === 0)
-    return;
+const g_callbackRunner = createCallbackRunner();
+const g_moduleLog = "frontend";
+const g_maxLogsSend = 10;
+let g_isSendingLogs = false;
+let g_pendingLogs = [];
 
-  localStorage.setItem(g_propLSLogs, JSON.stringify(logQueue));
-  g_pendingLogs.push(...logQueue);
-
-  if (isLocalhost()) {
-    g_pendingLogs = [];
-    if (g_retryTimer) {
-      clearTimeout(g_retryTimer);
-      g_retryTimer = null;
-    }
-    return;
-  }
-
-  if (g_isSendingLogs || g_retryTimer)
-    return;
-
-  flushPendingLogs();
-}
 
 function flushPendingLogs() {
   if (g_isSendingLogs || g_pendingLogs.length === 0 || !isOnline())
     return;
 
   g_isSendingLogs = true;
-  const payload = g_pendingLogs.splice(0, g_pendingLogs.length);
+  const payload = g_pendingLogs.splice(0, g_maxLogsSend); //pop
+  localStorage.setItem(g_propLSLogs, JSON.stringify(payload));
 
   const finalize = (success) => {
     g_isSendingLogs = false;
@@ -284,15 +271,6 @@ function flushPendingLogs() {
       if (g_pendingLogs.length > 0)
         flushPendingLogs();
       return;
-    }
-
-    g_pendingLogs = payload.concat(g_pendingLogs);
-    if (!g_retryTimer) {
-      g_retryTimer = setTimeout(() => {
-        g_retryTimer = null;
-        if (g_pendingLogs.length > 0 && !g_isSendingLogs)
-          flushPendingLogs();
-      }, LOG_RETRY_DELAY_MS);
     }
   };
 
@@ -306,6 +284,7 @@ function flushPendingLogs() {
         console.error("Error sending logs, status:", res.status);
         throw new Error(`HTTP ${res.status}`);
       }
+      return res;
     })
     .then(() => finalize(true))
     .catch(e => {
@@ -420,7 +399,8 @@ export function processAction(data, event, callbackMessage) {
       console.error("Invalid logs");
       return;
     }
-    sendLogsToServer(logs);
+    g_pendingLogs = g_pendingLogs.concat(logs);
+    flushPendingLogs();
   }
   else if (data.action == "toggleFullscreen") {
     toggleFullscreen();
@@ -791,6 +771,8 @@ let g_signalLoadFrame = null;
  * Loads the iframe from the current URL with the given extra parameters. 
 * if paramsExtra is not provided, uses the one set during initializePage.
  * @param {string} paramsExtra - Extra parameters to append to the iframe URL.
+ * errors (reject or exception) due to the frame failing to load are marked with property isIframeLoadTimeout = true
+ * this is so you can offer the user to retry loading the iframe.
  */
 export async function loadIframeFromCurrentUrl(paramsExtra = "", selector = "iframe") {
   if (g_loadedFrame || g_loadingFrame)
@@ -826,7 +808,9 @@ export async function loadIframeFromCurrentUrl(paramsExtra = "", selector = "ifr
       startedRetry = true;
       g_loadingFrame = false;
       notifyloadEvent(loadEvents.ERRORLOADING);
-      reject(new Error("Load timeout."));
+      const errorLoad = new Error("Load timeout.");
+      errorLoad.isIframeLoadTimeout = true;
+      reject(errorLoad);
     }
 
     iframeElem.addEventListener("load", (event) => {
@@ -1143,13 +1127,6 @@ function createCallbackRunner() {
   return Object.freeze({ setCallback, runCallback });
 }
 
-const g_callbackRunner = createCallbackRunner();
-const g_moduleLog = "frontend";
-const g_maxLogsSend = 10;
-let g_isSendingLogs = false;
-const LOG_RETRY_DELAY_MS = 10000;
-let g_retryTimer = null;
-let g_pendingLogs = [];
 restorePendingLogs();
 
 function restorePendingLogs() {
@@ -1161,7 +1138,6 @@ function restorePendingLogs() {
     if (!Array.isArray(parsed) || parsed.length === 0)
       return;
     g_pendingLogs.push(...parsed);
-    if (!isLocalhost() && !g_isSendingLogs && !g_retryTimer)
       flushPendingLogs();
   } catch (e) {
     console.error("Failed to restore pending logs", e);
@@ -1185,7 +1161,6 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
     assert: typeof console.assert === "function" ? console.assert.bind(console) : noop,
   };
 
-  let logQueue = [];
   let idleScheduled = false;
 
 
@@ -1334,7 +1309,7 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
 
       payload.timestamp = new Date().toISOString();
       payload.severity = levelToSeverity(level);
-      logQueue.push(payload);
+      g_pendingLogs.push(payload);
       scheduleLogFlush();
     } catch (e) {
       originalConsole.error(e);
@@ -1344,23 +1319,14 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
   }
 
   function scheduleLogFlush() {
-    if (logQueue.length === 0 || idleScheduled) return;
+    if (g_pendingLogs.length === 0 || idleScheduled)
+      return;
     idleScheduled = true;
     scheduleIdleCallback(flushLogs, { timeout: 2000 });
   }
 
-  function flushLogs(finalFlush) {
-    //deadline can be undefined. currently unused
-
-    if (logQueue.length === 0) {
-      idleScheduled = false;
-      return;
-    }
-
-
-    const logSend = logQueue.slice(0, g_maxLogsSend); //first ones only
-    logQueue = [];
-    sendLogsToServer(logSend, finalFlush);
+  function flushLogs() {
+    flushPendingLogs();
     idleScheduled = false;
   }
 
@@ -1372,7 +1338,13 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
   console.debug = (...args) => captureConsole("debug", ...args);
   console.assert = (condition, ...args) => {
     if (!condition) {
+      try {
       captureConsole("error", "Assertion failed:", ...args);
+      } catch (e) {
+      //ignore
+      }
+      
+      throw new Error(t("msgErrorGeneric")); //halting execution is safer
     }
   };
 
@@ -1394,9 +1366,13 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
   // Flush logs on page unload.
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden')
-      flushLogs(true);
+      flushLogs();
   });
 
-  window.addEventListener('pagehide', () => flushLogs(true), { capture: true });
-  document.addEventListener('freeze', () => flushLogs(true));
+  window.addEventListener('pagehide', () => flushLogs(), { capture: true });
+  document.addEventListener('freeze', () => flushLogs());
+}
+
+export function getViewportHeight() {
+  return window.visualViewport?.height ?? window.innerHeight;
 }

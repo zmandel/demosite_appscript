@@ -23,10 +23,11 @@ export default async function messageBox(title, message, options = {}) {
     if (cancel) overlay.setAttribute("data-a11y-dialog-hide", "");
 
     const content = document.createElement("div");
-    content.className = "dialog-content";
+    content.classList.add("dialog-content");
     content.setAttribute("role", "document");
 
     const h2 = document.createElement("h2");
+    h2.style.marginBottom = "0";
     h2.id = titleId;
     h2.textContent = title;
 
@@ -34,21 +35,25 @@ export default async function messageBox(title, message, options = {}) {
     p.style.whiteSpace = "pre-line";
     p.textContent = message;
 
+    const btnContainer = document.createElement("div");
+    btnContainer.classList.add("dialog-buttons");
     const okBtn = document.createElement("button");
     okBtn.type = "button";
     okBtn.textContent = okText;
 
     content.appendChild(h2);
     content.appendChild(p);
-    content.appendChild(okBtn);
+    btnContainer.appendChild(okBtn);
 
     let cancelBtn;
     if (cancel) {
       cancelBtn = document.createElement("button");
       cancelBtn.type = "button";
       cancelBtn.textContent = cancelText;
-      content.appendChild(cancelBtn);
+      btnContainer.appendChild(cancelBtn);
     }
+
+    content.appendChild(btnContainer);
 
     dialogEl.appendChild(overlay);
     dialogEl.appendChild(content);

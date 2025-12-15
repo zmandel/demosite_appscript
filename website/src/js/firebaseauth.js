@@ -2,7 +2,7 @@ import { t, isOnline } from "../js/common.js";
 import { signOut, setPersistence, indexedDBLocalPersistence, getAuth, onAuthStateChanged, getRedirectResult } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 import { doGoogleAuth, doEmailLogin, doEmailSignup, doPasswordReset, loadGIS } from "./authService.js";
-import messageBox from "./messagebox.js";
+import messageBox from "../components/js/messagebox.js";
 import "../components/js/authdialog.js";
 
 const firebaseConfig = {
@@ -259,6 +259,7 @@ async function showAuthDialog(headerText, cancelable = false) {
       try {
         await doGoogleAuth(authState.auth, authState.redirectMode);
       } catch (error) {
+        console.warn("Google auth error:", error);
         // doGoogleAuth already surfaces the error via messageBox
       } finally {
         dialog.setBusy?.(false);

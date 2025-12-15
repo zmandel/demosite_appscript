@@ -10,7 +10,7 @@ import {
   signInWithCredential,
 } from "firebase/auth";
 import { getLang, t, addTranslationMap } from "./common.js";
-import messageBox from "./messagebox.js";
+import messageBox from "../components/js/messagebox.js";
 
 const translations = {
   en: {
@@ -80,8 +80,10 @@ function getGoogleClientId() {
 }
 
 function createOneTapError(code, message) {
-  const error = new Error(message || "Google One Tap failed");
+  let messageUse = message || "Google One Tap failed";
+  const error = new Error(messageUse);
   error.code = code;
+  console.error("Google One Tap error:", code, messageUse);
   return error;
 }
 
@@ -118,9 +120,18 @@ async function loadGoogleIdentityServices() {
   return gsiScriptPromise;
 }
 
+export async function loadGIS() {
+  await loadGoogleIdentityServices();
+}
+
+let g_timerGISLogin = null;
 function finalizePromptCompletion(callback) {
   let completed = false;
   return (value) => {
+    if (g_timerGISLogin) {
+      clearTimeout(g_timerGISLogin);
+      g_timerGISLogin = null;
+    }
     if (completed)
       return;
     completed = true;
@@ -128,6 +139,7 @@ function finalizePromptCompletion(callback) {
       if (window.google?.accounts?.id?.cancel)
         window.google.accounts.id.cancel();
     } catch {
+      console.warn("Failed to cancel Google One Tap prompt");
       // ignore cancellation errors
     }
     callback(value);
@@ -149,6 +161,12 @@ async function signInWithGoogleOneTap(auth) {
     const safeResolve = finalizePromptCompletion(resolve);
     const safeReject = finalizePromptCompletion(reject);
 
+    if (!g_timerGISLogin) {
+      g_timerGISLogin = setTimeout(() => {
+        g_timerGISLogin = null;
+        safeReject(createOneTapError("one-tap-unavailable", "Google One Tap timed out."));
+      }, 10000); // 10 seconds timeout
+    }
     try {
       window.google.accounts.id.initialize({
         client_id: clientId,
@@ -177,11 +195,12 @@ async function signInWithGoogleOneTap(auth) {
       const err = error instanceof Error ? error : new Error(String(error));
       if (!err.code)
         err.code = "one-tap-unavailable";
+      console.error("Failed to initialize Google One Tap:", err);
       safeReject(err);
       return;
     }
     window.google.accounts.id.prompt((notification) => {
-      const momentType = notification?.getMomentType?.();
+      const momentType = notification?.getMomentType?.() || "dismissed";
 
       if (momentType === "skipped" || (typeof notification?.isSkippedMoment === "function" && notification.isSkippedMoment())) {
         // With FedCM we no longer receive a specific reason; treat as an intentional dismissal.
@@ -217,7 +236,7 @@ function shouldFallbackToFirebaseProvider(error) {
     || code === "one-tap-dismissed";
 }
 
-function handleFirebaseProviderError(e) {
+async function handleFirebaseProviderError(e) {
   if (!e)
     return;
   const code = e.code;
@@ -253,19 +272,15 @@ function handleFirebaseProviderError(e) {
     });
     return;
   }
-  messageBox(title, message);
+  await messageBox(title, message);
   throw e;
-}
-
-export async function loadGIS() {
-  await loadGoogleIdentityServices();
 }
 
 let g_alertedGISLoadError = false;
 let g_googleProvider = null;
 export async function doGoogleAuth(auth, redirectMode) {
 
-  function handleFirebaseProvider() {
+  async function handleFirebaseProvider() {
     if (!g_googleProvider)
       g_googleProvider = new GoogleAuthProvider({ prompt: "select_account" });
     const fbCall = redirectMode ? signInWithRedirect : signInWithPopup;
@@ -279,6 +294,7 @@ export async function doGoogleAuth(auth, redirectMode) {
   try {
     return await signInWithGoogleOneTap(auth);
   } catch (error) {
+    console.warn("Google One Tap sign-in failed:", error);
     if (shouldFallbackToFirebaseProvider(error)) {
       if (!redirectMode && !g_alertedGISLoadError) {
         g_alertedGISLoadError = true;
@@ -291,7 +307,7 @@ export async function doGoogleAuth(auth, redirectMode) {
       return handleFirebaseProvider();
     }
 
-    handleFirebaseProviderError(error);
+    await handleFirebaseProviderError(error);
     throw error;
   }
 }
@@ -322,7 +338,7 @@ export async function doPasswordReset(auth, email) {
   try {
     await sendPasswordResetEmail(auth, email);
   } catch (error) {
-    const { title, message } = getErrorMessage(t, error, t("passwordResetFailed"));
+    const { title, message } = getErrorMessage(error, t("passwordResetFailed"));
     messageBox(title, message);
     throw error;
   }

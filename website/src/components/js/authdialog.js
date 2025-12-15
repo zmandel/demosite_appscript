@@ -1,9 +1,9 @@
 import { LitElement, html } from "lit";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import componentHTML from "../html/authdialog.html?raw";
-import "../../css/dialog.css";
+import "../css/dialog.css";
 import A11yDialog from "a11y-dialog";
-import messageBox from "../../js/messagebox.js";
+import messageBox from "./messagebox.js";
 import { t, toast, applyTranslations, insertSpinner, addTranslationMap } from "../../js/common.js";
 import { onAuthStateChanged } from "firebase/auth";
 

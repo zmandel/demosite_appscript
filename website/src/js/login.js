@@ -1,5 +1,5 @@
 import { getLang, initializePage } from "./common.js";
-import messageBox from "./messagebox.js";
+import messageBox from "../components/js/messagebox.js";
 import {
   setupAuth,
   getCurrentUser,

@@ -27,3 +27,15 @@
 .messageBoxClass {
   z-index: 2147483647;
 }
+
+.messageBoxClass .dialog-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-buttons {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
