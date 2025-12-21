@@ -344,7 +344,7 @@ function setNoytifyloadEventCallback(callback) {
 }
 
 function notifyloadEvent(eventType, data = null) {
-  if (loadEvents.ERRORLOADING === eventType)
+  if (loadEvents.ERRORLOADING === eventType && isOnline())
     console.error("Error loading");
 
   if (g_callbackLoadEvents)
@@ -562,6 +562,7 @@ export async function initializePage({
       callbackContentLoaded();
     if (loadIframe)
       loadIframeFromCurrentUrl(paramsExtra).catch(err => {
+        if (isOnline())
         console.error("Error loading iframe:", err); //errors are handled in notifyloadEvent
       }); 
   }
@@ -611,9 +612,11 @@ export function setLang(lang, mapTranslations) {
 
   g_paramsClean.lang = lang;
   const url = new URL(window.location.href);
+  const langPrevURL = url.searchParams.get("lang");
+  if (langPrevURL &&  langPrevURL !== lang) {
   url.searchParams.set("lang", lang);
   window.history.replaceState({}, "", url.toString());
-
+  }
   applyTranslations(document, g_mapsLang, lang);
 }
 
@@ -798,6 +801,7 @@ export async function loadIframeFromCurrentUrl(paramsExtra = "", selector = "ifr
 
   if (!isOnline()) {
     notifyloadEvent(loadEvents.ERRORLOADING);
+    toast(t("offlineModeActive"));
     return Promise.reject(new Error(g_strErrorOffline));
   }
 
@@ -967,6 +971,9 @@ function getContainer(pos) {
   return el;
 }
 
+let g_textLastToast = null;
+let g_msLastToast = 0;
+
 /**
  * Show a toast.
  * @param {string|Node} text
@@ -979,6 +986,15 @@ export function toast(text, opts = {}) {
     console.error(msgError);
     throw new Error(msgError);
   }
+
+  const msNow = Date.now();
+  if (text == g_textLastToast && (msNow - g_msLastToast) < 1000) {
+    g_msLastToast = msNow;
+    return;
+  }
+  g_textLastToast = text;
+  g_msLastToast = msNow;
+  
   injectCSS();
 
   const {
@@ -1222,7 +1238,7 @@ function enableLogCapture(callbackContextInject = null, ignoreFnList = null) {
         try {
           if (arg instanceof Error)
             return "Error obj: " + (arg.message || unk);
-          return JSON.stringify(arg);
+          return JSON.stringify(arg, null, 2);
         } catch (err) {
           return String(arg);
         }
